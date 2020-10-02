@@ -4,8 +4,13 @@ var renderingParams = {
     stateScaleStep: 40000
 };
 
+var test = function(svg, data, args) {
+    console.log(data);
+};
+
 // rendering functions...
 var stateMapRendering = function(svg, data, args) {
+    console.log(data);
     g = svg.append("g");
     var params = args.renderingParams;
 
@@ -45,5 +50,6 @@ var stateMapRendering = function(svg, data, args) {
 
 module.exports = {
     stateMapRendering,
-    renderingParams
+    renderingParams,
+    test
 };

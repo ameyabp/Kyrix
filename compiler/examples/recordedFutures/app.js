@@ -19,6 +19,7 @@ var project = new Project("recordedFutures", "../../../config.txt");
 project.addRenderingParams(renderers.renderingParams);
 project.addRenderingParams(geomstrs.geomstrs);
 
+
 // set up SSV
 var width = 960 * 2;
 var height = 500 * 2;
@@ -30,7 +31,7 @@ project.addCanvas(stateMapCanvas);
 // static legends layer
 var stateMapLegendLayer = new Layer(null, true);
 stateMapCanvas.addLayer(stateMapLegendLayer);
-stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
+//stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 
 // bar chart layer
 // var barLayer = new Layer(transforms.barTransform, false);
@@ -46,6 +47,7 @@ stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 // state boundary layer
 var stateBoundaryLayer = new Layer(transforms.stateMapTransform, false);
 stateMapCanvas.addLayer(stateBoundaryLayer);
+//stateBoundaryLayer.addRenderingFunc(renderers.test);
 stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
 stateBoundaryLayer.addPlacement({
     centroid_x: "full",
@@ -63,6 +65,7 @@ var view = new View("facilities", 0, 0, width, height);
 project.addView(view);
 project.setInitialStates(view, stateMapCanvas, 0, 0);
 
+/*
 var ssv = {
     data: {
         db: "recFut",
@@ -111,7 +114,9 @@ var ssv = {
 
 var ret = project.addSSV(new SSV(ssv), {view: view});
 
-project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
-project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
+*/
+
+//project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
+//project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
 
 project.saveProject();

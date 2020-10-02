@@ -5,7 +5,7 @@ var stateMapTransform = new Transform(
     "SELECT * FROM facilities",
     "recfut",
     "",
-    [],
+    ["sid", "rfId", "type", "name", "lat", "lng"],
     true
 );
 
