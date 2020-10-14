@@ -17,7 +17,7 @@ const geomstrs = require("./geomstrs");
 // construct a project
 var project = new Project("recordedFutures", "../../../config.txt");
 project.addRenderingParams(renderers.renderingParams);
-project.addRenderingParams(geomstrs.geomstrs);
+//project.addRenderingParams(geomstrs.geomstrs);
 
 
 // set up SSV
@@ -29,8 +29,8 @@ var stateMapCanvas = new Canvas("statemap", width, height);
 project.addCanvas(stateMapCanvas);
 
 // static legends layer
-var stateMapLegendLayer = new Layer(null, true);
-stateMapCanvas.addLayer(stateMapLegendLayer);
+//var stateMapLegendLayer = new Layer(null, true);
+//stateMapCanvas.addLayer(stateMapLegendLayer);
 //stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 
 // bar chart layer
@@ -45,10 +45,10 @@ stateMapCanvas.addLayer(stateMapLegendLayer);
 // });
 
 // state boundary layer
-var stateBoundaryLayer = new Layer(transforms.stateMapTransform, false);
+var stateBoundaryLayer = new Layer(transforms.recfutTransform, false);
 stateMapCanvas.addLayer(stateBoundaryLayer);
 //stateBoundaryLayer.addRenderingFunc(renderers.test);
-stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
+stateBoundaryLayer.addRenderingFunc(renderers.test);
 stateBoundaryLayer.addPlacement({
     centroid_x: "full",
     centroid_y: "full",
@@ -65,12 +65,12 @@ var view = new View("facilities", 0, 0, width, height);
 project.addView(view);
 project.setInitialStates(view, stateMapCanvas, 0, 0);
 
-/*
+
 var ssv = {
     data: {
-        db: "recFut",
-        query: "SELECT x, y, sid, rfId, type, name, lat, lng FROM Facilities;",
-        columnNames: ["x", "y", "Serial ID", "Ref ID", "Facility type", "Facility Name", "Latitude", "Longitude"]
+        db: "recfut",
+        query: "SELECT (((960 * 2)/360.0) * (180 + lng)) as x, (((500 * 2)/180.0) * (90 - lat)) as y, sid, rfId, type, name, lat, lng FROM facilities limit 100000;",
+        columnNames: ["x", "y", "sid", "rfId", "type", "name", "lat", "lng"]
     },
     layout: {
         x: {
@@ -80,12 +80,13 @@ var ssv = {
             field: "y"
         },
         z: {
-            order: "asc"
-        },
-        geo: {
-            level: 7,
-            center: [39.5, -98.5]
-        }
+            field: "type",
+            order: "desc"
+        }//,
+        //geo: {
+        //    level: 10,
+        //    center: [28, 11]
+        //}
     },
     marks: {
         cluster: {
@@ -99,7 +100,7 @@ var ssv = {
             rankList: {
                 mode: "tabular",
                 topk: 3,
-                fields: ["name", "type"],
+                fields: ["sid", "rfId", "type", "name"],
                 orientation: "vertical",
                 boundary: "convexhull"
             }
@@ -114,9 +115,9 @@ var ssv = {
 
 var ret = project.addSSV(new SSV(ssv), {view: view});
 
-*/
 
-//project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
-//project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
+
+project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
+project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
 
 project.saveProject();

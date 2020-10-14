@@ -5,7 +5,9 @@ var renderingParams = {
 };
 
 var test = function(svg, data, args) {
+    console.log("test");
     console.log(data);
+
 };
 
 // rendering functions...

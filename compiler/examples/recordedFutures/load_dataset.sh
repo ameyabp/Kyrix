@@ -1,4 +1,4 @@
-docker cp ./maryland_coords.csv kyrix_db_1:/maryland_coords.csv         # copy the csv file to the db container
+docker cp ../../../back-end/maryland_coords.csv kyrix_db_1:/maryland_coords.csv         # copy the csv file to the db container
 docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgres -c "CREATE DATABASE recFut;"      # create database in the db container
 #docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgres -c "USE recfut;"      # connect to recFut database
 docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/recfut -c "DROP TABLE IF EXISTS Facilities;"    # drop table if previously existed
