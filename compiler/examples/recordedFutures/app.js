@@ -69,32 +69,28 @@ project.setInitialStates(view, stateMapCanvas, 0, 0);
 var ssv = {
     data: {
         db: "recfut",
-        query: "SELECT (((960 * 2)/360.0) * (180 + lng)) as x, (((500 * 2)/180.0) * (90 - lat)) as y, sid, rfId, type, name, lat, lng FROM facilities limit 100000;",
-        columnNames: ["x", "y", "sid", "rfId", "type", "name", "lat", "lng"]
+        query: "SELECT sid, rfId, type, name, lat, lng FROM facilities limit 100000;"
+        //columnNames: ["sid", "rfId", "type", "name", "kyrix_geo_y", "kyrix_geo_x"]
     },
     layout: {
         x: {
-            field: "x"
+            field: "lng"
         },
         y: {
-            field: "y"
+            field: "lat"
         },
         z: {
-            field: "type",
+            field: "sid",
             order: "desc"
-        }//,
-        //geo: {
-        //    level: 10,
-        //    center: [28, 11]
-        //}
+        },
+        geo: {
+            level: 7,
+            center: [39.5, -98.5]
+        }
     },
     marks: {
         cluster: {
             mode: "circle"
-            // config: {
-            //     circleMinSize: ,
-            //     circleMaxSize:
-            // }
         },
         hover: {
             rankList: {
