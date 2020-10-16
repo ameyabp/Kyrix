@@ -61,9 +61,7 @@ stateBoundaryLayer.addPlacement({
 //     ["State", "Acres burned"]
 // );
 
-var view = new View("facilities", 0, 0, width, height);
-project.addView(view);
-project.setInitialStates(view, stateMapCanvas, 0, 0);
+
 
 
 var ssv = {
@@ -84,8 +82,8 @@ var ssv = {
             order: "asc"
         },
         geo: {
-            level: 7,
-            center: [21.5, 79.5]
+            level: 3,
+            center: [0, 0]
         }
     },
     marks: {
@@ -97,25 +95,32 @@ var ssv = {
             }
         },
         hover: {
-            rankList: {
-                mode: "tabular",
-                topk: 3,
-                fields: ["sid", "rfId", "type", "name"],
-                orientation: "vertical",
-                boundary: "convexhull"
-            }
+            tooltip: {
+                //mode: "tabular",
+                //topk: 3,
+                columns: ["sid", "rfId", "type", "name"],
+                //aliases: ["Serial ID", "rfID", "Type", "Name"]
+            },
+            //orientation: "vertical",
+            boundary: "convexhull"
         }
     },
     config: {
         numLevels: 10,
-        topLevelWidth: width * 4,
-        topLevelHeight: height * 4
+        topLevelWidth: width,
+        topLevelHeight: height
     }
 };
 
-var ret = project.addSSV(new SSV(ssv), {view: view});
+var ret = project.addSSV(new SSV(ssv));
 
-project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
-project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
+//project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
+//project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
+
+/*
+var view = new View("facilities", 0, 0, width, height);
+project.addView(view);
+project.setInitialStates(view, stateMapCanvas, 0, 0);
+*/
 
 project.saveProject();
