@@ -7,6 +7,10 @@ var renderingParams = {
 var test = function(svg, data, args) {
     console.log("test");
     console.log(data);
+    var circle = svg.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 20);
 
 };
 

@@ -18,7 +18,7 @@ const geomstrs = require("./geomstrs");
 var project = new Project("recordedFutures", "../../../config.txt");
 project.addRenderingParams(renderers.renderingParams);
 //project.addRenderingParams(geomstrs.geomstrs);
-
+project.addStyles("../nba/nba.css");
 
 // set up SSV
 var width = 960 * 2;
@@ -81,16 +81,20 @@ var ssv = {
         },
         z: {
             field: "sid",
-            order: "desc"
+            order: "asc"
         },
         geo: {
             level: 7,
-            center: [39.5, -98.5]
+            center: [21.5, 79.5]
         }
     },
     marks: {
         cluster: {
-            mode: "circle"
+            mode: "circle",
+            config: {
+                circleMinSize: 30,
+                circleMaxSize: 70
+            }
         },
         hover: {
             rankList: {
@@ -110,8 +114,6 @@ var ssv = {
 };
 
 var ret = project.addSSV(new SSV(ssv), {view: view});
-
-
 
 project.addJump(new Jump(stateMapCanvas, ret.pyramid[0], "literal_zoom_in"));
 project.addJump(new Jump(ret.pyramid[0], stateMapCanvas, "literal_zoom_out"));
