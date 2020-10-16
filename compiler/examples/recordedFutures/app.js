@@ -69,15 +69,15 @@ project.setInitialStates(view, stateMapCanvas, 0, 0);
 var ssv = {
     data: {
         db: "recfut",
-        query: "SELECT sid, rfId, type, name, lat, lng FROM facilities limit 100000;"
+        query: "SELECT sid, rfId, type, name, latitude, longitude FROM mini_facilities;"
         //columnNames: ["sid", "rfId", "type", "name", "kyrix_geo_y", "kyrix_geo_x"]
     },
     layout: {
         x: {
-            field: "lng"
+            field: "longitude"
         },
         y: {
-            field: "lat"
+            field: "latitude"
         },
         z: {
             field: "sid",
