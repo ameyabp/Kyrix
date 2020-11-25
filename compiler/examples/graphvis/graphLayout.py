@@ -15,18 +15,29 @@ if __name__ == '__main__':
     #print(numVertices, numEdges)
 
     g = gt.Graph(directed=False)
-    g.add_vertex(n=numVertices)
+    #g.add_vertex(n=numVertices)
     etimestamp = g.new_ep("int")
+    vertexSet = set()
 
     edge_list = []
     for line in lines[2:]:
         edge = line.split(' ')
         vertex1 = int(edge[0]) - 1
         vertex2 = int(edge[1]) - 1
+        if vertex1 > 10000 or vertex2 > 10000:
+            continue
+        if vertex1 not in vertexSet:
+            vertexSet.add(vertex1)
+        if vertex2 not in vertexSet:
+            vertexSet.add(vertex2)
+        #vertexSet.add(vertex1)
+        #vertexSet.add(vertex2)
         timestamp = int(edge[3])
         edge_tuple = (vertex1, vertex2, timestamp)
         edge_list.append(edge_tuple)
 
+    numVertices = len(vertexSet)
+    g.add_vertex(numVertices)
     g.add_edge_list(edge_list, eprops=[etimestamp])
 
     print("Added data to graph")
@@ -46,11 +57,11 @@ if __name__ == '__main__':
 
     # create the dataframe for the nodes along with their generated positions
     # edges will be listed as a tuple of second vertex nodeId and the timestamp associated with the edge
-    d = {'nodeId': [], 'edges': [], 'posX': [], 'posY': []}
+    d = {'nodeId': [], 'edgeCount': [], 'posX': [], 'posY': []}
     
-    vertex_dict = {}
+    edge_count_dict = {}
     for i in range(numVertices):
-        vertex_dict[i] = []
+        edge_count_dict[i] = 0
 
     edges = g.get_edges(eprops=[etimestamp])
     print(edges.shape)
@@ -59,11 +70,11 @@ if __name__ == '__main__':
         vertex2 = edge[1]
         timestamp = edge[2]
 
-        vertex_dict[vertex1].append(edge[1:])
+        edge_count_dict[vertex1] += 1
 
-    for vertex1 in vertex_dict:
+    for vertex1 in edge_count_dict:
         d['nodeId'].append(vertex1)
-        d['edges'].append(vertex_dict[vertex1])
+        d['edgeCount'].append(edge_count_dict[vertex1])
         d['posX'].append(pos[vertex1][0])
         d['posY'].append(pos[vertex1][1])
 

@@ -7,8 +7,8 @@ var nodeTransform = new Transform(
     function(row) {
         var posX = row[2];
         var posY = row[3];
-        var x = Math.round(posX * 1920/32 + 960); //(int) (((960 * 2)/360.0) * (180 + lng)); //(960*2) is width
-        var y = Math.round((posY - 11.04) * 1080/14.64 + 540); //(int) (((500 * 2)/180.0) * (90 - lat)); //(500*2) is height
+        var x = Math.round((posX + 1)/2 * 1920);
+        var y = Math.round((posY - 3)/1 * 1080);
         var ret = [];
         ret.push(row[0]);
         ret.push(row[1]);
@@ -17,7 +17,7 @@ var nodeTransform = new Transform(
         
         return Java.to(ret, "java.lang.String[]");
     },
-    ["nodeId", "edges", "x", "y"],
+    ["nodeId", "edgeCount", "x", "y"],
     true
 );
 
@@ -30,10 +30,15 @@ var linkTransform = new Transform(
         var posx2 = row[4];
         var posy2 = row[5];
 
-        var x1 = Math.round(posx1 * 1920/32 + 960);
-        var y1 = Math.round((posy1 - 11.04) * 1080/14.64 + 540);
-        var x2 = Math.round(posx2 * 1920/32 + 960);
-        var y2 = Math.round((posy2 - 11.04) * 1080/14.64 + 540);
+        var x1 = Math.round((posx1 + 1)/2 * 1920 + 960);
+        var y1 = Math.round((posy1 - 3)/1 * 1080);
+        var x2 = Math.round((posx2 + 1)/2 * 1920 + 960);
+        var y2 = Math.round((posy2 - 3)/1 * 1080);
+
+        var centroidx = (x1 + x2)/2;
+        var centroidy = (y1 + y2)/2;
+        var bbwidth = Math.abs(x2-x1);
+        var bbheight = Math.abs(y2-y1);
 
         var ret = [];
         ret.push(row[0]);
@@ -42,10 +47,14 @@ var linkTransform = new Transform(
         ret.push(y1);
         ret.push(x2);
         ret.push(y2);
+        ret.push(centroidx);
+        ret.push(centroidy);
+        ret.push(bbwidth);
+        ret.push(bbheight);
 
         return Java.to(ret, "java.lang.String[]");
     },
-    ["edgeId", "timestamp", "x1", "y1", "x2", "y2"],
+    ["edgeId", "timestamp", "x1", "y1", "x2", "y2", "centroidx", "centroidy", "bbwidth", "bbheight"],
     true
 );
 
