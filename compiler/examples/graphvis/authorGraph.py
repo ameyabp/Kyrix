@@ -32,6 +32,8 @@ class Author:
         self.affiliation = affiliation
         self.paperCount = 0
         self.coauthors = set()
+        self.edges = []
+        self.parentMetaNode = name  # by default a node is initialized to be its own parent
 
 class Paper:
     # edge
@@ -44,6 +46,17 @@ class Paper:
         self.conferenceName = conferenceName
         self.year = year
 
+class Author1:
+    # meta-node
+    def __init__(self, id, mainName, mainAffiliation):
+        self.metaNodeId = id
+        self.mainName = mainName
+        self.mainAffiliation = mainAffiliation
+        self.memberNodes = set()   # set of node ids
+
+class Paper1:
+    def __init__(self, id, metaNode1, metaNode2)
+
 if __name__ == '__main__':
     # PARSE THE CSV TO EXTRACT REQUIRED DATA
     df = pd.read_csv('vispub.csv', dtype={'Conference': str, 'Year': int, 'Title': str, 'AuthorNames': str, 'AuthorAffiliation': str}, na_values=[''])
@@ -52,6 +65,7 @@ if __name__ == '__main__':
     # gather nodes and index by author name
     nodeDict = {}
 
+    nodeCounter = 0
     for idx, row in df.iterrows():
         authorList = row['AuthorNames'].split(';')
         cleanedAuthorList = ["".join(filter(lambda x: not x.isdigit(), author)) for author in authorList]
@@ -61,8 +75,9 @@ if __name__ == '__main__':
         for idx, author in enumerate(cleanedAuthorList):
             affiliation = affiliationList[idx] if idx < len(affiliationList) else ''
             if author not in nodeDict:
-                node = Author(id=len(nodeDict), name=author, affiliation=affiliation)
+                node = Author(id=nodeCounter, name=author, affiliation=affiliation)
                 nodeDict[author] = node
+                nodeCounter += 1
             
             nodeDict[author].paperCount += 1
             for coauthor in cleanedAuthorList:
@@ -81,6 +96,8 @@ if __name__ == '__main__':
 
         for pair in pairs:
             edgeDict[edgeCounter] = Paper(id=edgeCounter, title=row['Title'], author1=pair[0], author2=pair[1], authorCount=len(authorList), conferenceName=row['Conference'], year=row['Year'])
+            nodeDict[pair[0]].edges.append(edgeCounter)
+            nodeDict[pair[1]].edges.append(edgeCounter)
             edgeCounter += 1
 
 
@@ -148,5 +165,56 @@ if __name__ == '__main__':
 
     # IMPLEMENT LEVEL 1 CANVAS OF GRAPH VIZ (ONE LEVEL OF CLUSTERING)
     # SIMPLE GREEDY CLUSTERING BASED ON PAPER COUNT OF AUTHOR
+    # CREATE ONE CLUSTER FOR EACH HIGH PAPER COUNT AUTHOR
+    g1 = gt.Graph(directed=False)
+
     sortedNodeDict = dict(sorted(nodeDict.items(), key=lambda x: x[1].paperCount, reverse=True))
+
+    fixedNodes = []
+    metaNodeDict = {}
+    metaEdgeDict = {}
+
+    numClusters = 1000
+    nodeCounter = 0
+    nodesClustered = set()
+
+    # create only 1000 meta nodes or clusters
+    for node in list(sortedNodeDict.values())[:numClusters]:
+        metaNode = Author1(nodeCounter, node.name, affiliation)
+        nodesClustered.add(node.name)
+        metaNodeDict[node.name] = metaNode
+
+    # each cluster contains the main node and its 1-hop neighbors
+    for metaNodeKey in metaNodeDict:
+        metaNode = metaNodeDict[metaNodeKey]
+        for edgeId in nodeDict[metaNode.mainName].edges:
+            edge = edgeDict[edgeId]
+            if edge.author1 == metaNode.mainName and edge.author2 not in nodesClustered:
+                metaNode.memberNodes.add(edge.author2)
+                nodesClustered.add(edge.author2)
+                # set the meta node as the parent node of the newly added member nodes
+                nodeDict[edge.author2].parentMetaNode = metaNode
+            elif edge.author2 == metaNode.mainName and edge.author1 not in nodesClustered:
+                metaNode.memberNodes.add(edge.author1)
+                nodesClustered.add(edge.author1)
+                # set the meta node as the parent node of the newly added member nodes
+                nodeDict[edge.author1].parentMetaNode = metaNode
+            else:
+                pass
+
+
+    for node in list(nodeDict.values()):
+        if len(node.edges) == 0 and node.name not in nodesClustered:
+            nodesClustered.add(node.name)
+
+    # if after the first pass, we do not cover all the nodes, we also include the 2-hop neighbours
+    if len(nodesClustered) != numVertices:
+        print("Need 2-hop neighbors")
+        print(len(nodesClustered))
+    else:
+        # create edge list for level 1 graph layout
+        for edge in list(edgeDict.values()):
+
+
+        g1.add_vertex(n=len(nodesClustered))
 
