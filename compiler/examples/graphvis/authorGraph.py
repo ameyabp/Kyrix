@@ -1,6 +1,7 @@
 """
 Co-author network graph
-Creating a graph dataset of authors as nodes and co-authored papers as edges.
+Creating a graph dataset of authors as nodes and co-authorship as edges
+Each edge would have as its attribute a list of papers coauthored by the connected author nodes
 The edges in such a dataset would be undirected unlike a dataset of papers citing each other.
 In the latter, papers are nodes and citations are directed edges.
 
@@ -46,9 +47,9 @@ class Edge:
 
 class Paper:
     # attribute of edge
-    def __init__(self, title, conferenceName, year):
+    def __init__(self, title, authors, conferenceName, year):
         self.paperTitle = title
-        self.authors = []
+        self.authors = authors
         self.conferenceName = conferenceName
         self.year = year
 
@@ -74,7 +75,7 @@ if __name__ == '__main__':
                 nodeDict[author] = node
                 nodeCounter += 1
             
-            nodeDict[author].papers.append(str(row['Title']) + ' ' + str(row['Conference']) + ' ' + str(row['Year']))
+            nodeDict[author].papers.append(str(row['Title']) + '-' + str(row['Conference']) + '-' + str(row['Year']))
             for coauthor in cleanedAuthorList:
                 if coauthor != author:
                     nodeDict[author].coauthors.add(coauthor)
@@ -97,13 +98,10 @@ if __name__ == '__main__':
 
             if edgeIdx not in edgeDict:
                 edge = Edge(id=edgeCounter, author1=author1, author2=author2)
-                nodeDict[author1].edges.append(edgeCounter)
-                nodeDict[author2].edges.append(edgeCounter)
                 edgeDict[edgeIdx] = edge
                 edgeCounter += 1
 
-            paper = Paper(title=row['Title'], conferenceName=row['Conference'], year=row['Year'])
-            paper.authors = cleanedAuthorList
+            paper = Paper(title=row['Title'], authors=cleanedAuthorList, conferenceName=row['Conference'], year=row['Year'])
 
             edgeDict[edgeIdx].papers.append(paper)
 
@@ -168,32 +166,33 @@ if __name__ == '__main__':
     nodesClustered = set()
 
     # create only 1000 meta nodes or clusters
-    for nodeIdx in sortedNodeDict:
-        nodeDict[nodeIdx].isMetaNode = True
+    # initialize the clusters first, then fill up the member nodes for each cluster
+    for authorName in list(sortedNodeDict.keys())[:numClusters]:
+        nodeDict[authorName].isMetaNode = True
         nodesClustered.add(node.name)
 
     # each cluster contains the main node and its 1-hop neighbors
-    for metaNodeKey in metaNodeDict:
-        metaNode = metaNodeDict[metaNodeKey]
-        for edgeId in nodeDict[metaNode.mainName].edges:
-            edge = edgeDict[edgeId]
-            if edge.author1 == metaNode.mainName and edge.author2 not in nodesClustered:
+    for authorName in list(sortedNodeDict.keys())[:numClusters]:
+        metaNode = nodeDict[authorName]
+        for coauthor in metaNode.coauthors:
+            edgeIdx = authorName + '_' + coauthor if authorName < coauthor else coauthor + '_' + authorName
+            edge = edgeDict[edgeIdx]
+            if edge.author1 == metaNode.name and edge.author2 not in nodesClustered:
                 metaNode.memberNodes.add(edge.author2)
                 nodesClustered.add(edge.author2)
                 # set the meta node as the parent node of the newly added member nodes
-                nodeDict[edge.author2].parentMetaNode = metaNode
-            elif edge.author2 == metaNode.mainName and edge.author1 not in nodesClustered:
+                nodeDict[edge.author2].parentMetaNode = metaNode.name
+            elif edge.author2 == metaNode.name and edge.author1 not in nodesClustered:
                 metaNode.memberNodes.add(edge.author1)
                 nodesClustered.add(edge.author1)
                 # set the meta node as the parent node of the newly added member nodes
-                nodeDict[edge.author1].parentMetaNode = metaNode
+                nodeDict[edge.author1].parentMetaNode = metaNode.name
             else:
                 pass
 
-
     for node in list(nodeDict.values()):
         if len(node.edges) == 0 and node.name not in nodesClustered:
-            metaNodeDict[node.name] = Author1(node.nodeId, node.name, node.affiliation)
+            node.isMetaNode = True
             nodesClustered.add(node.name)
 
     # if after the first pass, we do not cover all the nodes, we also include the 2-hop neighbours
