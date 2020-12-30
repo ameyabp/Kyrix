@@ -22,6 +22,11 @@ The vispub dataset has the data for 3109 papers, with following schema
 
 import pandas as pd
 from itertools import combinations
+import random
+# graph_tool is installed outside the virtual environment
+# add the path to the graph_tool package in sys.path
+import sys
+sys.path.append('/usr/lib/python3/dist-packages')
 import graph_tool as gt
 from graph_tool.draw import sfdp_layout
 
@@ -119,7 +124,7 @@ if __name__ == '__main__':
     # create edge list for providing to the graph tool sfdp_layout API
     edgeList = []
     for edge in list(edgeDict.values()):
-        edgeTuple = (nodeDict[edge.author1].nodeId, nodeDict[edge.author2].nodeId)
+        edgeTuple = (nodeDict[edge.authorName1].nodeId, nodeDict[edge.authorName2].nodeId)
         edgeList.append(edgeTuple)
 
     g.add_vertex(n=numVertices)
@@ -134,6 +139,7 @@ if __name__ == '__main__':
     # CREATE ONE CLUSTER FOR EACH HIGH PAPER COUNT AUTHOR
     sortedNodeDict = dict(sorted(nodeDict.items(), key=lambda x: len(x[1].papers), reverse=True))
 
+    clusterMetaNodes = []
     metaEdgeDict = {}
 
     numClusters = 1000
@@ -143,10 +149,22 @@ if __name__ == '__main__':
     # initialize the clusters first, then fill up the member nodes for each cluster
     for authorName in list(sortedNodeDict.keys())[:numClusters]:
         nodeDict[authorName].isMetaNode = True
-        nodesClustered.add(node.name)
+        nodesClustered.add(authorName)
+        clusterMetaNodes.append(authorName)
 
-    # each cluster contains the main node and its 1-hop neighbors
-    # add the 1-hop neighbors to the member nodes of each meta node
+    print("Init meta nodes:", len(nodesClustered))
+
+    # mark the authors who do not have any coauthors as meta nodes
+    # as they cannot be clustered with any other node
+    for node in list(nodeDict.values()):
+        if len(node.coauthors) == 0:
+            node.isMetaNode = True
+            nodesClustered.add(node.name)
+
+    print("Init meta nodes + single authors:", len(nodesClustered))
+
+    # cluster the remaining nodes into one of the 1000 clusters
+    # first add the 1-hop neighbors to the member nodes of each meta node
     for authorName in list(sortedNodeDict.keys())[:numClusters]:
         metaNode = nodeDict[authorName]
         for coauthor in metaNode.coauthors:
@@ -155,78 +173,110 @@ if __name__ == '__main__':
                 nodesClustered.add(coauthor)
                 nodeDict[coauthor].parentMetaNode = authorName
 
-    # mark the authors who do not have any coauthors as meta nodes
-    for node in list(nodeDict.values()):
-        if len(node.coauthors) == 0 and node.name not in nodesClustered:
-            node.isMetaNode = True
-            nodesClustered.add(node.name)
+    print("Init meta nodes + single authors + 1-hop neighbors:", len(nodesClustered))
+
+    # following iterations over all the remaining nodes which haven't been clustered yet
+    # these are the 2 and higher hop neighbors of meta nodes
+    numNodesClustered = 0
+    while numNodesClustered != len(nodesClustered):
+        numNodesClustered = len(nodesClustered)
+        for authorName in nodeDict:
+            if authorName in nodesClustered:
+                continue
+
+            node = nodeDict[authorName]
+            paperCount = 0
+            for coauthor in node.coauthors:
+                parentMetaNode = nodeDict[nodeDict[coauthor].parentMetaNode]
+                if parentMetaNode.isMetaNode and len(parentMetaNode.papers) > paperCount:
+                    nodesClustered.add(authorName)
+                    nodeDict[authorName].parentMetaNode = parentMetaNode.name
+                    paperCount = len(parentMetaNode.papers)
+
+            if authorName in nodesClustered:
+                nodeDict[nodeDict[authorName].parentMetaNode].memberNodes.add(authorName)
+
+    print("Init meta nodes + single authors + > 1-hop neighbors:", len(nodesClustered))
 
     # if after the first pass, we do not cover all the nodes, we also include the 2-hop neighbours
     if len(nodesClustered) != numVertices:
-        print("Need 2-hop neighbors")
-        print(len(nodesClustered))
-    else:
-        edgeCounter = len(edgeDict)
-        # continue the number for meta edges from the numbering for edges
-        # create edge dict and edge list for level 1 graph layout
-        for edge in list(edgeDict.values()):
-            metaNode1 = nodeDict[edge.author1].parentMetaNode
-            metaNode2 = nodeDict[edge.author2].parentMetaNode
-            edgeIdx = metaNode1 + '_' + metaNode2 if metaNode1 < metaNode2 else metaNode2 + '_' + metaNode1
-            if edgeIdx not in metaEdgeDict:
-                metaEdgeDict[edgeIdx] = Edge(id=edgeCounter, metaNode1=metaNode1, metaNode2=metaNode2, isMetaEdge=True)
-                edgeCounter += 1
-                metaEdge = metaEdgeDict[edgeIdx]
-            else:
-                metaEdge = metaEdgeDict[edgeIdx]
+        #print("Need to cluster disconnected components")
+        # randomly assign the remaining nodes to one of the clusters
+        for authorName in nodeDict:
+            if authorName in nodesClustered:
+                continue
 
-            metaEdge.papers.extend(edge.papers)
+            node = nodeDict[authorName]
+            clusterNumber = random.randint(0, numClusters-1)
+            parentMetaNode = nodeDict[clusterMetaNodes[clusterNumber]]
+            node.parentMetaNode = parentMetaNode.name
+            parentMetaNode.memberNodes.add(authorName)
+            nodesClustered.add(authorName)
 
-        
-        # node dataframe
-        nodeDf = {'nodeId': [], 'posX': [], 'posY': [], 'authorName': [], 'affiliation': [], 'paperCount': [], 'coauthorCount': [], 'memberNodeCount': []}
+        print("Init meta nodes + single authors + > 1-hop neighbors + disconnected nodes:", len(nodesClustered))
 
-        for node in list(nodeDict.values()):
-            nodeDf['nodeId'].append(node.nodeId)
-            nodeDf['posX'].append(pos[node.nodeId][0])
-            nodeDf['posY'].append(pos[node.nodeId][1])
-            nodeDf['authorName'].append(node.name)
-            nodeDf['affiliation'].append(node.affiliation)
-            nodeDf['paperCount'].append(len(node.papers))
-            nodeDf['coauthorCount'].append(len(node.coauthors))
-            nodeDf['memberNodeCount'].append(len(node.memberNodes))
+    edgeCounter = len(edgeDict)
+    # continue the number for meta edges from the numbering for edges
+    # create edge dict and edge list for level 1 graph layout
+    for edge in list(edgeDict.values()):
+        metaNode1 = nodeDict[edge.authorName1].parentMetaNode
+        metaNode2 = nodeDict[edge.authorName2].parentMetaNode
+        edgeIdx = metaNode1 + '_' + metaNode2 if metaNode1 < metaNode2 else metaNode2 + '_' + metaNode1
+        if edgeIdx not in metaEdgeDict:
+            metaEdgeDict[edgeIdx] = Edge(id=edgeCounter, author1=metaNode1, author2=metaNode2, isMetaEdge=True)
+            edgeCounter += 1
+            metaEdge = metaEdgeDict[edgeIdx]
+        else:
+            metaEdge = metaEdgeDict[edgeIdx]
 
-        # edge dataframe
-        edgeDf = {'edgeId': [], 'x1': [], 'y1': [], 'x2': [], 'y2': [], 'author1': [], 'author2': [], 'paperCount': [], 'isMetaEdge': []}
-        
-        for edge in list(edgeDict.values()):
-            edgeDf['edgeId'].append(edge.edgeId)
-            edgeDf['x1'].append(pos[nodeDict[edge.author1].nodeId][0])
-            edgeDf['y1'].append(pos[nodeDict[edge.author1].nodeId][1])
-            edgeDf['x2'].append(pos[nodeDict[edge.author2].nodeId][0])
-            edgeDf['y2'].append(pos[nodeDict[edge.author2].nodeId][1])        
-            edgeDf['author1'].append(edge.author1)
-            edgeDf['author2'].append(edge.author2)
-            edgeDf['paperCount'].append(len(edge.papers))
-            edgeDf['isMetaEdge'].append(False)
+        metaEdge.papers.extend(edge.papers)
 
-        for edge in list(metaEdgeDict.values()):
-            edgeDf['edgeId'].append(edge.edgeId)
-            edgeDf['x1'].append(pos[nodeDict[edge.author1].nodeId][0])
-            edgeDf['y1'].append(pos[nodeDict[edge.author1].nodeId][1])
-            edgeDf['x2'].append(pos[nodeDict[edge.author2].nodeId][0])
-            edgeDf['y2'].append(pos[nodeDict[edge.author2].nodeId][1])        
-            edgeDf['author1'].append(edge.author1)
-            edgeDf['author2'].append(edge.author2)
-            edgeDf['paperCount'].append(len(edge.papers))
-            edgeDf['isMetaEdge'].append(True)
+    
+    # node dataframe
+    nodeDf = {'nodeId': [], 'posX': [], 'posY': [], 'authorName': [], 'affiliation': [], 'paperCount': [], 'coauthorCount': [], 'memberNodeCount': [], 'isMetaNode': []}
 
-        df = pd.DataFrame(data=nodeDf)
-        with open('graphNodesData.csv', 'w') as g:
-            df.to_csv(path_or_buf=g, index=False)
-            g.close()
+    for node in list(nodeDict.values()):
+        nodeDf['nodeId'].append(node.nodeId)
+        nodeDf['posX'].append(pos[node.nodeId][0])
+        nodeDf['posY'].append(pos[node.nodeId][1])
+        nodeDf['authorName'].append(node.name)
+        nodeDf['affiliation'].append(node.affiliation)
+        nodeDf['paperCount'].append(len(node.papers))
+        nodeDf['coauthorCount'].append(len(node.coauthors))
+        nodeDf['memberNodeCount'].append(len(node.memberNodes))
+        nodeDf['isMetaNode'].append(node.isMetaNode)
 
-        df = pd.DataFrame(data=edgeDf)
-        with open('graphEdgesData.csv', 'w') as g:
-            df.to_csv(path_or_buf=g, index=False)
-            g.close()
+    # edge dataframe
+    edgeDf = {'edgeId': [], 'x1': [], 'y1': [], 'x2': [], 'y2': [], 'author1': [], 'author2': [], 'paperCount': [], 'isMetaEdge': []}
+    
+    for edge in list(edgeDict.values()):
+        edgeDf['edgeId'].append(edge.edgeId)
+        edgeDf['x1'].append(pos[nodeDict[edge.authorName1].nodeId][0])
+        edgeDf['y1'].append(pos[nodeDict[edge.authorName1].nodeId][1])
+        edgeDf['x2'].append(pos[nodeDict[edge.authorName2].nodeId][0])
+        edgeDf['y2'].append(pos[nodeDict[edge.authorName2].nodeId][1])        
+        edgeDf['author1'].append(edge.authorName1)
+        edgeDf['author2'].append(edge.authorName2)
+        edgeDf['paperCount'].append(len(edge.papers))
+        edgeDf['isMetaEdge'].append(False)
+
+    for edge in list(metaEdgeDict.values()):
+        edgeDf['edgeId'].append(edge.edgeId)
+        edgeDf['x1'].append(pos[nodeDict[edge.authorName1].nodeId][0])
+        edgeDf['y1'].append(pos[nodeDict[edge.authorName1].nodeId][1])
+        edgeDf['x2'].append(pos[nodeDict[edge.authorName2].nodeId][0])
+        edgeDf['y2'].append(pos[nodeDict[edge.authorName2].nodeId][1])        
+        edgeDf['author1'].append(edge.authorName1)
+        edgeDf['author2'].append(edge.authorName2)
+        edgeDf['paperCount'].append(len(edge.papers))
+        edgeDf['isMetaEdge'].append(True)
+
+    df = pd.DataFrame(data=nodeDf)
+    with open('graphNodesData.csv', 'w') as g:
+        df.to_csv(path_or_buf=g, index=False)
+        g.close()
+
+    df = pd.DataFrame(data=edgeDf)
+    with open('graphEdgesData.csv', 'w') as g:
+        df.to_csv(path_or_buf=g, index=False)
+        g.close()
