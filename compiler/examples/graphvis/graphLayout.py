@@ -24,19 +24,19 @@ if __name__ == '__main__':
         edge = line.split(' ')
         vertex1 = int(edge[0]) - 1
         vertex2 = int(edge[1]) - 1
-        if vertex1 > 10000 or vertex2 > 10000:
-            continue
-        if vertex1 not in vertexSet:
-            vertexSet.add(vertex1)
-        if vertex2 not in vertexSet:
-            vertexSet.add(vertex2)
-        #vertexSet.add(vertex1)
-        #vertexSet.add(vertex2)
+        # if vertex1 > 10000 or vertex2 > 10000:
+        #     continue
+        # if vertex1 not in vertexSet:
+        #     vertexSet.add(vertex1)
+        # if vertex2 not in vertexSet:
+        #     vertexSet.add(vertex2)
+        # vertexSet.add(vertex1)
+        # vertexSet.add(vertex2)
         timestamp = int(edge[3])
         edge_tuple = (vertex1, vertex2, timestamp)
         edge_list.append(edge_tuple)
 
-    numVertices = len(vertexSet)
+    #numVertices = len(vertexSet)
     g.add_vertex(numVertices)
     g.add_edge_list(edge_list, eprops=[etimestamp])
 
