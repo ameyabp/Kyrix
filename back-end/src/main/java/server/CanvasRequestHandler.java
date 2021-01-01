@@ -122,7 +122,13 @@ public class CanvasRequestHandler implements HttpHandler {
             System.out.println(sql);
 
             // run query, add to response
-            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
+            // hardcode for now for StaticAggregationIndexer
+            // which needs to query raw db, rather than kyrix db
+            // in the most common case
+            if (l.getIndexerType().equals("StaticAggregationIndexer")) {
+                data.add(DbConnector.getQueryResult(l.getTransform().getDb(), sql));
+                DbConnector.closeConnection(l.getTransform().getDb());
+            } else data.add(DbConnector.getQueryResult(Config.databaseName, sql));
         }
 
         return data;

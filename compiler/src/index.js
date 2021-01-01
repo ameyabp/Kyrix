@@ -3,11 +3,11 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
-const Canvas = require("./Canvas").Canvas;
-const View = require("./View").View;
-const Jump = require("./Jump").Jump;
-const Layer = require("./Layer").Layer;
-const Transform = require("./Transform").Transform;
+const addTable = require("./template-api/addTable").addTable;
+const addSSV = require("./template-api/addSSV").addSSV;
+const addUSMap = require("./template-api/addUSMap").addUSMap;
+const addStaticAggregation = require("./template-api/addStaticAggregation")
+    .addStaticAggregation;
 
 /**
  *
@@ -47,6 +47,12 @@ function Project(name, configFile) {
     // set of tables
     this.tables = [];
 
+    // set of usmaps
+    this.usmaps = [];
+
+    // set of static aggregations
+    this.staticAggregations = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -56,21 +62,9 @@ function Project(name, configFile) {
 
 // Add a view to a project.
 function addView(view) {
-    for (var i = 0; i < this.views.length; i++) {
+    for (var i = 0; i < this.views.length; i++)
         if (this.views[i].id == view.id)
             throw new Error("Adding View: view id already existed.");
-        if (
-            this.views[i].minx > view.minx + view.width ||
-            this.views[i].miny > view.miny + view.height ||
-            view.minx > this.views[i].minx + this.views[i].width ||
-            view.miny > this.views[i].miny + this.views[i].height
-        )
-            continue;
-        else
-            throw new Error(
-                "Adding View: this view intersects with an existing view."
-            );
-    }
     this.views.push(view);
 }
 
@@ -186,263 +180,6 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
-// Add a Tabular vis to a project
-function addTable(table, args) {
-    if (args == null) args = {};
-
-    this.tables.push(table);
-    table.name = "kyrix_table_" + (this.tables.length - 1);
-
-    table.renderingParams = {
-        [table.name]: {
-            x: table.x,
-            y: table.y,
-            heads: {
-                height: table.heads_height,
-                names: table.heads_names
-            },
-            width: table.width,
-            cell_height: table.cell_height,
-            fields: table.schema.slice(0, table.schema.indexOf("rn"))
-        }
-    };
-
-    var canvas = new Canvas(
-        table.name,
-        Math.ceil(table.sum_width),
-        0,
-        "",
-        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
-    );
-    this.addCanvas(canvas);
-    this.addStyles(__dirname + "/template-api/css/table.css");
-    this.addRenderingParams(table.renderingParams);
-    var transform_func = table.getTableTransformFunc();
-    var tableTransform = new Transform(
-        table.query,
-        table.db,
-        transform_func,
-        table.schema,
-        true
-    );
-
-    var tableLayer = new Layer(tableTransform, false);
-    tableLayer.addPlacement(table.placement);
-    tableLayer.addRenderingFunc(table.getTableRenderer());
-    if (table.group_by.length > 0) {
-        tableLayer.setIndexerType("PsqlPredicatedTableIndexer");
-    }
-    canvas.addLayer(tableLayer);
-
-    if (!args.view) {
-        var tableView = new View(
-            table.name + "_view",
-            0,
-            0,
-            Math.floor(table.sum_width * 0.8),
-            700
-        );
-        this.addView(tableView);
-        this.setInitialStates(tableView, canvas, 0, 0);
-    } else if (!(args.view instanceof View))
-        throw new Error("Constructing Table: view must be a View object");
-
-    return {canvas, view: args.view ? args.view : tableView};
-}
-
-/**
- * Add an ssv to a project, this will create a hierarchy of canvases that form a pyramid shape
- * @param ssv an SSV object
- * @param args an dictionary that contains customization parameters, see doc
- * @returns {Array} an array of canvas objects that correspond to the hierarchy
- */
-function addSSV(ssv, args) {
-    if (args == null) args = {};
-
-    // add to project
-    this.ssvs.push(ssv);
-
-    // add stuff to renderingParam
-    var renderingParams = {
-        textwrap: require("./template-api/Utilities").textwrap,
-        processClusterAgg: require("./template-api/SSV").processClusterAgg,
-        serializePath: require("./template-api/Utilities").serializePath,
-        translatePathSegments: require("./template-api/Utilities")
-            .translatePathSegments,
-        parsePathIntoSegments: require("./template-api/Utilities")
-            .parsePathIntoSegments,
-        aggKeyDelimiter: ssv.aggKeyDelimiter,
-        loX: ssv.loX,
-        loY: ssv.loY,
-        hiX: ssv.hiX,
-        hiY: ssv.hiY,
-        bboxW: ssv.bboxW,
-        bboxH: ssv.bboxH,
-        zoomFactor: ssv.zoomFactor,
-        fadeInDuration: 200,
-        geoInitialLevel: ssv.geoInitialLevel,
-        geoInitialCenterLat: ssv.geoLat,
-        geoInitialCenterLon: ssv.geoLon
-    };
-    renderingParams = {
-        ...renderingParams,
-        ...ssv.clusterParams,
-        ...ssv.aggregateParams,
-        ...ssv.hoverParams,
-        ...ssv.legendParams,
-        ...ssv.axisParams
-    };
-    var rpKey = "ssv_" + (this.ssvs.length - 1);
-    var rpDict = {};
-    rpDict[rpKey] = renderingParams;
-    this.addRenderingParams(rpDict);
-
-    // construct canvases
-    var curPyramid = [];
-    var transform = new Transform(ssv.query, ssv.db, "", [], true);
-    var numLevels = Math.min(
-        ssv.numLevels,
-        args.pyramid ? args.pyramid.length : 1e10
-    );
-    for (var i = 0; i < numLevels; i++) {
-        var width = (ssv.topLevelWidth * Math.pow(ssv.zoomFactor, i)) | 0;
-        var height = (ssv.topLevelHeight * Math.pow(ssv.zoomFactor, i)) | 0;
-
-        // construct a new canvas
-        var curCanvas;
-        if (args.pyramid) {
-            curCanvas = args.pyramid[i];
-            if (
-                Math.abs(curCanvas.width - width) > 1e-3 ||
-                Math.abs(curCanvas.height - height) > 1e-3
-            )
-                throw new Error("Adding SSV: Canvas sizes do not match.");
-        } else {
-            curCanvas = new Canvas(
-                "ssv" + (this.ssvs.length - 1) + "_" + "level" + i,
-                width,
-                height
-            );
-            this.addCanvas(curCanvas);
-        }
-        curPyramid.push(curCanvas);
-
-        // add static legend layer
-        var staticLayer = new Layer(null, true);
-        curCanvas.addLayer(staticLayer);
-        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
-        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
-
-        // create one layer
-        var curLayer = new Layer(transform, false);
-        curCanvas.addLayer(curLayer);
-
-        // set fetching scheme
-        if (ssv.clusterMode == "contour" || ssv.clusterMode == "heatmap")
-            curLayer.setFetchingScheme("dbox", false);
-        //curLayer.setFetchingScheme("tiling");
-
-        // set ssv ID
-        curLayer.setIndexerType("SSVInMemoryIndexer");
-        //curLayer.setIndexerType("SSVCitusIndexer");
-        curLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
-
-        // dummy placement
-        curLayer.addPlacement({
-            centroid_x: "con:0",
-            centroid_y: "con:0",
-            width: "con:0",
-            height: "con:0"
-        });
-
-        // construct rendering function
-        curLayer.addRenderingFunc(ssv.getLayerRenderer());
-
-        // tooltips
-        curLayer.addTooltip(ssv.tooltipColumns, ssv.tooltipAliases);
-
-        // map layer
-        if (ssv.mapBackground) {
-            var mapLayer = new Layer(
-                require("./Transform").defaultEmptyTransform,
-                false
-            );
-            curCanvas.addLayer(mapLayer);
-            mapLayer.addRenderingFunc(ssv.getMapRenderer());
-            mapLayer.addPlacement({
-                centroid_x: "con:0",
-                centroid_y: "con:0",
-                width: "con:0",
-                height: "con:0"
-            });
-            mapLayer.setFetchingScheme("dbox", false);
-            mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
-        }
-
-        // axes
-        if (ssv.axis) {
-            curCanvas.addAxes(
-                ssv.getAxesRenderer(i),
-                "ssv_" + (this.ssvs.length - 1)
-            );
-        }
-    }
-
-    // literal zooms
-    for (var i = 0; i + 1 < ssv.numLevels; i++) {
-        var hasLiteralZoomIn = false;
-        var hasLiteralZoomOut = false;
-        for (var j = 0; j < this.jumps.length; j++) {
-            if (
-                this.jumps[j].sourceId == curPyramid[i].id &&
-                this.jumps[j].type == "literal_zoom_in"
-            ) {
-                if (this.jumps[j].destId != curPyramid[i + 1].id)
-                    throw new Error(
-                        "Adding SSV: malformed literal zoom pyramid."
-                    );
-                hasLiteralZoomIn = true;
-            }
-            if (
-                this.jumps[j].sourceId == curPyramid[i + 1].id &&
-                this.jumps[j].type == "literal_zoom_out"
-            ) {
-                if (this.jumps[j].destId != curPyramid[i].id)
-                    throw new Error(
-                        "Adding SSV: malformed literal zoom pyramid."
-                    );
-                hasLiteralZoomOut = true;
-            }
-        }
-        if (!hasLiteralZoomIn)
-            this.addJump(
-                new Jump(curPyramid[i], curPyramid[i + 1], "literal_zoom_in")
-            );
-        if (!hasLiteralZoomOut)
-            this.addJump(
-                new Jump(curPyramid[i + 1], curPyramid[i], "literal_zoom_out")
-            );
-    }
-
-    // create a new view if not specified
-    if (!args.view) {
-        var viewId = "ssv" + (this.ssvs.length - 1);
-        var view = new View(
-            viewId,
-            0,
-            0,
-            ssv.topLevelWidth,
-            ssv.topLevelHeight
-        );
-        this.addView(view);
-        // initialize view
-        this.setInitialStates(view, curPyramid[0], 0, 0);
-    } else if (!(args.view instanceof View))
-        throw new Error("Constructing SSV: view must be a View object");
-
-    return {pyramid: curPyramid, view: args.view ? args.view : view};
-}
-
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
     if (renderingParams == null) return;
@@ -475,8 +212,8 @@ function addStyles(styles) {
         rules = styles;
     }
 
-    this.styles.push(rules);
     // merge with current CSS
+    this.styles.push(rules);
 }
 
 /**
@@ -862,8 +599,10 @@ Project.prototype = {
     addView,
     addCanvas,
     addJump,
-    addTable,
     addSSV,
+    addTable,
+    addUSMap,
+    addStaticAggregation,
     addRenderingParams,
     addStyles,
     setInitialStates,

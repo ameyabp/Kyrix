@@ -23,6 +23,8 @@ function renderStaticLayers(viewId) {
         var args = getOptionalArgs(viewId);
         args["layerId"] = i;
         args["ssvId"] = curLayer.ssvId;
+        args["usmapId"] = curLayer.usmapId;
+        args["staticAggregationId"] = curLayer.staticAggregationId;
         renderFunc(curSvg, gvd.curStaticData[i], args);
 
         // tooltips

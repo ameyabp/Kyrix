@@ -128,7 +128,8 @@ public class Server {
         for (int i = 0; i < predicates.size(); i++) {
             String predicate = predicates.get(i);
             if (predicate.isEmpty()) continue;
-            ArrayList<String> colNames = c.getLayers().get(i).getTransform().getColumnNames();
+            ArrayList<String> colNames =
+                    c.getLayers().get(i).getTransform().getFilterableColumnNames();
             if (!checkPredicate(predicate, colNames)) {
                 System.out.println(predicate);
                 System.out.println(colNames);
@@ -280,6 +281,7 @@ public class Server {
             httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_NO_CONTENT, -1);
             return;
         }
+        httpExchange.getResponseHeaders().add("Content-Type", "text/plain");
         sendResponse(httpExchange, responseCode, response.getBytes(), response.getBytes().length);
     }
 
