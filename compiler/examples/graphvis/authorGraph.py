@@ -131,7 +131,7 @@ if __name__ == '__main__':
     g.add_edge_list(edgeList)
 
     # generate the graph layout
-    pos = sfdp_layout(g)
+    pos = sfdp_layout(g=g, C=1, p=4, mu_p=0)
 
     # IMPLEMENT LEVEL 1 CANVAS OF GRAPH VIZ (ONE LEVEL OF CLUSTERING)
     # SIMPLE GREEDY CLUSTERING BASED ON PAPER COUNT OF AUTHOR WHICH IS A BETTER MEASURE OF
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     clusterMetaNodes = []
     metaEdgeDict = {}
 
-    numClusters = 1000
+    numClusters = 500
     nodesClustered = set()
 
     # create only 1000 meta nodes or clusters

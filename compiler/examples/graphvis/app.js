@@ -14,6 +14,23 @@ const placements = require("./placements");
 var p = new Project("graphvis", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
+// ================== Canvas 0 ===================
+// base level - no clustering
+var bgCanvas0 = new Canvas("bgCanvas0", 3840, 2160);
+p.addCanvas(bgCanvas0);
+
+// node layer
+var nodeLayer = new Layer(transforms.nodeTransformc0, false);
+bgCanvas0.addLayer(nodeLayer);
+nodeLayer.addPlacement(placements.nodePlacementc0);
+nodeLayer.addRenderingFunc(renderers.nodeRenderingc0);
+
+// link layer
+var linkLayer = new Layer(transforms.linkTransformc0, false);
+bgCanvas0.addLayer(linkLayer);
+linkLayer.addPlacement(placements.linkPlacementc0);
+linkLayer.addRenderingFunc(renderers.linkRenderingc0);
+
 // ================== Canvas 1 ===================
 // one level of clustering
 var bgCanvas1 = new Canvas("bgCanvas1", 1920, 1080);
@@ -31,23 +48,6 @@ bgCanvas1.addLayer(linkLayer);
 linkLayer.addPlacement(placements.linkPlacementc1);
 linkLayer.addRenderingFunc(renderers.linkRenderingc1);
 
-// ================== Canvas 2 ===================
-// no clustering
-var bgCanvas2 = new Canvas("bgCanvas2", 3840, 2160);
-p.addCanvas(bgCanvas2);
-
-// node layer
-var nodeLayer = new Layer(transforms.nodeTransformc2, false);
-bgCanvas2.addLayer(nodeLayer);
-nodeLayer.addPlacement(placements.nodePlacementc2);
-nodeLayer.addRenderingFunc(renderers.nodeRenderingc2);
-
-// link layer
-var linkLayer = new Layer(transforms.linkTransformc2, false);
-bgCanvas2.addLayer(linkLayer);
-linkLayer.addPlacement(placements.linkPlacementc2);
-linkLayer.addRenderingFunc(renderers.linkRenderingc2);
-
 
 // ================== Views ===================
 var view = new View("graphvis", 0, 0, 1920, 1080);
@@ -55,8 +55,8 @@ p.addView(view);
 p.setInitialStates(view, bgCanvas1, 0, 0);
 
 // ================= Jumps ====================
-var jumpIn = new Jump(bgCanvas1, bgCanvas2, "literal_zoom_in");
-var jumpOut = new Jump(bgCanvas2, bgCanvas1, "literal_zoom_out");
+var jumpIn = new Jump(bgCanvas1, bgCanvas0, "literal_zoom_in");
+var jumpOut = new Jump(bgCanvas0, bgCanvas1, "literal_zoom_out");
 p.addJump(jumpIn);
 p.addJump(jumpOut);
 
