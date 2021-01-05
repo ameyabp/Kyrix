@@ -152,12 +152,13 @@ function makeTooltips(selection, columns, aliases) {
         // column values
         rows.append("td")
             .html(function(p) {
-                if (p != "fire_year" && p != "fire_size") {
-                    if (!isNaN(d[p])) return d3.format(",.2f")(d[p]);
-                    else return d[p];
-                }
-                if (p == "fire_year") return d[p];
-                if (p == "fire_size") return d3.format(",.2f")(d[p]) + " acres";
+                if (
+                    (typeof d[p] == "number" ||
+                        (typeof d[p] == "string" && d[p].length > 0)) &&
+                    !isNaN(d[p])
+                )
+                    return d3.format(",.2f")(d[p]);
+                else return d[p];
             })
             .style("font-weight", "900")
             .style("padding-left", "2px")

@@ -31,7 +31,10 @@ import graph_tool as gt
 from graph_tool.draw import sfdp_layout
 
 from sklearn.cluster import AgglomerativeClustering
+<<<<<<< HEAD
 from sklearn.preprocessing import MinMaxScaler
+=======
+>>>>>>> e113f6a914f7da9d889fd6b3ae8a488bee9bf6c0
 import numpy as np
 
 class Node:

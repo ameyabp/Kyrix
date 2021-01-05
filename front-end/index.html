@@ -1,21 +1,12 @@
 <html>
     <body>
-        <p
-            style="text-align: center; z-index: 1000; font-size: 18px; position: -webkit-sticky; /* Safari */
-  position: sticky; top: 30px"
-        >
-            Visualization generated using
-            <a target="_blank" href="http://github.com/tracyhenry/kyrix"
-                >Kyrix</a
-            >, an open-source tool for big data visualization.
-        </p>
-        <p
-            style="text-align: center; z-index: 1000; font-size: 13px; position: -webkit-sticky; /* Safari */
-  position: sticky; top: 60px"
-        ></p>
+        <div>
+            <!-- kyrix div -->
+        </div>
     </body>
     <head>
         <meta name="referrer" content="no-referrer" />
+        <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
         <link
             rel="stylesheet"
@@ -47,7 +38,15 @@
         <script src="/js/jump.js"></script>
         <script src="/js/staticLayers.js"></script>
         <script>
-            $(document).ready(pageOnLoad());
+            $(document).ready(
+                pageOnLoad(
+                    "",
+                    d3
+                        .select("body")
+                        .select("div")
+                        .node()
+                )
+            );
         </script>
     </head>
 </html>

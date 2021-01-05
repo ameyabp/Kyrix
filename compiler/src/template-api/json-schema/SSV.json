@@ -1,0 +1,690 @@
+{
+    "type": "object",
+    "definitions": {
+        "nonEmptyString": {
+            "type": "string",
+            "minLength": 1
+        },
+        "nonEmptyStringArray": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/nonEmptyString"
+            }
+        },
+        "twoNumberArray": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "aggregationFunctions": {
+            "enum": ["count", "sum", "avg", "min", "max", "sqrsum"]
+        }
+    },
+    "properties": {
+        "data": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
+                "db": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
+                "columnNames": {
+                    "default": []
+                }
+            },
+            "required": ["query", "db"],
+            "additionalProperties": false
+        },
+        "layout": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "$ref": "#/definitions/nonEmptyString"
+                        },
+                        "extent": {
+                            "$ref": "#/definitions/twoNumberArray"
+                        }
+                    },
+                    "required": ["field"],
+                    "additionalProperties": false
+                },
+                "y": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "$ref": "#/definitions/nonEmptyString"
+                        },
+                        "extent": {
+                            "$ref": "#/definitions/twoNumberArray"
+                        }
+                    },
+                    "required": ["field"],
+                    "additionalProperties": false
+                },
+                "z": {
+                    "type": "object",
+                    "properties": {
+                        "field": {
+                            "$ref": "#/definitions/nonEmptyString"
+                        },
+                        "order": {
+                            "enum": ["asc", "desc"]
+                        }
+                    },
+                    "required": ["field", "order"],
+                    "additionalProperties": false
+                },
+                "overlap": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "geo": {
+                    "type": "object",
+                    "properties": {
+                        "center": {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": [
+                                {
+                                    "type": "number",
+                                    "minimum": -90,
+                                    "maximum": 90
+                                },
+                                {
+                                    "type": "number",
+                                    "minimum": -180,
+                                    "maximum": 180
+                                }
+                            ]
+                        },
+                        "level": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 19
+                        }
+                    },
+                    "required": ["center", "level"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["x", "y", "z"],
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "required": ["geo"]
+                    },
+                    "then": {
+                        "properties": {
+                            "x": {
+                                "properties": {
+                                    "extent": {
+                                        "type": "null"
+                                    }
+                                }
+                            },
+                            "y": {
+                                "properties": {
+                                    "extent": {
+                                        "type": "null"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "marks": {
+            "type": "object",
+            "properties": {
+                "cluster": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "enum": [
+                                "custom",
+                                "circle",
+                                "contour",
+                                "heatmap",
+                                "radar",
+                                "pie",
+                                "dot"
+                            ]
+                        },
+                        "aggregate": {
+                            "type": "object",
+                            "properties": {
+                                "measures": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "field": {
+                                                        "$ref": "#/definitions/nonEmptyString"
+                                                    },
+                                                    "function": {
+                                                        "$ref": "#/definitions/aggregationFunctions"
+                                                    },
+                                                    "extent": {
+                                                        "$ref": "#/definitions/twoNumberArray"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "field",
+                                                    "function"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "fields": {
+                                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                                },
+                                                "function": {
+                                                    "$ref": "#/definitions/aggregationFunctions"
+                                                },
+                                                "extent": {
+                                                    "$ref": "#/definitions/twoNumberArray"
+                                                }
+                                            },
+                                            "required": ["fields", "function"],
+                                            "additionalProperties": false
+                                        }
+                                    ],
+                                    "default": []
+                                },
+                                "dimensions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "field": {
+                                                "$ref": "#/definitions/nonEmptyString"
+                                            },
+                                            "domain": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "required": ["field", "domain"],
+                                        "additionalProperties": false
+                                    },
+                                    "default": []
+                                }
+                            },
+                            "additionalProperties": false,
+                            "default": {
+                                "measures": [],
+                                "dimensions": []
+                            }
+                        },
+                        "custom": {"typeofFunction": true},
+                        "config": {
+                            "type": "object",
+                            "properties": {
+                                "bboxW": {
+                                    "type": "integer"
+                                },
+                                "bboxH": {
+                                    "type": "integer"
+                                },
+                                "circleMinSize": {
+                                    "type": "integer",
+                                    "minimum": 30,
+                                    "maximum": 100,
+                                    "default": 30
+                                },
+                                "circleMaxSize": {
+                                    "type": "integer",
+                                    "minimum": 30,
+                                    "maximum": 100,
+                                    "default": 70
+                                },
+                                "contourBandwidth": {
+                                    "type": "integer",
+                                    "default": 30
+                                },
+                                "contourRadius": {
+                                    "type": "integer",
+                                    "default": 120
+                                },
+                                "contourColorScheme": {
+                                    "type": "string",
+                                    "default": "interpolateViridis"
+                                },
+                                "contourOpacity": {
+                                    "type": "number",
+                                    "minimum": 0.2,
+                                    "maximum": 1,
+                                    "default": 1
+                                },
+                                "heatmapRadius": {
+                                    "type": "integer",
+                                    "minimum": 30,
+                                    "maximum": 120,
+                                    "default": 80
+                                },
+                                "heatmapOpacity": {
+                                    "type": "number",
+                                    "minimum": 0.2,
+                                    "maximum": 1,
+                                    "default": 1
+                                },
+                                "radarRadius": {
+                                    "type": "integer",
+                                    "minimum": 30,
+                                    "maximum": 120,
+                                    "default": 80
+                                },
+                                "radarTicks": {
+                                    "type": "integer",
+                                    "minimum": 2,
+                                    "maximum": 10,
+                                    "default": 5
+                                },
+                                "pieInnerRadius": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 40,
+                                    "default": 1
+                                },
+                                "pieOuterRadius": {
+                                    "type": "integer",
+                                    "minimum": 20,
+                                    "maximum": 120,
+                                    "default": 80
+                                },
+                                "pieCornerRadius": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 15,
+                                    "default": 5
+                                },
+                                "padAngle": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 0.5,
+                                    "default": 0.05
+                                },
+                                "pieLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString",
+                                    "default": "Legend"
+                                },
+                                "pieLegendDomain": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
+                                "dotSizeColumn": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "dotSizeDomain": {
+                                    "$ref": "#/definitions/twoNumberArray"
+                                },
+                                "dotSizeLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "dotMaxSize": {
+                                    "type": "integer",
+                                    "minimum": 5,
+                                    "maximum": 50,
+                                    "default": 15
+                                },
+                                "dotColorColumn": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "dotColorDomain": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 8
+                                },
+                                "dotColorLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "clusterCount": {
+                                    "type": "boolean",
+                                    "default": false
+                                }
+                            },
+                            "default": {},
+                            "additionalProperties": false,
+                            "allOf": [
+                                {
+                                    "if": {
+                                        "anyOf": [
+                                            {
+                                                "required": ["dotSizeDomain"]
+                                            },
+                                            {
+                                                "required": [
+                                                    "dotSizeLegendTitle"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "then": {
+                                        "required": ["dotSizeColumn"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotSizeColumn"]
+                                    },
+                                    "then": {
+                                        "required": ["dotSizeDomain"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "anyOf": [
+                                            {
+                                                "required": ["dotColorDomain"]
+                                            },
+                                            {
+                                                "required": [
+                                                    "dotColorLegendTitle"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "then": {
+                                        "required": ["dotColorColumn"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotColorColumn"]
+                                    },
+                                    "then": {
+                                        "required": ["dotColorDomain"]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "required": ["mode"],
+                    "additionalProperties": false,
+                    "allOf": [
+                        {
+                            "if": {
+                                "properties": {
+                                    "mode": {
+                                        "enum": ["custom"]
+                                    }
+                                }
+                            },
+                            "then": {
+                                "required": ["custom"]
+                            }
+                        },
+                        {
+                            "if": {
+                                "properties": {
+                                    "mode": {
+                                        "enum": [
+                                            "radar",
+                                            "circle",
+                                            "heatmap",
+                                            "contour"
+                                        ]
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "aggregate": {
+                                        "properties": {
+                                            "dimensions": {
+                                                "maxItems": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "if": {
+                                "properties": {
+                                    "mode": {
+                                        "enum": ["dot"]
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "aggregate": {
+                                        "properties": {
+                                            "measures": {
+                                                "type": "array",
+                                                "maxItems": 0
+                                            },
+                                            "dimensions": {
+                                                "maxItems": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "hover": {
+                    "type": "object",
+                    "properties": {
+                        "rankList": {
+                            "type": "object",
+                            "properties": {
+                                "mode": {
+                                    "enum": ["tabular", "custom"]
+                                },
+                                "topk": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 8,
+                                    "default": 1
+                                },
+                                "fields": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
+                                "custom": {"typeofFunction": true},
+                                "orientation": {
+                                    "enum": ["vertical", "horizontal"],
+                                    "default": "vertical"
+                                },
+                                "config": {
+                                    "type": "object",
+                                    "properties": {
+                                        "bboxW": {
+                                            "type": "number"
+                                        },
+                                        "bboxH": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "default": {},
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": ["mode"],
+                            "additionalProperties": false,
+                            "allOf": [
+                                {
+                                    "if": {
+                                        "properties": {
+                                            "mode": {
+                                                "enum": ["tabular"]
+                                            }
+                                        }
+                                    },
+                                    "then": {
+                                        "required": ["fields"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "properties": {
+                                            "mode": {
+                                                "enum": ["custom"]
+                                            }
+                                        }
+                                    },
+                                    "then": {
+                                        "properties": {
+                                            "config": {
+                                                "required": ["bboxW", "bboxH"]
+                                            }
+                                        },
+                                        "required": ["custom", "config"]
+                                    }
+                                }
+                            ]
+                        },
+                        "tooltip": {
+                            "type": "object",
+                            "properties": {
+                                "columns": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
+                                "aliases": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                }
+                            },
+                            "required": ["columns"],
+                            "additionalProperties": false
+                        },
+                        "boundary": {
+                            "enum": ["bbox", "convexhull"]
+                        },
+                        "selector": {
+                            "$ref": "#/definitions/nonEmptyString",
+                            "default": "*"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "default": {}
+                }
+            },
+            "required": ["cluster"],
+            "additionalProperties": false
+        },
+        "config": {
+            "type": "object",
+            "properties": {
+                "axis": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "xAxisTitle": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
+                "yAxisTitle": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
+                "numLevels": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 50,
+                    "default": 10
+                },
+                "topLevelWidth": {
+                    "type": "number",
+                    "minimum": 200,
+                    "maximum": 4000,
+                    "default": 1000
+                },
+                "topLevelHeight": {
+                    "type": "number",
+                    "minimum": 200,
+                    "maximum": 4000,
+                    "default": 1000
+                },
+                "zoomFactor": {
+                    "type": "number",
+                    "minimum": 1.1,
+                    "maximum": 5,
+                    "default": 2
+                },
+                "map": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "numberFormat": {
+                    "type": "string",
+                    "default": "~s"
+                }
+            },
+            "additionalProperties": false,
+            "default": {}
+        }
+    },
+    "required": ["data", "layout", "marks"],
+    "additionalProperties": false,
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "config": {
+                        "properties": {
+                            "axis": {
+                                "enum": [true]
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "layout": {
+                        "properties": {
+                            "x": {
+                                "required": ["extent"]
+                            },
+                            "y": {
+                                "required": ["extent"]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "config": {
+                        "properties": {
+                            "map": {
+                                "enum": [true]
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "layout": {
+                        "required": ["geo"]
+                    }
+                }
+            }
+        }
+    ]
+}
