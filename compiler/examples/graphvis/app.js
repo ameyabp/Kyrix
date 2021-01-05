@@ -24,15 +24,17 @@ var nodeLayer = new Layer(transforms.nodeTransformc0, false);
 bgCanvas0.addLayer(nodeLayer);
 nodeLayer.addPlacement(placements.nodePlacementc0);
 nodeLayer.addRenderingFunc(renderers.nodeRenderingc0);
+nodeLayer.addTooltip(["authorName", "affiliation", "paperCount", "coauthorCount"], ["Name", "Affiliation", "Paper count", "Coauthor count"]);
 
 // link layer
 var linkLayer = new Layer(transforms.linkTransformc0, false);
 bgCanvas0.addLayer(linkLayer);
 linkLayer.addPlacement(placements.linkPlacementc0);
 linkLayer.addRenderingFunc(renderers.linkRenderingc0);
+linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 2", "Paper count"]);
 
 // ================== Canvas 1 ===================
-// one level of clustering
+// first level of clustering
 var bgCanvas1 = new Canvas("bgCanvas1", 1920, 1080);
 p.addCanvas(bgCanvas1);
 
@@ -41,24 +43,49 @@ var nodeLayer = new Layer(transforms.nodeTransformc1, false);
 bgCanvas1.addLayer(nodeLayer);
 nodeLayer.addPlacement(placements.nodePlacementc1);
 nodeLayer.addRenderingFunc(renderers.nodeRenderingc1);
+nodeLayer.addTooltip(["authorName", "affiliation", "paperCount", "coauthorCount"], ["Name", "Affiliation", "Paper count", "Coauthor count"]);
 
 // link layer
 var linkLayer = new Layer(transforms.linkTransformc1, false);
 bgCanvas1.addLayer(linkLayer);
 linkLayer.addPlacement(placements.linkPlacementc1);
 linkLayer.addRenderingFunc(renderers.linkRenderingc1);
+linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 2", "Paper count"]);
 
+// ================== Canvas 2 ===================
+// second level of clustering
+var bgCanvas2 = new Canvas("bgCanvas2", 960, 540);
+p.addCanvas(bgCanvas2);
+
+// node layer
+var nodeLayer = new Layer(transforms.nodeTransformc2, false);
+bgCanvas2.addLayer(nodeLayer);
+nodeLayer.addPlacement(placements.nodePlacementc2);
+nodeLayer.addRenderingFunc(renderers.nodeRenderingc2);
+nodeLayer.addTooltip(["authorName", "affiliation", "paperCount", "coauthorCount"], ["Name", "Affiliation", "Paper count", "Coauthor count"]);
+
+// link layer
+var linkLayer = new Layer(transforms.linkTransformc2, false);
+bgCanvas2.addLayer(linkLayer);
+linkLayer.addPlacement(placements.linkPlacementc2);
+linkLayer.addRenderingFunc(renderers.linkRenderingc2);
+linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 2", "Paper count"]);
 
 // ================== Views ===================
-var view = new View("graphvis", 0, 0, 1920, 1080);
+var view = new View("graphvis", 0, 0, 960, 540);
 p.addView(view);
-p.setInitialStates(view, bgCanvas1, 0, 0);
+p.setInitialStates(view, bgCanvas2, 0, 0);
 
 // ================= Jumps ====================
-var jumpIn = new Jump(bgCanvas1, bgCanvas0, "literal_zoom_in");
-var jumpOut = new Jump(bgCanvas0, bgCanvas1, "literal_zoom_out");
-p.addJump(jumpIn);
-p.addJump(jumpOut);
+var jumpIn10 = new Jump(bgCanvas1, bgCanvas0, "literal_zoom_in");
+var jumpOut01 = new Jump(bgCanvas0, bgCanvas1, "literal_zoom_out");
+p.addJump(jumpIn10);
+p.addJump(jumpOut01);
+
+var jumpIn21 = new Jump(bgCanvas2, bgCanvas1, "literal_zoom_in");
+var jumpOut12 = new Jump(bgCanvas1, bgCanvas2, "literal_zoom_out");
+p.addJump(jumpIn21);
+p.addJump(jumpOut12);
 
 // save to db
 p.saveProject();
