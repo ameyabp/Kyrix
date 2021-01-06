@@ -5,7 +5,7 @@ var renderingParams = {
 };
 
 var nodeRenderingc0 = function(svg, data) {
-    // no clustering - render both meta nodes and individual nodes
+    // no clustering - render level 0 and level 1 nodes
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -18,31 +18,21 @@ var nodeRenderingc0 = function(svg, data) {
             return d.y;
         })
         .attr("r", function(d) {
-            return 3;
+            if (d.clusterLevel == 0)
+                return 3;
+            else
+                return 4;
         })
         .attr("fill", function(d) {
-            return "red";
-        })        
-        .on("mouseover", function(d) {
-            d3.select("#tooltip")
-                .transition()		
-                .duration(200)		
-                .style("opacity", .9);		
-            d3.select("#tooltip")
-                .html(d.name)
-                .style("left", (d3.event.pageX) + "px")		
-                .style("top", (d3.event.pageY - 28) + "px");	
-            })					
-        .on("mouseout", function(d) {		
-            d3.select("#tooltip")
-                .transition()
-                .duration(500)		
-                .style("opacity", 0);	
+            if (d.clusterLevel == 0)
+                return "red";
+            else
+                return "blue";
         });
 };
 
 var linkRenderingc0 = function(svg, data) {
-    // no clustering - render only individual edges
+    // no clustering - render only individual edges (level 0)
     g = svg.append("g");
     g.selectAll("line")
     .data(data)
@@ -65,7 +55,7 @@ var linkRenderingc0 = function(svg, data) {
 }
 
 var nodeRenderingc1 = function(svg, data) {
-    // first level of clustering - render only level 1 meta nodes
+    // first level of clustering - render nodes on cluster level 1 and 2
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -77,23 +67,17 @@ var nodeRenderingc1 = function(svg, data) {
         .attr("cy", function(d) {
             return d.y;
         })
-        .attr("r", 3)
-        .attr("fill", "blue")        
-        .on("mouseover", function(d) {		
-            d3.select("#tooltip")
-                .transition()		
-                .duration(200)		
-                .style("opacity", .9);		
-            d3.select("#tooltip")
-                .html(d.name)
-                .style("left", (d3.event.pageX) + "px")		
-                .style("top", (d3.event.pageY - 28) + "px");	
-            })					
-        .on("mouseout", function(d) {		
-            d3.select("#tooltip")
-                .transition()
-                .duration(500)		
-                .style("opacity", 0);	
+        .attr("r", function(d) {
+            if (d.clusterLevel == 1)
+                return 3;
+            else
+                return 4;
+        })
+        .attr("fill", function(d) {
+            if (d.clusterLevel == 1)
+                return "blue";
+            else
+                return "green";
         });
 };
 
@@ -121,7 +105,7 @@ var linkRenderingc1 = function(svg, data) {
 }
 
 var nodeRenderingc2 = function(svg, data) {
-    // second level of clustering - render only level 2 meta nodes
+    // second level of clustering - render nodes on cluster level 2 and 3
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -133,12 +117,65 @@ var nodeRenderingc2 = function(svg, data) {
         .attr("cy", function(d) {
             return d.y;
         })
-        .attr("r", 3)
-        .attr("fill", "green");
+        .attr("r", function(d) {
+            if (d.clusterLevel == 2)
+                return 3;
+            else
+                return 4;
+        })
+        .attr("fill", function(d) {
+            if (d.clusterLevel == 2)
+                return "green";
+            else
+                return "purple";
+        });
 };
 
 var linkRenderingc2 = function(svg, data) {
     // second level of clustering - render only level 2 meta edges
+    g = svg.append("g");
+    g.selectAll("line")
+    .data(data)
+    .enter()
+    .append("line")
+    .attr("x1", function(d) {
+        return d.x1;
+    })
+    .attr("y1", function(d) {
+        return d.y1;
+    })
+    .attr("x2", function(d) {
+        return d.x2;
+    })
+    .attr("y2", function(d) {
+        return d.y2;
+    })          
+    .attr("stroke-width", 2)
+    .attr("stroke", "black");
+}
+var nodeRenderingc3 = function(svg, data) {
+    // second level of clustering - render only level 3 meta nodes
+    g = svg.append("g");
+    g.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", function(d) {
+            return d.x;
+        })
+        .attr("cy", function(d) {
+            return d.y;
+        })
+        .attr("r", function(d) {
+            return 3;
+        })
+        .attr("fill", function(d) {
+            return "purple";
+        });
+};
+
+var linkRenderingc3 = function(svg, data) {
+    // second level of clustering - render only level 3 meta edges
     g = svg.append("g");
     g.selectAll("line")
     .data(data)
@@ -167,5 +204,7 @@ module.exports = {
     linkRenderingc1,
     nodeRenderingc2,
     linkRenderingc2,
+    nodeRenderingc3,
+    linkRenderingc3,
     renderingParams
 };

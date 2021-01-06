@@ -31,10 +31,7 @@ import graph_tool as gt
 from graph_tool.draw import sfdp_layout
 
 from sklearn.cluster import AgglomerativeClustering
-<<<<<<< HEAD
 from sklearn.preprocessing import MinMaxScaler
-=======
->>>>>>> e113f6a914f7da9d889fd6b3ae8a488bee9bf6c0
 import numpy as np
 
 class Node:
@@ -272,11 +269,23 @@ if __name__ == '__main__':
                 edgeIdx = metaNode1.name + '_2_' + metaNode2.name if metaNode1.name < metaNode2.name else metaNode2.name + '_2_' + metaNode1.name
                 metaEdgeDict[edgeIdx] = edge
 
+        # create meta-edge for cluster level 2
+        if 3 in node1.parentMetaNode and 3 in node2.parentMetaNode:
+            # some nodes might not have a parent at some of the higher cluster levels, that is possible and is an artifact of agglomerative clustering
+            metaNode1 = nodeDict[authorDict[node1.parentMetaNode[3]]]
+            metaNode2 = nodeDict[authorDict[node2.parentMetaNode[3]]]
+            if metaNode1.nodeId != metaNode2.nodeId:
+                edge = Edge(edgeCounter, metaNode1.name, metaNode2.name, 3)
+                edgeCounter += 1
+                edge.papers = metaNode1.papers + metaNode2.papers
+                edgeIdx = metaNode1.name + '_3_' + metaNode2.name if metaNode1.name < metaNode2.name else metaNode2.name + '_3_' + metaNode1.name
+                metaEdgeDict[edgeIdx] = edge
+
     # node dataframe
     nodeDf = {'nodeId': [], 'posX': [], 'posY': [], 'authorName': [], 'affiliation': [], 'paperCount': [], 'coauthorCount': [], 'memberNodeCount': [], 'clusterLevel': []}
 
     for node in list(nodeDict.values()):
-        if node.clusterLevel > 2:
+        if node.clusterLevel > 3:
             continue
 
         # only add nodes and meta nodes in cluster levels 0, 1 and 2 to the nodeDict

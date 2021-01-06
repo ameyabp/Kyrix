@@ -1,8 +1,8 @@
 var nodePlacementc0 = {
     centroid_x: "col:x",
     centroid_y: "col:y",
-    width: "con:6",
-    height: "con:6"
+    width: "con:8",
+    height: "con:8"
 }
 
 var linkPlacementc0 = {
@@ -15,8 +15,8 @@ var linkPlacementc0 = {
 var nodePlacementc1 = {
     centroid_x: "col:x",
     centroid_y: "col:y",
-    width: "con:6",
-    height: "con:6"
+    width: "con:8",
+    height: "con:8"
 }
 
 var linkPlacementc1 = {
@@ -29,11 +29,25 @@ var linkPlacementc1 = {
 var nodePlacementc2 = {
     centroid_x: "col:x",
     centroid_y: "col:y",
-    width: "con:6",
-    height: "con:6"
+    width: "con:8",
+    height: "con:8"
 }
 
 var linkPlacementc2 = {
+    centroid_x: "col:centroidx",
+    centroid_y: "col:centroidy",
+    width: "col:bbwidth",
+    height: "col:bbheight"
+}
+
+var nodePlacementc3 = {
+    centroid_x: "col:x",
+    centroid_y: "col:y",
+    width: "con:8",
+    height: "con:8"
+}
+
+var linkPlacementc3 = {
     centroid_x: "col:centroidx",
     centroid_y: "col:centroidy",
     width: "col:bbwidth",
@@ -46,5 +60,7 @@ module.exports = {
     nodePlacementc1,
     linkPlacementc1,
     nodePlacementc2,
-    linkPlacementc2
+    linkPlacementc2,
+    nodePlacementc3,
+    linkPlacementc3
 };
