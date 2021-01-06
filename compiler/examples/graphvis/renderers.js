@@ -11,7 +11,6 @@ var test = function(svg, data, args) {
                     .attr("cx", 30)
                     .attr("cy", 30)
                     .attr("r", 20);
-
 };
 
 var nodeRenderingc0 = function(svg, data) {
@@ -96,7 +95,7 @@ var linkRenderingc1 = function(svg, data) {
     .attr("y2", function(d) {
         return d.y2;
     })          
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 2)
     .attr("stroke", "black");
 }
 
