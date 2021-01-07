@@ -182,9 +182,18 @@ if __name__ == '__main__':
     for _, pair in enumerate(clustering.children_):
         memberNode1 = nodeDict[pair[0]]
         memberNode2 = nodeDict[pair[1]]
-        # the meta node gets the name and affiliation of the first node in the children pair
-        # this is just a random choice for now, no semantic meaning behind it as of now
-        node = Node(nodeCounter, memberNode1.name, memberNode1.affiliation)
+        # the meta node gets the name and affiliation of that node which has a higher paper count
+        repNode = None
+        if len(memberNode1.papers) > len(memberNode2.papers):
+            repNode = memberNode1
+        elif len(memberNode1.papers) < len(memberNode2.papers):
+            repNode = memberNode2
+        elif memberNode1.name < memberNode2.name:
+            repNode = memberNode1
+        else:
+            repNode = memberNode2
+
+        node = Node(nodeCounter, repNode.name, repNode.affiliation)
         node.papers = memberNode1.papers + memberNode2.papers
         node.coauthors = memberNode1.coauthors.union(memberNode2.coauthors)
         node.clusterLevel = max(memberNode1.clusterLevel, memberNode2.clusterLevel)+1

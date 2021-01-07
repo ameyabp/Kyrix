@@ -127,7 +127,7 @@ var nodeRenderingc2 = function(svg, data) {
             if (d.clusterLevel == 2)
                 return "green";
             else
-                return "purple";
+                return "rgba(198, 45, 205, 0.8)";
         });
 };
 
@@ -170,7 +170,7 @@ var nodeRenderingc3 = function(svg, data) {
             return 3;
         })
         .attr("fill", function(d) {
-            return "purple";
+            return "rgba(198, 45, 205, 0.8)";
         });
 };
 
