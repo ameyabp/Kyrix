@@ -66,7 +66,7 @@ class Paper:
 
 if __name__ == '__main__':
     # PARSE THE CSV TO EXTRACT REQUIRED DATA
-    df = pd.read_csv('vispub.csv', dtype={'Conference': str, 'Year': int, 'Title': str, 'AuthorNames': str, 'AuthorAffiliation': str}, na_values=[''])
+    df = pd.read_csv('/home/ameya/Documents/Kyrix/compiler/examples/graphvis/vispub.csv', dtype={'Conference': str, 'Year': int, 'Title': str, 'AuthorNames': str, 'AuthorAffiliation': str}, na_values=[''])
     df.AuthorAffiliation.astype(str)
 
     # gather nodes and index by node id
@@ -200,7 +200,6 @@ if __name__ == '__main__':
         # set the parent meta node for all member nodes of a meta node
         for nodeId in metaNode.memberNodes:
             node = nodeDict[nodeId]
-            assert(metaNode.clusterLevel == 1 and 1 not in node.parentMetaNode)
             # every level 0 node should be assigned to one and only one cluster in level 1
             node.parentMetaNode[1] = metaNode.nodeId
 
@@ -259,7 +258,6 @@ if __name__ == '__main__':
     for idx, clusterId in enumerate(clustering.labels_):
         # add numVertices because the IDs for level 1 nodes
         # start from numVertices onward
-        assert(idx not in nodeDict_l1)
         node = nodeDict_l1[idx+numVertices]
         if clusterId not in clusterId2NodeId_l2:
             # the node with the highest paper count will represent the meta node
@@ -272,6 +270,7 @@ if __name__ == '__main__':
         
         metaNode = nodeDict_l2[clusterId2NodeId_l2[clusterId]]
         metaNode.memberNodes = metaNode.memberNodes.union(node.memberNodes)
+        metaNode.memberNodes.add(node.nodeId)
         metaNode.papers.extend(node.papers)
         metaNode.coauthors = metaNode.coauthors.union(node.coauthors)
 
@@ -289,7 +288,6 @@ if __name__ == '__main__':
         # set the parent meta node for all member nodes of a meta node
         for nodeId in metaNode.memberNodes:
             node = nodeDict_l1[nodeId] if nodeId in nodeDict_l1 else nodeDict[nodeId]
-            assert(metaNode.clusterLevel == 2 and 2 not in node.parentMetaNode)
             node.parentMetaNode[2] = metaNode.nodeId
 
     # create meta edges for level 2
@@ -297,14 +295,8 @@ if __name__ == '__main__':
     edgeDict_l2 = {}
     for edgeIdx in edgeDict_l1:
         edge = edgeDict_l1[edgeIdx]
-        assert(edge.author1Id in nodeDict_l1)
-        assert(edge.author2Id in nodeDict_l1)
-        try:
-            author1Id = nodeDict_l1[edge.author1Id].parentMetaNode[2]
-            author2Id = nodeDict_l1[edge.author2Id].parentMetaNode[2]
-        except KeyError:
-            print(nodeDict_l1[edge.author1Id].clusterLevel)
-            print(nodeDict_l1[edge.author1Id].parentMetaNode)
+        author1Id = nodeDict_l1[edge.author1Id].parentMetaNode[2]
+        author2Id = nodeDict_l1[edge.author2Id].parentMetaNode[2]
 
         edgeIdx_l2 = str(author1Id) + '_2_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_2_' + str(author1Id)
         if edgeIdx_l2 not in edgeDict_l2:
@@ -364,6 +356,7 @@ if __name__ == '__main__':
         
         metaNode = nodeDict_l3[clusterId2NodeId_l3[clusterId]]
         metaNode.memberNodes = metaNode.memberNodes.union(node.memberNodes)
+        metaNode.memberNodes.add(node.nodeId)
         metaNode.papers.extend(node.papers)
         metaNode.coauthors = metaNode.coauthors.union(node.coauthors)
 
@@ -381,7 +374,6 @@ if __name__ == '__main__':
         # set the parent meta node for all member nodes of a meta node
         for nodeId in metaNode.memberNodes:
             node = nodeDict_l2[nodeId] if nodeId in nodeDict_l2 else (nodeDict_l1[nodeId] if nodeId in nodeDict_l1 else nodeDict[nodeId])
-            assert(metaNode.clusterLevel == 3)
             node.parentMetaNode[3] = metaNode.nodeId
 
     # create meta edges for level 3
@@ -410,120 +402,163 @@ if __name__ == '__main__':
 
     # GENERATE LAYOUT FOR CLUSTER LEVEL 3
     g = gt.Graph(directed=False)
+    edge_weights_l3 = g.new_edge_property("double")
+    # group_map_l3 = g.new_vertex_property("int")
 
-    edgeList_l3 = []
-    edgeWeights_l3 = gt.EdgePropertyMap()
+    for nodeIdx in nodeDict_l3:
+        node = nodeDict_l3[nodeIdx]
+        v = g.add_vertex()
+        # group_map_l3[v] = node.parentMetaNode[4]
+
     for edgeIdx in edgeDict_l3:
         edge = edgeDict_l3[edgeIdx]
-        edgeTuple = (edge.author1Id, edge.author2Id)
+
         affinity_score = len(edge.papers) / numPapers
         if nodeDict_l3[edge.author1Id].affiliation == nodeDict_l3[edge.author2Id].affiliation:
             affinity_score = pow(affinity_score, 0.5)
-        edgeWeights_l3[len(edgeList_l3)] = affinity_score
-        edgeList_l3.append(edgeTuple)
 
-    g.add_vertex(n=numVertices_l3)
-    g.add_edge_list(edgeList_l3)
+        e = g.add_edge(edge.author1Id, edge.author2Id)
+        edge_weights_l3[e] = affinity_score
 
-    pos_l3 = sfdp_layout(g=g, eweight=edgeWeights_l3, C=1, p=4, mu_p=0)
+    pos = sfdp_layout(g=g, eweight=edge_weights_l3, C=1, p=4, mu_p=0)
+    pos_l3 = []
+    for p in pos:
+        pos_l3.append(p)
 
     # GENERATE LAYOUT FOR CLUSTER LEVEL 2
     g = gt.Graph(directed=False)
+    edge_weights_l2 = g.new_edge_property("double")
+    group_map_l2 = g.new_vertex_property("int")
+    init_pos_map_l2 = g.new_vertex_property("vector<double>")
 
-    edgeList_l2 = []
-    edgeWeights_l2 = gt.EdgePropertyMap()
+    for nodeIdx in nodeDict_l2:
+        node = nodeDict_l2[nodeIdx]
+        v = g.add_vertex()
+        group_map_l2[v] = node.parentMetaNode[3]
+        init_pos_map_l2[v] = pos_l3[node.parentMetaNode[3] - (numVertices + numVertices_l1 + numVertices_l2)]
+
     for edgeIdx in edgeDict_l2:
         edge = edgeDict_l2[edgeIdx]
-        edgeTuple = (edge.author1Id, edge.author2Id)
-        edgeWeights_l2[len(edgeList_l2)] = affinity_matrix_l2[edge.author1Id, edge.author2Id]
-        edgeList_l2.append(edgeTuple)
 
-    g.add_vertex(n=numVertices_l2)
-    g.add_edge_list(edgeList_l2)
+        affinity_score = len(edge.papers) / numPapers
+        if nodeDict_l2[edge.author1Id].affiliation == nodeDict_l2[edge.author2Id].affiliation:
+            affinity_score = pow(affinity_score, 0.5)
 
-    pos_l2 = sfdp_layout(g=g, eweight=edgeWeights_l2, C=1, p=4, mu_p=0)
+        e = g.add_edge(edge.author1Id, edge.author2Id)
+        edge_weights_l2[e] = affinity_score
+
+    pos = sfdp_layout(g=g, eweight=edge_weights_l2, groups=group_map_l2, C=1, p=4, mu_p=0, pos=init_pos_map_l2)
+    pos_l2 = []
+    for p in pos:
+        pos_l2.append(p)
 
     # GENERATE LAYOUT FOR CLUSTER LEVEL 1
     g = gt.Graph(directed=False)
+    edge_weights_l1 = g.new_edge_property("double")
+    group_map_l1 = g.new_vertex_property("int")
+    init_pos_map_l1 = g.new_vertex_property("vector<double>")
 
-    edgeList_l1 = []
-    edgeWeights_l1 = gt.EdgePropertyMap()
+    for nodeIdx in nodeDict_l1:
+        node = nodeDict_l1[nodeIdx]
+        v = g.add_vertex()
+        group_map_l1[v] = node.parentMetaNode[2]
+        init_pos_map_l1[v] = pos_l2[node.parentMetaNode[2] - (numVertices + numVertices_l1)]
+
     for edgeIdx in edgeDict_l1:
         edge = edgeDict_l1[edgeIdx]
-        edgeTuple = (edge.author1Id, edge.author2Id)
-        edgeWeights_l1[len(edgeList_l1)] = affinity_matrix_l1[edge.author1Id, edge.author2Id]
-        edgeList_l1.append(edgeTuple)
 
-    g.add_vertex(n=numVertices_l1)
-    g.add_edge_list(edgeList_l1)
+        affinity_score = len(edge.papers) / numPapers
+        if nodeDict_l1[edge.author1Id].affiliation == nodeDict_l1[edge.author2Id].affiliation:
+            affinity_score = pow(affinity_score, 0.5)
 
-    pos_l1 = sfdp_layout(g=g, eweight=edgeWeights_l1, C=1, p=4, mu_p=0)
+        e = g.add_edge(edge.author1Id, edge.author2Id)
+        edge_weights_l1[e] = affinity_score
+
+    pos = sfdp_layout(g=g, eweight=edge_weights_l1, groups=group_map_l1, C=1, p=4, mu_p=0)
+    pos_l1 = []
+    for p in pos:
+        pos_l1.append(p)
 
     # GENERATE LAYOUT FOR CLUSTER LEVEL 0
     g = gt.Graph(directed=False)
+    edge_weights = g.new_edge_property("double")
+    group_map = g.new_vertex_property("int")
+    init_pos_map = g.new_vertex_property("vector<double>")
 
-    edgeList = []
-    edgeWeights = gt.EdgePropertyMap()
+    for nodeIdx in nodeDict:
+        node = nodeDict[nodeIdx]
+        v = g.add_vertex()
+        group_map[v] = node.parentMetaNode[1]
+        init_pos_map[v] = pos_l1[node.parentMetaNode[1] - numVertices]
+
     for edgeIdx in edgeDict:
         edge = edgeDict[edgeIdx]
-        edgeTuple = (edge.author1Id, edge.author2Id)
-        edgeWeights[len(edgeList)] = affinity_matrix[edge.author1Id, edge.author2Id]
-        edgeList.append(edgeTuple)
 
-    g.add_vertex(n=numVertices)
-    g.add_edge_list(edgeList)
+        affinity_score = len(edge.papers) / numPapers
+        if nodeDict[edge.author1Id].affiliation == nodeDict[edge.author2Id].affiliation:
+            affinity_score = pow(affinity_score, 0.5)
 
-    pos = sfdp_layout(g=g, eweight=edgeWeights, C=1, p=4, mu_p=0)
+        e = g.add_edge(edge.author1Id, edge.author2Id)
+        edge_weights[e] = affinity_score
 
-    """
-    # GENERATE LAYOUT FOR THE GRAPH
-    # create graph object
-    g = gt.Graph(directed=False)
+    pos = sfdp_layout(g=g, eweight=edge_weights, groups=group_map, C=1, p=4, mu_p=0)
+    pos_l0 = []
+    for p in pos:
+        pos_l0.append(p)
 
-    # create edge list for providing to the graph tool sfdp_layout API
-    edgeList = []
-    for edge in list(metaEdgeDictl1.values()):
-        edgeTuple = (authorDict[edge.authorName1], authorDict[edge.authorName2])
-        edgeList.append(edgeTuple)
-
-    g.add_vertex(n=len(nodeDict_l1))
-    g.add_edge_list(edgeList)
-
-    # init_pos = g.new_vertex_property('vector<double>')
-    # pin_pos = g.new_vertex_property('bool')
-    # v = g.vertex(25)
-    # init_pos[v] = [25, 25]
-    # pin_pos[v] = True
-
-    # generate the graph layout
-    #pos = sfdp_layout(g=g, pin=pin_pos, C=1, p=4, mu_p=0, pos=init_pos)
-    pos = sfdp_layout(g=g, C=1, p=4, mu_p=0)
-
-    pos2darray = []
-    for nodeId in range(numVertices):
-        pos2darray.append(pos[nodeId])
-
-    pos2darray = np.asarray(pos2darray)
-    
-    # normalize the position values to lie between the range 0 to 1
+    # scale the positions to lie in the 0-1 range
     scaler = MinMaxScaler(feature_range=(0,1), copy=True)
-    scaler.fit(pos2darray)
-    pos2darray = scaler.transform(pos2darray)
+    scaler.fit(pos_l3 + pos_l2 + pos_l1 + pos_l0)
+    pos_l3 = scaler.transform(pos_l3)
+    pos_l2 = scaler.transform(pos_l2)
+    pos_l1 = scaler.transform(pos_l1)
+    pos_l0 = scaler.transform(pos_l0)
 
-    for nodeId in nodeDict_l1:
-        print(nodeId, pos[nodeId-len(nodeDict)])
-
+    # Create the dataframes
     # node dataframe
     nodeDf = {'nodeId': [], 'posX': [], 'posY': [], 'authorName': [], 'affiliation': [], 'paperCount': [], 'coauthorCount': [], 'memberNodeCount': [], 'clusterLevel': []}
+
+    for nodeId in nodeDict:
+        node = nodeDict[nodeId]
+        nodeDf['nodeId'].append(node.nodeId)
+        nodeDf['posX'].append(pos_l0[nodeId][0])
+        nodeDf['posY'].append(pos_l0[nodeId][1])
+        nodeDf['authorName'].append(node.name)
+        nodeDf['affiliation'].append(node.affiliation)
+        nodeDf['paperCount'].append(int(len(node.papers)))
+        nodeDf['coauthorCount'].append(int(len(node.coauthors)))
+        nodeDf['memberNodeCount'].append(int(len(node.memberNodes)))
+        nodeDf['clusterLevel'].append(node.clusterLevel)
 
     for nodeId in nodeDict_l1:
         node = nodeDict_l1[nodeId]
-        # only add nodes and meta nodes in cluster levels 0, 1 and 2 to the nodeDict
         nodeDf['nodeId'].append(node.nodeId)
-        #locatorNodeId = nodeDict[authorDict[node.name]].nodeId
-        nodeDf['posX'].append(pos2darray[nodeId-len(nodeDict)][0])
-        nodeDf['posY'].append(pos2darray[nodeId-len(nodeDict)][1])
+        nodeDf['posX'].append(pos_l1[nodeId-numVertices][0])
+        nodeDf['posY'].append(pos_l1[nodeId-numVertices][1])
+        nodeDf['authorName'].append(node.name)
+        nodeDf['affiliation'].append(node.affiliation)
+        nodeDf['paperCount'].append(int(len(node.papers)))
+        nodeDf['coauthorCount'].append(int(len(node.coauthors)))
+        nodeDf['memberNodeCount'].append(int(len(node.memberNodes)))
+        nodeDf['clusterLevel'].append(node.clusterLevel)
 
+    for nodeId in nodeDict_l2:
+        node = nodeDict_l2[nodeId]
+        nodeDf['nodeId'].append(node.nodeId)
+        nodeDf['posX'].append(pos_l2[nodeId-(numVertices+numVertices_l1)][0])
+        nodeDf['posY'].append(pos_l2[nodeId-(numVertices+numVertices_l1)][1])
+        nodeDf['authorName'].append(node.name)
+        nodeDf['affiliation'].append(node.affiliation)
+        nodeDf['paperCount'].append(int(len(node.papers)))
+        nodeDf['coauthorCount'].append(int(len(node.coauthors)))
+        nodeDf['memberNodeCount'].append(int(len(node.memberNodes)))
+        nodeDf['clusterLevel'].append(node.clusterLevel)
+
+    for nodeId in nodeDict_l3:
+        node = nodeDict_l3[nodeId]
+        nodeDf['nodeId'].append(node.nodeId)
+        nodeDf['posX'].append(pos_l3[nodeId-(numVertices+numVertices_l1+numVertices_l2)][0])
+        nodeDf['posY'].append(pos_l3[nodeId-(numVertices+numVertices_l1+numVertices_l2)][1])
         nodeDf['authorName'].append(node.name)
         nodeDf['affiliation'].append(node.affiliation)
         nodeDf['paperCount'].append(int(len(node.papers)))
@@ -534,228 +569,51 @@ if __name__ == '__main__':
     # edge dataframe
     edgeDf = {'edgeId': [], 'x1': [], 'y1': [], 'x2': [], 'y2': [], 'author1': [], 'author2': [], 'paperCount': [], 'clusterLevel': []}
     
-    for edge in list(edgeDict.values()):
-        edgeDf['edgeId'].append(edge.edgeId)
-        edgeDf['x1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][0])
-        edgeDf['y1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][1])
-        edgeDf['x2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][0])
-        edgeDf['y2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][1])        
-        edgeDf['author1'].append(edge.authorName1)
-        edgeDf['author2'].append(edge.authorName2)
-        edgeDf['paperCount'].append(int(len(edge.papers)))
-        edgeDf['clusterLevel'].append(edge.clusterLevel)
-
-    for edge in list(metaEdgeDict.values()):
-        edgeDf['edgeId'].append(edge.edgeId)
-        edgeDf['x1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][0])
-        edgeDf['y1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][1])
-        edgeDf['x2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][0])
-        edgeDf['y2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][1])        
-        edgeDf['author1'].append(edge.authorName1)
-        edgeDf['author2'].append(edge.authorName2)
-        edgeDf['paperCount'].append(int(len(edge.papers)))
-        edgeDf['clusterLevel'].append(edge.clusterLevel)
-
-    # GENERATE LAYOUT FOR THE GRAPH
-    # create graph object
-    g = gt.Graph(directed=False)
-
-    # create edge list for providing to the graph tool sfdp_layout API
-    edgeList = []
-    for edge in list(edgeDict.values()):
-        edgeTuple = (authorDict[edge.authorName1], authorDict[edge.authorName2])
-        edgeList.append(edgeTuple)
-
-    g.add_vertex(n=numVertices)
-    g.add_edge_list(edgeList)
-
-    # generate the graph layout
-    pos = sfdp_layout(g=g, C=1, p=4, mu_p=0)
-
-    # IMPLEMENT CLUSTER LEVEL CANVASSES OF GRAPH VIZ USING AGGLOMERATIVE CLUSTERING
-    pos2darray = []
-    for nodeId in range(numVertices):
-        pos2darray.append(pos[nodeId])
-
-    pos2darray = np.asarray(pos2darray)
-    
-    # normalize the position values to lie between the range 0 to 1
-    scaler = MinMaxScaler(feature_range=(0,1), copy=True)
-    scaler.fit(pos2darray)
-    pos2darray = scaler.transform(pos2darray)
-
-    #print(pos2darray)
-    
-    csrMatrix = gt.spectral.adjacency(g)
-    clustering = AgglomerativeClustering(n_clusters=None, affinity='euclidean', connectivity=csrMatrix, compute_full_tree=True, linkage='ward', distance_threshold=1).fit(pos2darray)
-
-    print("Num leaf nodes:", clustering.n_leaves_)
-    print("Num clusters found:", clustering.n_clusters_)
-    print("Num non-leaf nodes:", len(clustering.children_))
-    #print(clustering.children_)
-
-    # cluster levels grow bottom up: most detailed layer (most zoomed in) is cluster level 0
-    # followed by cluster level 1 and so on, the most coarse layer (most zoomed out) is cluster level 'n'
-    numNodesPerClusterLevel = {}
-    numNodesPerClusterLevel[0] = numVertices
-
-    # create meta nodes from the agglomerative clustering
-    nodeCounter = numVertices   # counter for meta nodes resumes from the counter for original nodes
-    for _, pair in enumerate(clustering.children_):
-        memberNode1 = nodeDict[pair[0]]
-        memberNode2 = nodeDict[pair[1]]
-        # the meta node gets the name and affiliation of that node which has a higher paper count
-        repNode = None
-        if len(memberNode1.papers) > len(memberNode2.papers):
-            repNode = memberNode1
-        elif len(memberNode1.papers) < len(memberNode2.papers):
-            repNode = memberNode2
-        elif memberNode1.name < memberNode2.name:
-            repNode = memberNode1
-        else:
-            repNode = memberNode2
-
-        node = Node(nodeCounter, repNode.name, repNode.affiliation)
-        node.papers = memberNode1.papers + memberNode2.papers
-        node.coauthors = memberNode1.coauthors.union(memberNode2.coauthors)
-        node.clusterLevel = max(memberNode1.clusterLevel, memberNode2.clusterLevel)+1
-        if node.clusterLevel not in numNodesPerClusterLevel:
-            numNodesPerClusterLevel[node.clusterLevel] = 1
-        else:
-            numNodesPerClusterLevel[node.clusterLevel] += 1
-        node.memberNodes = memberNode1.memberNodes.union(memberNode2.memberNodes)
-        # parentName will be assigned later when deciding the final nodes to be visualized
-        # we do not visualize the meta nodes on all the cluster levels to reduce the unnecessary creation of intermediate cluster levels
-        nodeDict[nodeCounter] = node
-        nodeCounter += 1
-
-    #print("Node dict size:", len(nodeDict))
-    #node = nodeDict[nodeCounter-1]
-    #print(node.name)
-    #print(node.affiliation)
-    #print(node.clusterLevel)
-    #print(len(node.memberNodes))
-    #print(len(node.papers))
-    #print(len(node.coauthors))
-
-    #print(numNodesPerClusterLevel)
-    # try to understand how come there are more than 1 cluster levels having the same number of nodes
-
-    # we have a total of 196 cluster levels created from the above meta-node creation step
-    # level 0: 5492
-    # level 1: 1598
-    # level 2: 804
-    # level 3: 472
-    # level 4: 296
-    # level 5: 189
-    # level 6: 130
-    # ...
-    # for now, we visualize only the first 3 cluster levels which have 5492 (level 0), 1598 (level 1) and 804 (level 2) nodes respectively
-    # we determine the parent node for each node/meta-node from the meta-node creation process
-    # each node will have a parent node in each of the visualized cluster levels higher than its own cluster level
-    for nodeId in nodeDict:
-        node = nodeDict[nodeId]
-        # we iterate over all the meta-nodes (nodes of cluster level > 0) and for each node,
-        # we iterate over all its children nodes and update the parent meta node dict for those nodes
-        if node.clusterLevel == 0:
-            continue
-
-        for memberName in node.memberNodes:
-            memberNode = nodeDict[authorDict[memberName]]
-            assert(node.clusterLevel not in memberNode.parentMetaNode)  # assert to ensure that a particular node does not get its parent meta node at any cluster level reassigned
-            # such a situation should not arise, a particular node should belong to only one parent meta node at a given cluster level
-            memberNode.parentMetaNode[node.clusterLevel] = node.name
-
-    # create meta-edges for the meta-nodes on every cluster level
-    edgeCounter = numEdges  # counter for meta edges resumes from the counter for original edges
-    metaEdgeDict = {}
     for edgeId in edgeDict:
         edge = edgeDict[edgeId]
-        node1 = nodeDict[authorDict[edge.authorName1]]
-        node2 = nodeDict[authorDict[edge.authorName2]]
-
-        # create meta-edge for cluster level 1
-        if 1 in node1.parentMetaNode and 1 in node2.parentMetaNode:
-            # some nodes might not have a parent at some of the higher cluster levels, that is possible and is an artifact of agglomerative clustering
-            metaNode1 = nodeDict[authorDict[node1.parentMetaNode[1]]]
-            metaNode2 = nodeDict[authorDict[node2.parentMetaNode[1]]]
-            if metaNode1.nodeId != metaNode2.nodeId:
-                # if the parent meta nodes of the two nodes are the same, we need not create a meta-edge
-                edge = Edge(edgeCounter, metaNode1.name, metaNode2.name, 1)
-                edgeCounter += 1
-                edge.papers = metaNode1.papers + metaNode2.papers
-                edgeIdx = metaNode1.name + '_1_' + metaNode2.name if metaNode1.name < metaNode2.name else metaNode2.name + '_1_' + metaNode1.name
-                metaEdgeDict[edgeIdx] = edge
-
-
-        # create meta-edge for cluster level 2
-        if 2 in node1.parentMetaNode and 2 in node2.parentMetaNode:
-            # some nodes might not have a parent at some of the higher cluster levels, that is possible and is an artifact of agglomerative clustering
-            metaNode1 = nodeDict[authorDict[node1.parentMetaNode[2]]]
-            metaNode2 = nodeDict[authorDict[node2.parentMetaNode[2]]]
-            if metaNode1.nodeId != metaNode2.nodeId:
-                edge = Edge(edgeCounter, metaNode1.name, metaNode2.name, 2)
-                edgeCounter += 1
-                edge.papers = metaNode1.papers + metaNode2.papers
-                edgeIdx = metaNode1.name + '_2_' + metaNode2.name if metaNode1.name < metaNode2.name else metaNode2.name + '_2_' + metaNode1.name
-                metaEdgeDict[edgeIdx] = edge
-
-        # create meta-edge for cluster level 2
-        if 3 in node1.parentMetaNode and 3 in node2.parentMetaNode:
-            # some nodes might not have a parent at some of the higher cluster levels, that is possible and is an artifact of agglomerative clustering
-            metaNode1 = nodeDict[authorDict[node1.parentMetaNode[3]]]
-            metaNode2 = nodeDict[authorDict[node2.parentMetaNode[3]]]
-            if metaNode1.nodeId != metaNode2.nodeId:
-                edge = Edge(edgeCounter, metaNode1.name, metaNode2.name, 3)
-                edgeCounter += 1
-                edge.papers = metaNode1.papers + metaNode2.papers
-                edgeIdx = metaNode1.name + '_3_' + metaNode2.name if metaNode1.name < metaNode2.name else metaNode2.name + '_3_' + metaNode1.name
-                metaEdgeDict[edgeIdx] = edge
-
-    # node dataframe
-    nodeDf = {'nodeId': [], 'posX': [], 'posY': [], 'authorName': [], 'affiliation': [], 'paperCount': [], 'coauthorCount': [], 'memberNodeCount': [], 'clusterLevel': []}
-
-    for node in list(nodeDict.values()):
-        if node.clusterLevel > 3:
-            continue
-
-        # only add nodes and meta nodes in cluster levels 0, 1 and 2 to the nodeDict
-        nodeDf['nodeId'].append(node.nodeId)
-        # the locator node determines where a meta node in the higher cluster levels are positioned
-        # for now, this is just a random selection of one of the 2 children nodes of the meta-node, whose author name, the meta node uses
-        locatorNodeId = nodeDict[authorDict[node.name]].nodeId
-        nodeDf['posX'].append(pos2darray[locatorNodeId][0])
-        nodeDf['posY'].append(pos2darray[locatorNodeId][1])
-
-        nodeDf['authorName'].append(node.name)
-        nodeDf['affiliation'].append(node.affiliation)
-        nodeDf['paperCount'].append(int(len(node.papers)))
-        nodeDf['coauthorCount'].append(int(len(node.coauthors)))
-        nodeDf['memberNodeCount'].append(int(len(node.memberNodes)))
-        nodeDf['clusterLevel'].append(node.clusterLevel)
-
-    # edge dataframe
-    edgeDf = {'edgeId': [], 'x1': [], 'y1': [], 'x2': [], 'y2': [], 'author1': [], 'author2': [], 'paperCount': [], 'clusterLevel': []}
-    
-    for edge in list(edgeDict.values()):
         edgeDf['edgeId'].append(edge.edgeId)
-        edgeDf['x1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][0])
-        edgeDf['y1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][1])
-        edgeDf['x2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][0])
-        edgeDf['y2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][1])        
-        edgeDf['author1'].append(edge.authorName1)
-        edgeDf['author2'].append(edge.authorName2)
+        edgeDf['x1'].append(pos_l0[edge.author1Id][0])
+        edgeDf['y1'].append(pos_l0[edge.author1Id][1])
+        edgeDf['x2'].append(pos_l0[edge.author2Id][0])
+        edgeDf['y2'].append(pos_l0[edge.author2Id][1])
+        edgeDf['author1'].append(nodeDict[edge.author1Id].name)
+        edgeDf['author2'].append(nodeDict[edge.author2Id].name)
         edgeDf['paperCount'].append(int(len(edge.papers)))
         edgeDf['clusterLevel'].append(edge.clusterLevel)
 
-    for edge in list(metaEdgeDict.values()):
+    for edgeId in edgeDict_l1:
+        edge = edgeDict_l1[edgeId]
         edgeDf['edgeId'].append(edge.edgeId)
-        edgeDf['x1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][0])
-        edgeDf['y1'].append(pos2darray[nodeDict[authorDict[edge.authorName1]].nodeId][1])
-        edgeDf['x2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][0])
-        edgeDf['y2'].append(pos2darray[nodeDict[authorDict[edge.authorName2]].nodeId][1])        
-        edgeDf['author1'].append(edge.authorName1)
-        edgeDf['author2'].append(edge.authorName2)
+        edgeDf['x1'].append(pos_l1[edge.author1Id-numVertices][0])
+        edgeDf['y1'].append(pos_l1[edge.author1Id-numVertices][1])
+        edgeDf['x2'].append(pos_l1[edge.author2Id-numVertices][0])
+        edgeDf['y2'].append(pos_l1[edge.author2Id-numVertices][1])
+        edgeDf['author1'].append(nodeDict_l1[edge.author1Id].name)
+        edgeDf['author2'].append(nodeDict_l1[edge.author2Id].name)
+        edgeDf['paperCount'].append(int(len(edge.papers)))
+        edgeDf['clusterLevel'].append(edge.clusterLevel)
+
+    for edgeId in edgeDict_l2:
+        edge = edgeDict_l2[edgeId]
+        edgeDf['edgeId'].append(edge.edgeId)
+        edgeDf['x1'].append(pos_l2[edge.author1Id-(numVertices+numVertices_l1)][0])
+        edgeDf['y1'].append(pos_l2[edge.author1Id-(numVertices+numVertices_l1)][1])
+        edgeDf['x2'].append(pos_l2[edge.author2Id-(numVertices+numVertices_l1)][0])
+        edgeDf['y2'].append(pos_l2[edge.author2Id-(numVertices+numVertices_l1)][1])
+        edgeDf['author1'].append(nodeDict_l2[edge.author1Id].name)
+        edgeDf['author2'].append(nodeDict_l2[edge.author2Id].name)
+        edgeDf['paperCount'].append(int(len(edge.papers)))
+        edgeDf['clusterLevel'].append(edge.clusterLevel)
+
+    for edgeId in edgeDict_l3:
+        edge = edgeDict_l3[edgeId]
+        edgeDf['edgeId'].append(edge.edgeId)
+        edgeDf['x1'].append(pos_l3[edge.author1Id-(numVertices+numVertices_l1+numVertices_l2)][0])
+        edgeDf['y1'].append(pos_l3[edge.author1Id-(numVertices+numVertices_l1+numVertices_l2)][1])
+        edgeDf['x2'].append(pos_l3[edge.author2Id-(numVertices+numVertices_l1+numVertices_l2)][0])
+        edgeDf['y2'].append(pos_l3[edge.author2Id-(numVertices+numVertices_l1+numVertices_l2)][1])
+        edgeDf['author1'].append(nodeDict_l3[edge.author1Id].name)
+        edgeDf['author2'].append(nodeDict_l3[edge.author2Id].name)
         edgeDf['paperCount'].append(int(len(edge.papers)))
         edgeDf['clusterLevel'].append(edge.clusterLevel)
     
@@ -768,4 +626,3 @@ if __name__ == '__main__':
     with open('graphEdgesData.csv', 'w') as g:
         df.to_csv(path_or_buf=g, index=False)
         g.close()
-    """
