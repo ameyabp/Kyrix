@@ -72,7 +72,7 @@ linkLayer.addRenderingFunc(renderers.linkRenderingc2);
 linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 2", "Paper count"]);
 
 // ================== Canvas 3 ===================
-// second level of clustering
+// third level of clustering
 var bgCanvas3 = new Canvas("bgCanvas3", 480, 270);
 p.addCanvas(bgCanvas3);
 

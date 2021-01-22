@@ -6,7 +6,7 @@ The edges in such a dataset would be undirected unlike a dataset of papers citin
 In the latter, papers are nodes and citations are directed edges.
 
 Nodes table:
-NodeID | Author Name | Affiliation | Paper count | Co-author count | Is Meta Node | Member Node Count
+NodeID | Author Name | Affiliation | Paper count | Co-author count | Member Node Count | Cluster Level
 
 Edges table:
 EdgeID | Paper name | Author1 | Author2 | Paper count | Is Meta Edge
@@ -42,7 +42,7 @@ class Node:
         self.affiliation = affiliation
         self.papers = []
         self.coauthors = set()
-        self.parentMetaNode = {}    # a dict to record the parent meta node for each visualized cluster level
+        self.parentMetaNode = {}    # a dict to record the parent meta node for each visualized cluster level {1: nodeId, 2: nodeID2, 3:}
         self.clusterLevel = 0
         self.memberNodes = set()
         # index everything using the node and edge IDs
@@ -211,13 +211,14 @@ if __name__ == '__main__':
         author1Id = nodeDict[edge.author1Id].parentMetaNode[1]
         author2Id = nodeDict[edge.author2Id].parentMetaNode[1]
 
-        edgeIdx_l1 = str(author1Id) + '_1_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_1_' + str(author1Id)
-        if edgeIdx_l1 not in edgeDict_l1:
-            edgeDict_l1[edgeIdx_l1] = Edge(edgeCounter, author1Id, author2Id, 1)
-            edgeCounter += 1
-        
-        metaEdge = edgeDict_l1[edgeIdx_l1]
-        metaEdge.papers.extend(edge.papers)
+        if author1Id != author2Id:
+            edgeIdx_l1 = str(author1Id) + '_1_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_1_' + str(author1Id)
+            if edgeIdx_l1 not in edgeDict_l1:
+                edgeDict_l1[edgeIdx_l1] = Edge(edgeCounter, author1Id, author2Id, 1)
+                edgeCounter += 1
+            
+            metaEdge = edgeDict_l1[edgeIdx_l1]
+            metaEdge.papers.extend(edge.papers)
 
     numVertices_l1 = len(nodeDict_l1)
     numEdges_l1 = len(edgeDict_l1)
@@ -298,13 +299,14 @@ if __name__ == '__main__':
         author1Id = nodeDict_l1[edge.author1Id].parentMetaNode[2]
         author2Id = nodeDict_l1[edge.author2Id].parentMetaNode[2]
 
-        edgeIdx_l2 = str(author1Id) + '_2_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_2_' + str(author1Id)
-        if edgeIdx_l2 not in edgeDict_l2:
-            edgeDict_l2[edgeIdx_l2] = Edge(edgeCounter, author1Id, author2Id, 2)
-            edgeCounter += 1
-        
-        metaEdge = edgeDict_l2[edgeIdx_l2]
-        metaEdge.papers.extend(edge.papers)
+        if author1Id != author2Id:
+            edgeIdx_l2 = str(author1Id) + '_2_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_2_' + str(author1Id)
+            if edgeIdx_l2 not in edgeDict_l2:
+                edgeDict_l2[edgeIdx_l2] = Edge(edgeCounter, author1Id, author2Id, 2)
+                edgeCounter += 1
+            
+            metaEdge = edgeDict_l2[edgeIdx_l2]
+            metaEdge.papers.extend(edge.papers)
 
     numVertices_l2 = len(nodeDict_l2)
     numEdges_l2 = len(edgeDict_l2)
@@ -384,13 +386,14 @@ if __name__ == '__main__':
         author1Id = nodeDict_l2[edge.author1Id].parentMetaNode[3]
         author2Id = nodeDict_l2[edge.author2Id].parentMetaNode[3]
 
-        edgeIdx_l3 = str(author1Id) + '_3_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_3_' + str(author1Id)
-        if edgeIdx_l3 not in edgeDict_l3:
-            edgeDict_l3[edgeIdx_l3] = Edge(edgeCounter, author1Id, author2Id, 3)
-            edgeCounter += 1
-        
-        metaEdge = edgeDict_l3[edgeIdx_l3]
-        metaEdge.papers.extend(edge.papers)
+        if author1Id != author2Id:
+            edgeIdx_l3 = str(author1Id) + '_3_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_3_' + str(author1Id)
+            if edgeIdx_l3 not in edgeDict_l3:
+                edgeDict_l3[edgeIdx_l3] = Edge(edgeCounter, author1Id, author2Id, 3)
+                edgeCounter += 1
+            
+            metaEdge = edgeDict_l3[edgeIdx_l3]
+            metaEdge.papers.extend(edge.papers)
 
     numVertices_l3 = len(nodeDict_l3)
     numEdges_l3 = len(edgeDict_l3)

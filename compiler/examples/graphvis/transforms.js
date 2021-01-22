@@ -2,7 +2,7 @@ const Transform = require("../../src/Transform").Transform;
 
 var nodeTransformc0 = new Transform(
     // no clustering - render only the level 0 nodes
-    "SELECT * FROM authorNodes WHERE clusterLevel = 0 OR clusterLevel = 1",
+    "SELECT * FROM authorNodes WHERE clusterLevel = 0",
     "graphvis",
     function(row, width, height) {
         // nodeId, posX, posY, authorName, affiliation, paperCount, coauthorCount, memberNodeCount, clusterLevel
@@ -74,7 +74,7 @@ var linkTransformc0 = new Transform(
 // data transforms...
 var nodeTransformc1 = new Transform(
     // one level of clustering
-    "SELECT * FROM authorNodes WHERE clusterLevel = 1 OR clusterLevel = 2",
+    "SELECT * FROM authorNodes WHERE clusterLevel = 1",
     "graphvis",
     function(row, width, height) {
         // nodeId, posX, posY, authorName, affiliation, paperCount, coauthorCount, memberNodeCount, clusterLevel
@@ -146,7 +146,7 @@ var linkTransformc1 = new Transform(
 // data transforms...
 var nodeTransformc2 = new Transform(
     // second level of clustering
-    "SELECT * FROM authorNodes WHERE clusterLevel = 2 OR clusterLevel = 3",
+    "SELECT * FROM authorNodes WHERE clusterLevel = 2",
     "graphvis",
     function(row, width, height) {
         // nodeId, posX, posY, authorName, affiliation, paperCount, coauthorCount, memberNodeCount, clusterLevel
