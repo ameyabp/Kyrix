@@ -5,6 +5,7 @@ var renderingParams = {
 };
 
 var nodeRenderingc0 = function(svg, data) {
+    console.log(data);
     // no clustering - render level 0 and level 1 nodes
     g = svg.append("g");
     g.selectAll("circle")
@@ -175,6 +176,7 @@ var nodeRenderingc3 = function(svg, data) {
 };
 
 var linkRenderingc3 = function(svg, data) {
+    console.log(data);
     // second level of clustering - render only level 3 meta edges
     g = svg.append("g");
     g.selectAll("line")
