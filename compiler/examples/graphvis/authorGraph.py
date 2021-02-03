@@ -23,6 +23,7 @@ The vispub dataset has the data for 3109 papers, with following schema
 import pandas as pd
 from itertools import combinations
 import random
+import pickle
 # graph_tool is installed outside the virtual environment
 # add the path to the graph_tool package in sys.path
 import sys
@@ -34,35 +35,37 @@ from sklearn.cluster import SpectralClustering
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
-class Node:
-    # author
-    def __init__(self, id, name, affiliation):
-        self.nodeId = id
-        self.name = name
-        self.affiliation = affiliation
-        self.papers = []
-        self.coauthors = set()
-        self.parentMetaNode = {}    # a dict to record the parent meta node for each visualized cluster level {1: nodeId, 2: nodeID2, 3:}
-        self.clusterLevel = 0
-        self.memberNodes = set()
-        # index everything using the node and edge IDs
+from authorGraphDefs import *
 
-class Edge:
-    # coauthor relationship
-    def __init__(self, id, author1, author2, clusterLevel=0):
-        self.edgeId = id
-        self.author1Id = author1
-        self.author2Id = author2
-        self.papers = []
-        self.clusterLevel = clusterLevel
+# class Node:
+#     # author
+#     def __init__(self, id, name, affiliation):
+#         self.nodeId = id
+#         self.name = name
+#         self.affiliation = affiliation
+#         self.papers = []
+#         self.coauthors = set()
+#         self.parentMetaNode = {}    # a dict to record the parent meta node for each visualized cluster level {1: nodeId, 2: nodeID2, 3:}
+#         self.clusterLevel = 0
+#         self.memberNodes = set()
+#         # index everything using the node and edge IDs
 
-class Paper:
-    # attribute of edge
-    def __init__(self, title, authors, conferenceName, year):
-        self.paperTitle = title
-        self.authors = authors
-        self.conferenceName = conferenceName
-        self.year = year
+# class Edge:
+#     # coauthor relationship
+#     def __init__(self, id, author1, author2, clusterLevel=0):
+#         self.edgeId = id
+#         self.author1Id = author1
+#         self.author2Id = author2
+#         self.papers = []
+#         self.clusterLevel = clusterLevel
+
+# class Paper:
+#     # attribute of edge
+#     def __init__(self, title, authors, conferenceName, year):
+#         self.paperTitle = title
+#         self.authors = authors
+#         self.conferenceName = conferenceName
+#         self.year = year
 
 if __name__ == '__main__':
     # PARSE THE CSV TO EXTRACT REQUIRED DATA
@@ -124,7 +127,7 @@ if __name__ == '__main__':
             edgeIdx = str(author1Id) + '_0_' + str(author2Id) if str(author1Id) < str(author2Id) else str(author2Id) + '_0_' + str(author1Id)
 
             if edgeIdx not in edgeDict:
-                edge = Edge(id=edgeCounter, author1=author1Id, author2=author2Id)
+                edge = Edge(id=edgeIdx, author1=author1Id, author2=author2Id)
                 edgeDict[edgeIdx] = edge
                 edgeCounter += 1
 
@@ -137,6 +140,14 @@ if __name__ == '__main__':
     print('Number of nodes', numVertices)
     print('Number of edges', numEdges)
     print('Number of papers', numPapers)
+
+    with open('nodeDict.pkl', 'wb') as f:
+        pickle.dump(nodeDict, f)
+        f.close()
+
+    with open('edgeDict.pkl', 'wb') as f:
+        pickle.dump(edgeDict, f)
+        f.close()
 
     # Create clusters bottom up - first level 1 clustering (less clusters)
     # then level 2 clustering (slightly more clusters)

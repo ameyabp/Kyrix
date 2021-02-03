@@ -68,7 +68,6 @@ div.jumppopover > div {
     text-align: center;
     font-family: "Source Serif Pro", sans-serif !important;
 }
-<<<<<<< HEAD
 
 .gobackbutton {
     position: absolute;
@@ -282,5 +281,3 @@ label {
 label:hover:before {
     border: 2px solid #4778d9 !important;
 }
-=======
->>>>>>> upstream/master

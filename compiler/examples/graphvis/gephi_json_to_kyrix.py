@@ -27,13 +27,14 @@ for node in data_l0['nodes']:
     try:
         nodeDf['affiliation'].append(node['attributes']['affiliation'])
     except:
-        nodeDf['affiliation'].append('N/A')
+        nodeDf['affiliation'].append('')
     nodeDf['paperCount'].append(int(node['attributes']['papercount']))
     nodeDf['coauthorCount'].append(int(node['attributes']['coauthorcount']))
     nodeDf['memberNodeCount'].append(int(node['attributes']['membernodecount']))
     nodeDf['clusterLevel'].append(node['attributes']['clusterlevel'])
     id_to_coord[node['id']] = [node['x'], node['y']]
     
+"""
 for node in data_l1['nodes']:
     #node = nodeDict[nodeId]
     nodeDf['nodeId'].append(node['id'])
@@ -82,6 +83,8 @@ for node in data_l3['nodes']:
     nodeDf['clusterLevel'].append(node['attributes']['clusterlevel'])
     id_to_coord[node['id']] = [node['x'], node['y']]
 
+"""
+
 # edge dataframe
 edgeDf = {'edgeId': [], 'x1': [], 'y1': [], 'x2': [], 'y2': [], 'author1': [], 'author2': [], 'paperCount': [], 'clusterLevel': []}
 
@@ -96,6 +99,7 @@ for edge in data_l0['edges']:
     edgeDf['paperCount'].append(int(edge['attributes']['papercount']))
     edgeDf['clusterLevel'].append(edge['attributes']['clusterlevel'])
 
+"""
 for edge in data_l1['edges']:
     edgeDf['edgeId'].append(edge['attributes']['edgeid'])
     edgeDf['x1'].append(id_to_coord[edge['source']][0])
@@ -128,7 +132,7 @@ for edge in data_l3['edges']:
     edgeDf['author2'].append(edge['target'])
     edgeDf['paperCount'].append(int(edge['attributes']['papercount']))
     edgeDf['clusterLevel'].append(edge['attributes']['clusterlevel'])
-
+"""
 
 df = pd.DataFrame(data=nodeDf)
 with open('kyrixGraphNodesData_f.csv', 'w') as g:

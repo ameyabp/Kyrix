@@ -23,6 +23,7 @@ The vispub dataset has the data for 3109 papers, with following schema
 import pandas as pd
 from itertools import combinations
 import random
+import pickle
 # graph_tool is installed outside the virtual environment
 # add the path to the graph_tool package in sys.path
 # import sys
@@ -138,6 +139,14 @@ numPapers = len(df)
 print('Number of nodes', numVertices)
 print('Number of edges', numEdges)
 print('Number of papers', numPapers)
+
+with open('nodeDict.pkl', 'wb') as f:
+    pickle.dump(nodeDict, f)
+    f.close()
+
+with open('edgeDict.pkl', 'wb') as f:
+    pickle.dump(edgeDict, f)
+    f.close()
 
 # Create clusters bottom up - first level 1 clustering (less clusters)
 # then level 2 clustering (slightly more clusters)
@@ -491,7 +500,6 @@ for edgeId in edgeDict:
     edgeDf_l0['Target'].append(edge.author2Id)
     edgeDf_l0['paperCount'].append(int(len(edge.papers)))
     edgeDf_l0['clusterLevel'].append(edge.clusterLevel)
-    edgeDf_l0['weights'].append(len(edge.papers) / numPapers)
     edgeDf_l0['weight'].append(len(edge.papers) / numPapers)
 
 for edgeId in edgeDict_l1:
