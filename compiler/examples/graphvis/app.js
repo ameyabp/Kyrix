@@ -91,7 +91,7 @@ linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 
 // linkLayer.addTooltip(["author1", "author2", "paperCount"], ["Author 1", "Author 2", "Paper count"]);
 
 // ================== Views ===================
-var view = new View("graphvis", 0, 0, 960, 960);
+var view = new View("graphvis", 960, 960);
 p.addView(view);
 p.setInitialStates(view, bgCanvas2, 0, 0);
 

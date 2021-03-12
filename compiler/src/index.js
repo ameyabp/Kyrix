@@ -5,6 +5,7 @@ const psql = require("pg");
 const http = require("http");
 const addTable = require("./template-api/addTable").addTable;
 const addSSV = require("./template-api/addSSV").addSSV;
+const addGraph = require("./template-api/Graph").addGraph;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
 const addStaticAggregation = require("./template-api/addStaticAggregation")
     .addStaticAggregation;
@@ -43,6 +44,9 @@ function Project(name, configFile) {
 
     // set of ssv(s)
     this.ssvs = [];
+
+    // set of graph(s)
+    this.graphs = [];
 
     // set of tables
     this.tables = [];
@@ -600,6 +604,7 @@ Project.prototype = {
     addCanvas,
     addJump,
     addSSV,
+    addGraph,
     addTable,
     addUSMap,
     addStaticAggregation,
