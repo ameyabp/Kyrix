@@ -11,6 +11,11 @@
 # start with alpine and node
 FROM node:8-alpine
 
+# ADDING MAKE AND G++ FOR OPENORD LAYOUT
+RUN apk add --update make
+RUN apk add --update g++
+#COPY ./OpenORD/OpenORD-master /
+
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \
     nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl
