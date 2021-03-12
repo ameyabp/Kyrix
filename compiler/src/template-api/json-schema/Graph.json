@@ -219,8 +219,19 @@
             },
             "required": ["cluster"],
             "additionalProperties": false
+        },        
+        "config": {
+            "type": "object",
+            "properties": {
+                "projectName": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "additionalProperties": false,
+            "required": ["projectName"]
         }
     },
-    "required": ["data", "layout", "marks"],
+    "required": ["data", "layout", "marks", "config"],
     "additionalProperties": false
 }
