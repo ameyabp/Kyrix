@@ -58,7 +58,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
         Transform trans = l.getTransform();
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-        OpenORD();
+        //OpenORD();
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName =
