@@ -96,6 +96,14 @@ function setSSVId(ssvId) {
 }
 
 /**
+ * set graph ID
+ * @param graphId
+ */
+ function setGraphId(graphId) {
+    this.graphId = graphId;
+}
+
+/**
  * set usmap ID
  * @param usmapId
  */
@@ -130,6 +138,7 @@ Layer.prototype = {
     addTooltip,
     setFetchingScheme,
     setSSVId,
+    setGraphId,
     setUSMapId,
     setStaticAggregationId,
     setIndexerType

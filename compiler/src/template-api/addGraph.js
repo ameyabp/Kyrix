@@ -71,17 +71,84 @@ function addGraph(graph, args) {
         curCanvas.addLayer(curEdgeLayer);
 
         // set fetching scheme
-        curLayer.setFetchingScheme("dbox", false);
+        curNodeLayer.setFetchingScheme("dbox", false);
+        curEdgeLayer.setFetchingScheme("dbox", false);
         //curLayer.setFetchingScheme("tiling");
 
-        curLayer.addPlacement({
+        // set ssv ID
+        curNodeLayer.setIndexerType("GraphInMemoryIndexer");
+        //curLayer.setIndexerType("SSVCitusIndexer");
+        curNodeLayer.setGraphId(this.graphs.length - 1 + "_node_" + i);
+        curEdgeLayer.setIndexerType("GraphInMemoryIndexer");
+        //curLayer.setIndexerType("SSVCitusIndexer");
+        curEdgeLayer.setGraphId(this.graphs.length - 1 + "_edge_" + i);
+
+        // dummy placement
+        curNodeLayer.addPlacement({
+            centroid_x: "con:0",
+            centroid_y: "con:0",
+            width: "con:0",
+            height: "con:0"
+        });
+        curEdgeLayer.addPlacement({
             centroid_x: "con:0",
             centroid_y: "con:0",
             width: "con:0",
             height: "con:0"
         });
 
+        // construct rendering function
+        curNodeLayer.addRenderingFunc(graph.getNodeLayerRenderer());
+        curEdgeLayer.addRenderingFunc(graph.getEdgeLayerRenderer());
+
+        // tooltips
+        curNodeLayer.addTooltip(graph.tooltipColumns, graph.tooltipAliases);
+        curEdgeLayer.addTooltip(graph.tooltipColumns, graph.tooltipAliases);
     }
+
+    // literal zooms
+    for (var i = 0; i + 1 < graph.numLevels; i++) {
+        var hasLiteralZoomIn = false;
+        var hasLiteralZoomOut = false;
+        for (var j = 0; j < this.jumps.length; j++) {
+            if (
+                this.jumps[j].sourceId == curPyramid[i].id &&
+                this.jumps[j].type == "literal_zoom_in"
+            ) {
+                if (this.jumps[j].destId != curPyramid[i + 1].id)
+                    throw new Error(
+                        "Adding SSV: malformed literal zoom pyramid."
+                    );
+                hasLiteralZoomIn = true;
+            }
+            if (
+                this.jumps[j].sourceId == curPyramid[i + 1].id &&
+                this.jumps[j].type == "literal_zoom_out"
+            ) {
+                if (this.jumps[j].destId != curPyramid[i].id)
+                    throw new Error(
+                        "Adding SSV: malformed literal zoom pyramid."
+                    );
+                hasLiteralZoomOut = true;
+            }
+        }
+        if (!hasLiteralZoomIn)
+            this.addJump(new Jump(curPyramid[i], curPyramid[i + 1], "literal_zoom_in"));
+        if (!hasLiteralZoomOut)
+            this.addJump(new Jump(curPyramid[i + 1], curPyramid[i], "literal_zoom_out"));
+    }
+
+    // create a new view if not specified
+    if (!args.view) {
+        var viewId = "graph" + (this.graphs.length - 1);
+        var view = new View(viewId, graph.topLevelWidth, graph.topLevelHeight);
+        this.addView(view);
+        // initialize view
+        this.setInitialStates(view, curPyramid[0], 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Adding Graph: view must be a View object");
+
+    return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
 
 module.exports = {
