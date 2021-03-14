@@ -25,20 +25,31 @@ var graph = {
     },
     marks: {
         cluster: {
-            aggregate: "memberNodeCount",
+            aggregate: {
+                measures: {
+                    fields: ["memberNodeCount", "paperCount"],
+                    function: "sum"
+                }
+            },
             numClusters: [200, 100, 40],
             randomState: 0,
             algorithm: "elkan"
+        },
+        encoding: {
+            nodeSize: "memberNodeCount"
         },
         hover: {
             rankList: {
                 mode: "tabular",
                 fields: ["name", "affiliation", "paperCount", "memberNodeCount"],
-                topk: 3
+                topk: 3,
+                orientation: "vertical"
             },
             boundary: "convexhull"
-        },
-
+        }
+    },
+    config: {
+        projectName: "authorGraph"
     }
 };
 

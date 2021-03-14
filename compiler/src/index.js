@@ -5,7 +5,7 @@ const psql = require("pg");
 const http = require("http");
 const addTable = require("./template-api/addTable").addTable;
 const addSSV = require("./template-api/addSSV").addSSV;
-const addGraph = require("./template-api/Graph").addGraph;
+const addGraph = require("./template-api/addGraph").addGraph;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
 const addStaticAggregation = require("./template-api/addStaticAggregation")
     .addStaticAggregation;

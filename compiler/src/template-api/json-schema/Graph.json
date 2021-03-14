@@ -30,6 +30,9 @@
         },
         "aggregationFunctions": {
             "enum": ["count", "sum", "avg", "min", "max", "sqrsum"]
+        },
+        "clusteringAlgorithms": {
+            "enum": ["elkan"]
         }
     },
     "properties": {
@@ -105,8 +108,77 @@
                     "type": "object",
                     "properties": {
                         "aggregate": {
-                            "type": "string",
-                            "minLength": 1
+                            "type": "object",
+                            "properties": {
+                                "measures": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "field": {
+                                                        "$ref": "#/definitions/nonEmptyString"
+                                                    },
+                                                    "function": {
+                                                        "$ref": "#/definitions/aggregationFunctions"
+                                                    },
+                                                    "extent": {
+                                                        "$ref": "#/definitions/twoNumberArray"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "field",
+                                                    "function"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "fields": {
+                                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                                },
+                                                "function": {
+                                                    "$ref": "#/definitions/aggregationFunctions"
+                                                },
+                                                "extent": {
+                                                    "$ref": "#/definitions/twoNumberArray"
+                                                }
+                                            },
+                                            "required": ["fields", "function"],
+                                            "additionalProperties": false
+                                        }
+                                    ],
+                                    "default": []
+                                },
+                                "dimensions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "field": {
+                                                "$ref": "#/definitions/nonEmptyString"
+                                            },
+                                            "domain": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "required": ["field", "domain"],
+                                        "additionalProperties": false
+                                    },
+                                    "default": []
+                                }
+                            },
+                            "additionalProperties": false,
+                            "default": {
+                                "measures": [],
+                                "dimensions": []
+                            }
                         },
                         "numClusters": {
                             "$ref": "#/definitions/nonEmptyNumberArray"
@@ -116,9 +188,13 @@
                             "default": 0
                         },
                         "algorithm": {
-                            "type": "string",
-                            "default": "elkan"
+                            "$ref": "#/definitions/clusteringAlgorithms"
                         }
+                    }
+                },
+                "encoding": {
+                    "nodeSize": {
+                        "$ref": "#/definitions/nonEmptyString"
                     }
                 },
                 "hover": {
@@ -226,6 +302,24 @@
                 "projectName": {
                     "type": "string",
                     "minLength": 1
+                },
+                "topLevelWidth": {
+                    "type": "number",
+                    "minimum": 200,
+                    "maximum": 4000,
+                    "default": 4000
+                },
+                "topLevelHeight": {
+                    "type": "number",
+                    "minimum": 200,
+                    "maximum": 4000,
+                    "default": 4000
+                },
+                "zoomFactor": {
+                    "type": "number",
+                    "minimum": 1.1,
+                    "maximum": 5,
+                    "default": 2
                 }
             },
             "additionalProperties": false,
