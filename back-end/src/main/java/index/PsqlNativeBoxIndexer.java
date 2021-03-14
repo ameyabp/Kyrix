@@ -15,6 +15,11 @@ import project.Canvas;
 import project.Layer;
 import project.Transform;
 
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+
 public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
     private static PsqlNativeBoxIndexer instance = null;
@@ -29,12 +34,31 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
         return instance;
     }
 
+    private static void OpenORD() throws Exception {
+        String s;
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec("sh -c ./authorship.sh", null, new File("/OpenOrd-master/examples/recursive"));
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            while ((s = br.readLine()) != null)
+                System.out.println("line: " + s);
+            p.waitFor();
+            System.out.println ("exit: " + p.exitValue());
+            p.destroy();
+        } catch (Exception e) {
+        	System.out.println(e.getMessage());
+        }
+    }
+
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+
+        //OpenORD();
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName =
