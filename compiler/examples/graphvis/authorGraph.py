@@ -49,6 +49,9 @@ from authorGraphDefs import *
 #         self.clusterLevel = 0
 #         self.memberNodes = set()
 #         # index everything using the node and edge IDs
+#         # node position
+#         self.x = 0
+#         self.y = 0
 
 # class Edge:
 #     # coauthor relationship
@@ -58,6 +61,11 @@ from authorGraphDefs import *
 #         self.author2Id = author2
 #         self.papers = []
 #         self.clusterLevel = clusterLevel
+#         # edge position
+#         self.x1 = 0
+#         self.y1 = 0
+#         self.x2 = 0
+#         self.y2 = 0
 
 # class Paper:
 #     # attribute of edge

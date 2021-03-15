@@ -16,7 +16,7 @@ public class Layer implements Serializable {
     private String rendering;
     private ArrayList<String> tooltipColumns, tooltipAliases;
     private transient Indexer indexer;
-    private String ssvId, usmapId, staticAggregationId;
+    private String ssvId, usmapId, staticAggregationId, graphId;
     private String indexerType;
 
     public Transform getTransform() {
@@ -53,6 +53,10 @@ public class Layer implements Serializable {
 
     public String getSSVId() {
         return ssvId;
+    }
+
+    public String getGraphId() {
+        return graphId;
     }
 
     public String getUsmapId() {

@@ -54,4 +54,4 @@ var graph = {
 };
 
 p.addGraph(new Graph(graph));
-// p.saveProject();
+p.saveProject();
