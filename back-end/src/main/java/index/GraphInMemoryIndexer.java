@@ -29,6 +29,95 @@ import vlsi.utils.CompactHashMap;
 
 /** Created on 3/13/21. */
 public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
+    private class RTreeData {
+        int rowId;
+        float minx, miny, maxx, maxy;
+        CompactHashMap<String, Float> numericalAggs;
+        float[][] convexHull;
+        int[] topk;
+
+        RTreeData(int _rowId) {
+            rowId = _rowId;
+            minx = miny = maxx = maxy = 0;
+            numericalAggs = null;
+            convexHull = null;
+            topk = null;
+        }
+
+        public RTreeData clone() {
+            RTreeData ret = new RTreeData(rowId);
+            if (numericalAggs != null) {
+                ret.numericalAggs = new CompactHashMap<>();
+                for (String key : numericalAggs.keySet())
+                    ret.numericalAggs.put(key, numericalAggs.get(key));
+            }
+            if (convexHull != null) {
+                ret.convexHull = new float[convexHull.length][2];
+                for (int i = 0; i < convexHull.length; i++) {
+                    ret.convexHull[i][0] = convexHull[i][0];
+                    ret.convexHull[i][1] = convexHull[i][1];
+                }
+            }
+            if (topk != null) {
+                ret.topk = new int[topk.length];
+                for (int i = 0; i < topk.length; i++) ret.topk[i] = topk[i];
+            }
+            return ret;
+        }
+
+        public String getClusterAggString() throws Exception {
+            JsonObject jsonObj = new JsonObject();
+
+            // add numeric aggs
+            for (String key : numericalAggs.keySet())
+                jsonObj.addProperty(key, numericalAggs.get(key));
+
+            // turn convexhull into json array of json arrays
+            JsonArray convexHullArr = new JsonArray();
+            for (int i = 0; i < convexHull.length; i++) {
+                JsonArray arr = new JsonArray();
+                arr.add(convexHull[i][0]);
+                arr.add(convexHull[i][1]);
+                convexHullArr.add(arr);
+            }
+            jsonObj.add("convexHull", convexHullArr);
+
+            // turn topk into an array of json objects
+            JsonArray topkArr = new JsonArray();
+            for (int i = 0; i < topk.length; i++) {
+                JsonObject obj = new JsonObject();
+                ArrayList<String> curRow = rawRows.get(topk[i]);
+                for (int j = 0; j < numRawColumns; j++)
+                    obj.addProperty(graph.getColumnNames().get(j), curRow.get(j));
+                topkArr.add(obj);
+            }
+            jsonObj.add("topk", topkArr);
+
+            return gson.toJson(jsonObj);
+        }
+    }
+
+    public class SortByZ implements Comparator<RTreeData> {
+
+        @Override
+        public int compare(RTreeData o1, RTreeData o2) {
+
+            String zCol = graph.getzCol();
+            int zColId = 0;
+            try {
+                zColId = graph.getColumnNames().indexOf(zCol);
+            } catch (Exception e) {
+                return 0; // this will probably cause an exception anyways
+            }
+            String zOrder = graph.getzOrder();
+
+            float v1 = parseFloat(rawRows.get(o1.rowId).get(zColId));
+            float v2 = parseFloat(rawRows.get(o2.rowId).get(zColId));
+            if (v1 == v2) return 0;
+            if (zOrder.equals("asc")) return v1 < v2 ? -1 : 1;
+            else return v1 < v2 ? 1 : -1;
+        }
+    }
 
     private static GraphInMemoryIndexer instance = null;
     // private final int objectNumLimit = 4000; // in a 1k by 1k region
@@ -47,7 +136,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private Graph graph;    
 
     // singleton pattern to ensure only one instance existed
-    private SSVInMemoryIndexer() {
+    private GraphInMemoryIndexer() {
         gson = new GsonBuilder().create();
     }
 
@@ -109,14 +198,24 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
 
         // store raw query results into memory
-        rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQuery());
+        rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryNodes());
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumns; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
         System.out.println("Total raw rows: " + rawRows.size());
 
         // add row number as a BGRP
-        Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
+        Main.getProject().addBGRP(rpKey, "roughNodes", String.valueOf(rawRows.size()));
+
+        // store raw query results into memory
+        rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryEdges());
+        for (int i = 0; i < rawRows.size(); i++)
+            for (int j = 0; j < numRawColumns; j++)
+                if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
+        System.out.println("Total raw rows: " + rawRows.size());
+
+        // add row number as a BGRP
+        Main.getProject().addBGRP(rpKey, "roughEdges", String.valueOf(rawRows.size()));
     }
 
     private void computeClusterAggs() throws Exception {

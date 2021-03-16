@@ -14,7 +14,9 @@ public class Graph {
     private int bboxW, bboxH;
     private int topk;
     // private String clusterMode, zOrder;
+    private String zOrder;
     private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
+    // private ArrayList<String> edgeColumnNames, queriedEdgeColumnNames = null, edgeColumnTypes = null;
     private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int numLevels, topLevelWidth, topLevelHeight;
     // private double overlap;
@@ -71,9 +73,9 @@ public class Graph {
         return zCol;
     }
 
-    // public String getzOrder() {
-    //     return zOrder;
-    // }
+    public String getzOrder() {
+        return zOrder;
+    }
 
     // public String getClusterMode() {
     //     return clusterMode;
@@ -120,7 +122,7 @@ public class Graph {
             queriedColumnNames = new ArrayList<>();
             columnTypes = new ArrayList<>();
             Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-            String query = getQuery();
+            String query = getQueryNodes();
             if (Config.database == Config.Database.CITUS) {
                 while (query.charAt(query.length() - 1) == ';')
                     query = query.substring(0, query.length() - 1);
@@ -146,6 +148,43 @@ public class Graph {
         getColumnNames();
         return columnTypes;
     }
+
+    // public ArrayList<String> getEdgeColumnNames() throws Exception {
+
+    //     // if it is specified already, return
+    //     if (edgeColumnNames.size() > 0) return edgeColumnNames;
+
+    //     // otherwise fetch the schema from DB
+    //     if (queriedEdgeColumnNames == null) {
+    //         queriedEdgeColumnNames = new ArrayList<>();
+    //         columnTypes = new ArrayList<>();
+    //         Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+    //         String query = getQuery();
+    //         if (Config.database == Config.Database.CITUS) {
+    //             while (query.charAt(query.length() - 1) == ';')
+    //                 query = query.substring(0, query.length() - 1);
+    //             // assuming there is no limit 1
+    //             query += " LIMIT 1;";
+    //         }
+    //         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
+    //         int colCount = rs.getMetaData().getColumnCount();
+    //         for (int i = 1; i <= colCount; i++) {
+    //             queriedEdgeColumnNames.add(rs.getMetaData().getColumnName(i));
+    //             edgeColumnTypes.add(rs.getMetaData().getColumnTypeName(i));
+    //         }
+    //         rs.close();
+    //         rawDBStmt.close();
+    //         DbConnector.closeConnection(getDb());
+    //     }
+
+    //     return queriedEdgeColumnNames;
+    // }
+
+    // public ArrayList<String> getEdgeColumnTypes() throws Exception {
+    //     if (edgeColumnTypes != null) return edgeColumnTypes;
+    //     getEdgeColumnNames();
+    //     return edgeColumnTypes;
+    // }
 
     public ArrayList<String> getAggDimensionFields() {
         return aggDimensionFields;
@@ -255,7 +294,7 @@ public class Graph {
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
             Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
+            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQueryNodes());
             while (rs.next()) {
                 double cx = rs.getDouble(getXColId() + 1);
                 double cy = rs.getDouble(getYColId() + 1);
@@ -272,8 +311,11 @@ public class Graph {
     @Override
     public String toString() {
         return "Graph{"
-                + "query='"
-                + query
+                + "queryNodes='"
+                + queryNodes
+                + '\''
+                + "queryEdges='"
+                + queryEdges
                 + '\''
                 + ", db='"
                 + db
@@ -289,9 +331,6 @@ public class Graph {
                 + ", bboxH="
                 + bboxH
                 + '\''
-                + ", clusterMode='"
-                + clusterMode
-                + '\''
                 + ", columnNames="
                 + columnNames
                 + ", numLevels="
@@ -300,8 +339,6 @@ public class Graph {
                 + topLevelWidth
                 + ", topLevelHeight="
                 + topLevelHeight
-                + ", overlap="
-                + overlap
                 + ", zoomFactor="
                 + zoomFactor
                 + '}';
