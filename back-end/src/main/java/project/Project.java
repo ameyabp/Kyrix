@@ -22,6 +22,7 @@ public class Project {
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
     private ArrayList<SSV> ssvs;
+    private ArrayList<Graph> graphs;
     private ArrayList<Table> tables;
     private String renderingParams;
     private ArrayList<String> styles;
@@ -54,6 +55,10 @@ public class Project {
 
     public ArrayList<SSV> getSsvs() {
         return ssvs;
+    }
+
+    public ArrayList<Graph> getGraphs() {
+        return graphs;
     }
 
     public ArrayList<Table> getTables() {

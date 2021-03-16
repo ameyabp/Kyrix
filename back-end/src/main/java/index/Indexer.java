@@ -22,6 +22,7 @@ import project.Canvas;
 import project.Layer;
 import project.Placement;
 import project.SSV;
+import project.Graph;
 
 /** Created by wenbo on 12/30/18. */
 public abstract class Indexer implements Serializable {
