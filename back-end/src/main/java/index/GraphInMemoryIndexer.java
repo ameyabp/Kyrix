@@ -8,6 +8,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -160,13 +164,57 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // set common variables
         setCommonVariables();
 
+
+        // compute layout
+        System.out.println("Computing Layout...");
+        computeLayout();
+
+
         // compute cluster aggregations
         long st = System.nanoTime();
-        computeClusterAggs();
+        //below is commented out for now - need to uncomment some commands in the dockerfile-kyrix-alpine for the clustering script to work properly
+        //computeClusterAggs();
         System.out.println("Computer ClusterAggs took " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // clean up
         cleanUp();
+    }
+
+
+    private static void computeLayout() throws Exception {
+        String s;
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec("sh -c ./authorship.sh", null, new File("/OpenOrd-master/examples/recursive"));
+
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            while ((s = br.readLine()) != null)
+                System.out.println("line: " + s);
+            p.waitFor();
+            System.out.println ("exit: " + p.exitValue());
+            p.destroy();
+        } catch (Exception e) {
+        	System.out.println(e.getMessage());
+        }
+    }
+
+    private static void computeClustering() throws Exception {
+        String s;
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec("sh -c python kMeansClusteringIterative.py 2", null, new File("/Clustering"));
+
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            while ((s = br.readLine()) != null)
+                System.out.println("line: " + s);
+            p.waitFor();
+            System.out.println ("exit: " + p.exitValue());
+            p.destroy();
+        } catch (Exception e) {
+        	System.out.println(e.getMessage());
+        }
     }
 
     private void setCommonVariables() throws Exception {
@@ -219,6 +267,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
     private void computeClusterAggs() throws Exception {
+
+        computeClustering();
+        
+        /*
         // initialize R-tree0
         rtree0 = RTree.star().create();
         for (int i = 0; i < rawRows.size(); i++) {
@@ -250,6 +302,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             //            Main.printUsedMemory("Memory consumed after clustering level" + i);
         }
+        */
+        
+        
+
     }
 
     private void writeToDB(int level) throws Exception {

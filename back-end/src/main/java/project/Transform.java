@@ -47,8 +47,15 @@ public class Transform implements Serializable {
 
     public ArrayList<String> getColumnNames() throws SQLException, ClassNotFoundException {
 
+        System.out.println("getDb is empty: " + getDb() + ".");
+        System.out.println("id: " + getId() + ".");
+        System.out.println("query: " + getQuery() + ".");
+
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
+
+        // delete the below line later - this was not initially part of transform and is just for debugging purposes
+        if (getDb() == null) return columnNames;
 
         // if it is an empty transform, return an empty array
         if (getDb().isEmpty()) return columnNames;

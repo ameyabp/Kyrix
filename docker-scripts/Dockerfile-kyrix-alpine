@@ -14,7 +14,21 @@ FROM node:8-alpine
 # ADDING MAKE AND G++ FOR OPENORD LAYOUT
 RUN apk add --update make
 RUN apk add --update g++
-#COPY ./OpenORD/OpenORD-master /
+RUN mkdir /OpenOrd-master
+RUN mkdir /Clustering
+ADD ./OpenORD/OpenOrd-master /OpenOrd-master/
+ADD ./OpenORD/Clustering /Clustering/
+RUN cd /OpenOrd-master/src/ && make clean && make 
+# uncomment below run sequence for the clustering
+#RUN apk add --no-cache --virtual build-dependencies python --update py-pip 
+#    && apk add --virtual build-runtime 
+#    build-base python-dev openblas-dev freetype-dev pkgconfig gfortran
+#    && pip install --upgrade pip 
+#    && pip install --no-cache-dir wheel
+#    && pip install --no-cache-dir numpy
+#    && pip install --no-cache-dir pandas
+#    && pip install --no-cache-dir scikit-learn
+
 
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \

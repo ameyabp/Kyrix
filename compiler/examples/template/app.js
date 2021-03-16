@@ -4,6 +4,7 @@ const Canvas = require("../../src/Canvas").Canvas;
 const Jump = require("../../src/Jump").Jump;
 const Layer = require("../../src/Layer").Layer;
 const View = require("../../src/View").View;
+const Graph = require("../../src/template-api/Graph").Graph;
 
 // project components
 const renderers = require("./renderers");
@@ -28,13 +29,59 @@ project.addCanvas(testingCanvas);
 var testingLayer = new Layer(transforms.emptyTransform, false);
 testingCanvas.addLayer(testingLayer);
 //stateBoundaryLayer.addRenderingFunc(renderers.test);
-testingLayer.addRenderingFunc(renderers.test);
+//testingLayer.addRenderingFunc(renderers.test);
 testingLayer.addPlacement({
     centroid_x: "full",
     centroid_y: "full",
     width: "full",
     height: "full"
 });
+
+var graph = {
+    data: {
+        db: "nba",
+        queryNodes: "asdfasdf;",
+        queryEdges: "asdfad;"
+    },
+    layout: {
+        name: "openORD",
+        maxLevel: 2,
+        startLevel: 1,
+        lastCut: 0.8,
+        refineCut: 0.5,
+        finalCut: 0.5
+    },
+    marks: {
+        cluster: {
+            aggregate: {
+                measures: {
+                    fields: ["memberNodeCount", "paperCount"],
+                    function: "sum"
+                }
+            },
+            numClusters: [200, 100, 40],
+            randomState: 0,
+            algorithm: "elkan"
+        },
+        encoding: {
+            nodeSize: "memberNodeCount"
+        },
+        hover: {
+            rankList: {
+                mode: "tabular",
+                fields: ["name", "affiliation", "paperCount", "memberNodeCount"],
+                topk: 3,
+                orientation: "vertical"
+            },
+            boundary: "convexhull"
+        }
+    },
+    config: {
+        projectName: "authorGraph"
+    }
+};
+
+project.addGraph(new Graph(graph));
 
 var view = new View("testing", 960*2, 500*2);
 project.addView(view);
