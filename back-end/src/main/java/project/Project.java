@@ -132,6 +132,8 @@ public class Project {
                 + jumps
                 + ", ssvs="
                 + ssvs
+                + ", graphs="
+                + graphs
                 + ", renderingParams='"
                 + renderingParams
                 + '\''

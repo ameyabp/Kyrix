@@ -65,6 +65,10 @@ function Graph(args_) {
             );
     }
 
+    this.db = args.data.db;
+    this.queryNodes = args.data.queryNodes;
+    this.queryEdges = args.data.queryEdges;
+
     this.numLevels = args.marks.cluster.numClusters.length;
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;

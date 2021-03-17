@@ -15,8 +15,8 @@ public class Graph {
     private int topk;
     // private String clusterMode, zOrder;
     private String zOrder;
-    private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
-    // private ArrayList<String> edgeColumnNames, queriedEdgeColumnNames = null, edgeColumnTypes = null;
+    private ArrayList<String> columnNamesNodes, queriedColumnNamesNodes = null, columnTypesNodes = null;
+    private ArrayList<String> columnNamesEdges, queriedColumnNamesEdges = null, columnTypesEdges = null;
     private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int numLevels, topLevelWidth, topLevelHeight;
     // private double overlap;
@@ -88,7 +88,7 @@ public class Graph {
     public int getXColId() throws Exception {
 
         if (xColId < 0) {
-            ArrayList<String> colNames = getColumnNames();
+            ArrayList<String> colNames = getColumnNamesNodes();
             xColId = colNames.indexOf(xCol);
         }
         return xColId;
@@ -97,7 +97,7 @@ public class Graph {
     public int getYColId() throws Exception {
 
         if (yColId < 0) {
-            ArrayList<String> colNames = getColumnNames();
+            ArrayList<String> colNames = getColumnNamesNodes();
             yColId = colNames.indexOf(yCol);
         }
         return yColId;
@@ -106,21 +106,21 @@ public class Graph {
     public int getZColId() throws Exception {
 
         if (zColId < 0) {
-            ArrayList<String> colNames = getColumnNames();
+            ArrayList<String> colNames = getColumnNamesNodes();
             zColId = colNames.indexOf(zCol);
         }
         return zColId;
     }
 
-    public ArrayList<String> getColumnNames() throws Exception {
+    public ArrayList<String> getColumnNamesNodes() throws Exception {
 
         // if it is specified already, return
-        if (columnNames.size() > 0) return columnNames;
+        if (columnNamesNodes != null && columnNamesNodes.size() > 0) return columnNamesNodes;
 
         // otherwise fetch the schema from DB
-        if (queriedColumnNames == null) {
-            queriedColumnNames = new ArrayList<>();
-            columnTypes = new ArrayList<>();
+        if (queriedColumnNamesNodes == null) {
+            queriedColumnNamesNodes = new ArrayList<>();
+            columnTypesNodes = new ArrayList<>();
             Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
             String query = getQueryNodes();
             if (Config.database == Config.Database.CITUS) {
@@ -132,59 +132,59 @@ public class Graph {
             ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
             int colCount = rs.getMetaData().getColumnCount();
             for (int i = 1; i <= colCount; i++) {
-                queriedColumnNames.add(rs.getMetaData().getColumnName(i));
-                columnTypes.add(rs.getMetaData().getColumnTypeName(i));
+                queriedColumnNamesNodes.add(rs.getMetaData().getColumnName(i));
+                columnTypesNodes.add(rs.getMetaData().getColumnTypeName(i));
             }
             rs.close();
             rawDBStmt.close();
             DbConnector.closeConnection(getDb());
         }
 
-        return queriedColumnNames;
+        return queriedColumnNamesNodes;
     }
 
-    public ArrayList<String> getColumnTypes() throws Exception {
-        if (columnTypes != null) return columnTypes;
-        getColumnNames();
-        return columnTypes;
+    public ArrayList<String> getColumnTypesNodes() throws Exception {
+        if (columnTypesNodes != null) return columnTypesNodes;
+        getColumnNamesNodes();
+        return columnTypesNodes;
     }
 
-    // public ArrayList<String> getEdgeColumnNames() throws Exception {
+    public ArrayList<String> getColumnNamesEdges() throws Exception {
 
-    //     // if it is specified already, return
-    //     if (edgeColumnNames.size() > 0) return edgeColumnNames;
+        // if it is specified already, return
+        if (columnNamesEdges != null && columnNamesEdges.size() > 0) return columnNamesEdges;
 
-    //     // otherwise fetch the schema from DB
-    //     if (queriedEdgeColumnNames == null) {
-    //         queriedEdgeColumnNames = new ArrayList<>();
-    //         columnTypes = new ArrayList<>();
-    //         Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-    //         String query = getQuery();
-    //         if (Config.database == Config.Database.CITUS) {
-    //             while (query.charAt(query.length() - 1) == ';')
-    //                 query = query.substring(0, query.length() - 1);
-    //             // assuming there is no limit 1
-    //             query += " LIMIT 1;";
-    //         }
-    //         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
-    //         int colCount = rs.getMetaData().getColumnCount();
-    //         for (int i = 1; i <= colCount; i++) {
-    //             queriedEdgeColumnNames.add(rs.getMetaData().getColumnName(i));
-    //             edgeColumnTypes.add(rs.getMetaData().getColumnTypeName(i));
-    //         }
-    //         rs.close();
-    //         rawDBStmt.close();
-    //         DbConnector.closeConnection(getDb());
-    //     }
+        // otherwise fetch the schema from DB
+        if (queriedColumnNamesEdges == null) {
+            queriedColumnNamesEdges = new ArrayList<>();
+            columnTypesEdges = new ArrayList<>();
+            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+            String query = getQueryEdges();
+            if (Config.database == Config.Database.CITUS) {
+                while (query.charAt(query.length() - 1) == ';')
+                    query = query.substring(0, query.length() - 1);
+                // assuming there is no limit 1
+                query += " LIMIT 1;";
+            }
+            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
+            int colCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= colCount; i++) {
+                queriedColumnNamesEdges.add(rs.getMetaData().getColumnName(i));
+                columnTypesEdges.add(rs.getMetaData().getColumnTypeName(i));
+            }
+            rs.close();
+            rawDBStmt.close();
+            DbConnector.closeConnection(getDb());
+        }
 
-    //     return queriedEdgeColumnNames;
-    // }
+        return queriedColumnNamesEdges;
+    }
 
-    // public ArrayList<String> getEdgeColumnTypes() throws Exception {
-    //     if (edgeColumnTypes != null) return edgeColumnTypes;
-    //     getEdgeColumnNames();
-    //     return edgeColumnTypes;
-    // }
+    public ArrayList<String> getColumnTypesEdges() throws Exception {
+        if (columnTypesEdges != null) return columnTypesEdges;
+        getColumnNamesEdges();
+        return columnTypesEdges;
+    }
 
     public ArrayList<String> getAggDimensionFields() {
         return aggDimensionFields;
@@ -331,8 +331,10 @@ public class Graph {
                 + ", bboxH="
                 + bboxH
                 + '\''
-                + ", columnNames="
-                + columnNames
+                + ", columnNamesNodes="
+                + columnNamesNodes
+                + ", columnNamesEdges="
+                + columnNamesEdges
                 + ", numLevels="
                 + numLevels
                 + ", topLevelWidth="

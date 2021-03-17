@@ -12,8 +12,8 @@ var p = new Project("graphvis", "../../../config.txt");
 var graph = {
     data: {
         db: "coauthor_graph",
-        queryNodes: "select * from nodes",
-        queryEdges: "select * from edges"
+        queryNodes: "select * from authornodes",
+        queryEdges: "select * from authoredges"
     },
     layout: {
         name: "openORD",
