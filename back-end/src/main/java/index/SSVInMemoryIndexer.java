@@ -24,6 +24,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import project.Canvas;
+import project.Layer;
 import project.SSV;
 import vlsi.utils.CompactHashMap;
 
@@ -150,6 +151,11 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
+        // create MV for all graph canvases at once
+        String canvasId = c.getId();
+        int cId = Integer.valueOf(canvasId.substring(canvasId.indexOf("_level") + 6));
+        if (cId > 0) return;    // since we are creating MV for all graph canvases at once,
+
 
         // create MV for all ssv layers at once
         String curSSVId = c.getLayers().get(layerId).getSSVId();
@@ -157,6 +163,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         if (levelId > 0) return;
         ssvIndex = Integer.valueOf(curSSVId.substring(0, curSSVId.indexOf("_")));
         rpKey = "ssv_" + String.valueOf(ssvIndex);
+        System.out.println("rpKey: " + rpKey);
 
         // set common variables
         setCommonVariables();
@@ -497,23 +504,18 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
     private String getSSVBboxTableName(int level) {
-
         String ssvId = String.valueOf(ssvIndex) + "_" + String.valueOf(level);
-        for (Canvas c : Main.getProject().getCanvases()) {
-            int numLayers = c.getLayers().size();
-            for (int layerId = 0; layerId < numLayers; layerId++) {
-                if (c.getLayers().get(layerId).isStatic()) continue;
-                String curSSVId = c.getLayers().get(layerId).getSSVId();
-                if (curSSVId == null) continue;
-                if (curSSVId.equals(ssvId))
-                    return "bbox_"
-                            + Main.getProject().getName()
-                            + "_"
-                            + c.getId()
-                            + "layer"
-                            + layerId;
-            }
+        Canvas c = Main.getProject().getCanvases().get(level);
+        for (Layer l : c.getLayers()) {
+            if (l.getSSVId().equals(ssvId))
+                return "bbox_"
+                        + Main.getProject().getName()
+                        + "_"
+                        + c.getId()
+                        + "layer"
+                        + l.getSSVId();
         }
+
         return "";
     }
 

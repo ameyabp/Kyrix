@@ -32,6 +32,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import project.Canvas;
+import project.Layer;
 import project.Graph;
 import vlsi.utils.CompactHashMap;
 
@@ -160,12 +161,20 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        // create MV for all graph layers at once
+        // create MV for all graph canvases at once
+        String canvasId = c.getId();
+        int cId = Integer.valueOf(canvasId.substring(canvasId.indexOf("_level") + 6));
+        if (cId > 0) return;    // since we are creating MV for all graph canvases at once,
         String curGraphId = c.getLayers().get(layerId).getGraphId();
-        int levelId = Integer.valueOf(curGraphId.substring(curGraphId.lastIndexOf("_") + 1));
-        if (levelId > 0) return;
-        graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
+        if (!curGraphId.contains("node"))
+            // we create MV only for the nodes layers
+            // clustering need not be performed again for edges layers
+            return;
+
         rpKey = "graph_" + curGraphId.substring(0, curGraphId.lastIndexOf("_"));
+        System.out.println("rpKey: " + rpKey);
+
+        graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
 
         // set common variables
         setCommonVariables();
@@ -173,7 +182,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // compute layout
         System.out.println("Computing Layout...");
-        //computeLayout();
+        computeLayout();
 
 
         // compute cluster aggregations
@@ -257,7 +266,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumnsNodes; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw rows: " + rawRows.size());
+        System.out.println("Total raw nodes: " + rawRows.size());
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughNodes", String.valueOf(rawRows.size()));
@@ -267,7 +276,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumnsEdges; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw rows: " + rawRows.size());
+        System.out.println("Total raw edges: " + rawRows.size());
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughEdges", String.valueOf(rawRows.size()));
@@ -352,19 +361,19 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 writeToDBNodes(i);
                 System.out.println("finished writing to db...");
 
-                /*//read edges
-                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(1).build();
-                List<String[]> edges = edgesReader.readAll();
-                edges.forEach(edge -> {
-                    //System.out.println(Arrays.toString(edge));
-                    //TODO: cx and cy should be middle of line segment probably, this is only taking source point of edge and using that...
-                    double cx = edge[1];
-                    double cy = edge[2];
-                    double minx = cx - graph.getBboxW() * overlappingThreshold / 2;
-                    double miny = cy - graph.getBboxH() * overlappingThreshold / 2;
-                    double maxx = cx + graph.getBboxW() * overlappingThreshold / 2;
-                    double maxy = cy + graph.getBboxH() * overlappingThreshold / 2;
-                });*/
+                //read edges
+                // CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(1).build();
+                // List<String[]> edges = edgesReader.readAll();
+                // edges.forEach(edge -> {
+                //     //System.out.println(Arrays.toString(edge));
+                //     //TODO: cx and cy should be middle of line segment probably, this is only taking source point of edge and using that...
+                //     double cx = edge[1];
+                //     double cy = edge[2];
+                //     double minx = cx - graph.getBboxW() * overlappingThreshold / 2;
+                //     double miny = cy - graph.getBboxH() * overlappingThreshold / 2;
+                //     double maxx = cx + graph.getBboxW() * overlappingThreshold / 2;
+                //     double maxy = cy + graph.getBboxH() * overlappingThreshold / 2;
+                // });
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -386,9 +395,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-        System.out.println("test");
         // step 0: create tables for storing bboxes
-        String bboxTableName = getGraphBboxTableName(level);
+        String bboxTableName = getGraphNodesBboxTableName(level);
 
         System.out.println("bboxTableName:" + bboxTableName);
         // drop table if exists
@@ -460,7 +468,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // step 0: create tables for storing bboxes
-        String bboxTableName = getGraphBboxTableName(level);
+        String bboxTableName = getGraphEdgesBboxTableName(level);
 
         // drop table if exists
         String sql = "drop table if exists " + bboxTableName + ";";
@@ -568,23 +576,33 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         graph = null;
     }
 
-    private String getGraphBboxTableName(int level) {
-        String graphId = String.valueOf(graphIndex) + "_" + String.valueOf(level);
-        for (Canvas c : Main.getProject().getCanvases()) {
-            int numLayers = c.getLayers().size();
-            for (int layerId = 0; layerId < numLayers; layerId++) {
-                if (c.getLayers().get(layerId).isStatic()) continue;
-                String curGraphId = c.getLayers().get(layerId).getGraphId();
-                if (curGraphId == null) continue;
-                if (curGraphId.equals(graphId))
-                    return "bbox_"
-                            + Main.getProject().getName()
-                            + "_"
-                            + c.getId()
-                            + "layer"
-                            + layerId;
-            }
+    private String getGraphNodesBboxTableName(int level) {
+        Canvas c = Main.getProject().getCanvases().get(level);
+        for (Layer l : c.getLayers()) {
+            if (l.getGraphId().contains("node"))
+                return "bbox" +
+                        Main.getProject().getName() +
+                        "_" +
+                        c.getId() +
+                        "layer" + 
+                        l.getGraphId().substring(l.getGraphId().indexOf("_"));
         }
+
+        return "";
+    }
+
+    private String getGraphEdgesBboxTableName(int level) {
+        Canvas c = Main.getProject().getCanvases().get(level);
+        for (Layer l : c.getLayers()) {
+            if (l.getGraphId().contains("edge"))
+                return "bbox" +
+                        Main.getProject().getName() +
+                        "_" +
+                        c.getId() +
+                        "layer" + 
+                        l.getGraphId().substring(l.getGraphId().indexOf("_"));
+        }
+
         return "";
     }
 
