@@ -40,8 +40,8 @@ testingLayer.addPlacement({
 var graph = {
     data: {
         db: "nba",
-        queryNodes: "asdfasdf;",
-        queryEdges: "asdfad;"
+        queryNodes: "select * from teams;",
+        queryEdges: "select * from teams;"
     },
     layout: {
         name: "openORD",

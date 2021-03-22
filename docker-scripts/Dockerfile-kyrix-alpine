@@ -1,3 +1,28 @@
+# multistage build to include python as well, makes container a bit larger...
+
+#FROM python:3.7-alpine as clusteringStuff
+#ENV PACKAGES=" \
+#    dumb-init \
+#    musl  \
+#    build-base \
+#    ca-certificates  \
+#    libgfortran \
+#    openblas  \
+#    "
+#ENV PYTHON_PACKAGES=" \
+#    numpy   \
+#    scikit-learn \
+#    pandas  \
+#    " 
+#RUN apk add --no-cache --virtual build-dependencies python3 \
+#    && apk add --virtual build-runtime \
+#    build-base python3-dev openblas-dev freetype-dev pkgconfig gfortran \
+#    && python3 -m ensurepip \
+#    && pip3 install --upgrade pip setuptools \
+#    && pip install --no-cache-dir $PYTHON_PACKAGES \
+#    && apk del build-runtime \
+#    && apk add --no-cache --virtual build-dependencies $PACKAGES
+
 #
 # Dockerfile with Alpine Linux as the container OS
 #
@@ -11,6 +36,8 @@
 # start with alpine and node
 FROM node:8-alpine
 
+#COPY --from=clusteringStuff . .
+
 # ADDING MAKE AND G++ FOR OPENORD LAYOUT
 RUN apk add --update make
 RUN apk add --update g++
@@ -19,15 +46,27 @@ RUN mkdir /Clustering
 ADD ./OpenORD/OpenOrd-master /OpenOrd-master/
 ADD ./OpenORD/Clustering /Clustering/
 RUN cd /OpenOrd-master/src/ && make clean && make 
-# uncomment below run sequence for the clustering
-#RUN apk add --no-cache --virtual build-dependencies python --update py-pip 
-#    && apk add --virtual build-runtime 
-#    build-base python-dev openblas-dev freetype-dev pkgconfig gfortran
-#    && pip install --upgrade pip 
-#    && pip install --no-cache-dir wheel
-#    && pip install --no-cache-dir numpy
-#    && pip install --no-cache-dir pandas
-#    && pip install --no-cache-dir scikit-learn
+#ENV PACKAGES=" \
+#    dumb-init \
+#    musl  \
+#    build-base \
+#    ca-certificates  \
+#    libgfortran \
+#    openblas  \
+#    "
+#ENV PYTHON_PACKAGES=" \
+#    numpy   \
+#    scikit-learn \
+#    pandas  \
+#    " 
+#RUN apk add --no-cache --virtual build-dependencies python3 \
+#    && apk add --virtual build-runtime \
+#    build-base python3-dev openblas-dev freetype-dev pkgconfig gfortran \
+#    && python3 -m ensurepip \
+#    && pip3 install --upgrade pip setuptools \
+#    && pip install --no-cache-dir $PYTHON_PACKAGES \
+#    && apk del build-runtime \
+#    && apk add --no-cache --virtual build-dependencies $PACKAGES
 
 
 # coreutils provides stdbuf; --update nodejs required to get npm

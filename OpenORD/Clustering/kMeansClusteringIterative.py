@@ -248,7 +248,7 @@ if __name__ == "__main__":
             nodeDf['nodeId'].append(i)
             nodeDf['posX'].append(node.x)
             nodeDf['posY'].append(node.y)
-            nodeDf['authorName'].append(node.name)
+            nodeDf['authorName'].append(levelNodeDict[0][node.name].authorName)
             nodeDf['affiliation'].append(node.affiliation)
             nodeDf['paperCount'].append(int(len(node.papers)))
             if nodeDict == 0:
