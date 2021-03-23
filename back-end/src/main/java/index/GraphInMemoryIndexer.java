@@ -235,7 +235,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void setCommonVariables() throws Exception {
         // get current Graph object
         graph = Main.getProject().getGraphs().get(graphIndex);
-        numLevels = graph.getNumLevels();
+        numLevels = graph.getNumLevels(); 
         numRawColumnsNodes = graph.getColumnNamesNodes().size();
         numRawColumnsEdges = graph.getColumnNamesEdges().size();
         
@@ -284,22 +284,19 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private void computeClusterAggs() throws Exception {
 
+        //TODO: UNCOMMENT THIS
         //computeClustering();
         
-
-
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
-        for (int i = numLevels-1; i >= 0; i--) {
+        for (int i = 0; i <= numLevels - 1; i++) {
+            System.out.println(i);
             rtree0 = RTree.star().create();
             String edgesFile = "/Clustering/graphEdgesData_level_" + i + ".csv";
             String nodesFile = "/Clustering/graphNodesData_level_" + i + ".csv";
 
             // an Rtree for level clusters
             rtree1 = RTree.star().create();
-
-            int ecount = 0;
-            int ncount = 0;
 
             try {
                 //read nodes
@@ -310,6 +307,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rawNodesTitles = nodes.remove(0);
                 rawNodes = nodes;
                 
+                /*
                 for (int nodeidx = 0; nodeidx < nodes.size(); nodeidx++) {
                 	String[] node = rawNodes.get(nodeidx);
                     RTreeData rd = new RTreeData(nodeidx);
@@ -352,39 +350,78 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                                             (float) maxy));
 
                 }
-
+                */
                 // assign rtree1 to rtree0
                 rtree0 = null;
                 rtree0 = rtree1;
 
-                System.out.println("writing to db....");
+                System.out.println("writing nodes to db level " + i + "....");
                 writeToDBNodes(i);
-                System.out.println("finished writing to db...");
+                System.out.println("finished writing nodes to db level "+ i + "...");
 
                 //read edges
-                // CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(1).build();
-                // List<String[]> edges = edgesReader.readAll();
-                // edges.forEach(edge -> {
-                //     //System.out.println(Arrays.toString(edge));
-                //     //TODO: cx and cy should be middle of line segment probably, this is only taking source point of edge and using that...
-                //     double cx = edge[1];
-                //     double cy = edge[2];
-                //     double minx = cx - graph.getBboxW() * overlappingThreshold / 2;
-                //     double miny = cy - graph.getBboxH() * overlappingThreshold / 2;
-                //     double maxx = cx + graph.getBboxW() * overlappingThreshold / 2;
-                //     double maxy = cy + graph.getBboxH() * overlappingThreshold / 2;
-                // });
+                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(0).build();
+                List<String[]> edges = edgesReader.readAll();
+
+                numRawColumnsEdges = edges.get(0).length;
+                rawEdgesTitles = edges.remove(0);
+                rawEdges = edges;
+                
+                /*
+                for (int edgeidx = 0; edgeidx < edges.size(); edgeidx++) {
+                	String[] edge = rawEdges.get(edgeidx);
+                    RTreeData rd = new RTreeData(edgeidx);
+                    rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
+                    //System.out.println(Arrays.toString(node));
+                    double cx = (new Double(node[1]) + new Double(node[3]))/2;
+                    double cy = (new Double(node[2]) + new Double(node[4]))/2;
+                    float minx = (float) (cx - graph.getBboxW() * overlappingThreshold / 2);
+                    float miny = (float) (cy - graph.getBboxH() * overlappingThreshold / 2);
+                    float maxx = (float) (cx + graph.getBboxW() * overlappingThreshold / 2);
+                    float maxy = (float) (cy + graph.getBboxH() * overlappingThreshold / 2);
+                    
+                    rd.minx = minx;
+                    rd.miny = miny;
+                    rd.maxx = maxx;
+                    rd.maxy = maxy;
+
+                    float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
+                    rd.convexHull = convexHullCopy;
+
+                    RTreeData rdClone = rd.clone();
+                    // scale the convex hulls
+                    for (int p = 0; p < rdClone.convexHull.length; p++)
+                        for (int k = 0; k < 2; k++) rdClone.convexHull[p][k] /= graph.getZoomFactor();
+
+                    // add bbox coordinates
+                    rdClone.minx = (float) minx;
+                    rdClone.miny = (float) miny;
+                    rdClone.maxx = (float) maxx;
+                    rdClone.maxy = (float) maxy;
+
+                    // add it to current level
+                    rtree1 =
+                            rtree1.add(
+                                    rdClone,
+                                    Geometries.rectangle(
+                                            (float) minx,
+                                            (float) miny,
+                                            (float) maxx,
+                                            (float) maxy));
+
+                }
+                */
+                // assign rtree1 to rtree0
+                rtree0 = null;
+                rtree0 = rtree1;
+
+                System.out.println("writing edges to db level "+ i + "....");
+                writeToDBEdges(i);
+                System.out.println("finished writing edges to db level " + i + "...");
+                
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-            // read in current cluster nodes and edges to a rTreeData -> curClusters
-            // files are: '/Clustering/graphEdgesData_level_' + i + ".csv"
-            // files are: '/Clustering/graphNodesData_level_' + i + ".csv"
-            // calculate BGRP
-            // calculateBGRP(curClusters, i);
-            // write level to db
-            // writeToDBNodes(i);
-            // writeToDBEdges(i);
 
         }
         
@@ -421,7 +458,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int insertCount = 0;
-        Iterable<Entry<RTreeData, Rectangle>> clusters = rtree0.entries().toBlocking().toIterable();
+        //Iterable<Entry<RTreeData, Rectangle>> clusters = rtree0.entries().toBlocking().toIterable();
 
         for (int nodeidx = 0; nodeidx < rawNodes.size(); nodeidx++) {
             String[] node = rawNodes.get(nodeidx);
@@ -542,6 +579,65 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int insertCount = 0;
         Iterable<Entry<RTreeData, Rectangle>> clusters = rtree1.entries().toBlocking().toIterable();
+
+        for (int edgeidx = 0; edgeidx < rawEdges.size(); edgeidx++) {
+            String[] edge = rawEdges.get(edgeidx);
+            RTreeData rd = new RTreeData(edgeidx);
+            //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
+            //System.out.println(Arrays.toString(node));
+            double n1x = new Double(edge[1]);
+            double n2x = new Double(edge[3]);
+            double n1y = new Double(edge[2]);
+            double n2y = new Double(edge[4]);
+            double cx = (n1x + n2x)/2;
+            double cy = (n1y + n2y)/2;
+
+            double mincx = (n1x < n2x) ? n1x : n2x;
+            double mincy = (n1x > n2x) ? n1x : n2x;
+            double maxcx = (n1y < n2y) ? n1y : n2y;
+            double maxcy = (n1y > n2y) ? n1y : n2y;
+            
+            float minx = (float) (mincx - graph.getBboxW() * overlappingThreshold / 2);
+            float miny = (float) (mincy - graph.getBboxH() * overlappingThreshold / 2);
+            float maxx = (float) (maxcx + graph.getBboxW() * overlappingThreshold / 2);
+            float maxy = (float) (maxcy + graph.getBboxH() * overlappingThreshold / 2);
+            
+            rd.minx = minx;
+            rd.miny = miny;
+            rd.maxx = maxx;
+            rd.maxy = maxy;
+
+            float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
+            rd.convexHull = convexHullCopy;
+
+            // scale the convex hulls
+            for (int p = 0; p < rd.convexHull.length; p++)
+                for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();
+
+            for (int k = 0; k < rawEdgesTitles.length; k++)
+            preparedStmt.setString(
+                    k + 1, rawEdges.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
+
+            preparedStmt.setString(
+                    numRawColumnsEdges + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
+            
+            
+            // bounding box fields
+            preparedStmt.setDouble(numRawColumnsEdges + 2, cx);
+            preparedStmt.setDouble(numRawColumnsEdges + 3, cy);
+            preparedStmt.setDouble(numRawColumnsEdges + 4, rd.minx);
+            preparedStmt.setDouble(numRawColumnsEdges + 5, rd.miny);
+            preparedStmt.setDouble(numRawColumnsEdges + 6, rd.maxx);
+            preparedStmt.setDouble(numRawColumnsEdges + 7, rd.maxy);
+
+            System.out.println(preparedStmt);
+            preparedStmt.addBatch();
+            insertCount++;
+            if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
+
+        }
+
+        /*
         for (Entry<RTreeData, Rectangle> o : clusters) {
             RTreeData rd = o.value();
 
@@ -567,6 +663,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             insertCount++;
             if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
         }
+        */
+        
         preparedStmt.executeBatch();
         preparedStmt.close();
 
