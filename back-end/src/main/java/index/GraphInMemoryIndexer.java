@@ -182,7 +182,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // compute layout
         System.out.println("Computing Layout...");
-        computeLayout();
+        //computeLayout();
 
 
         // compute cluster aggregations
@@ -413,28 +413,77 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                         + "maxx double precision, maxy double precision, geom box);";
         bboxStmt.executeUpdate(sql);
 
-        System.out.println("sql" + sql);
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int j = 0; j < numRawColumnsNodes + 6; j++) insertSql += "?, ";
         insertSql += "?);";
-        System.out.println("insertSql: " + insertSql);
+
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int insertCount = 0;
-        Iterable<Entry<RTreeData, Rectangle>> clusters = rtree1.entries().toBlocking().toIterable();
+        Iterable<Entry<RTreeData, Rectangle>> clusters = rtree0.entries().toBlocking().toIterable();
+
+        for (int nodeidx = 0; nodeidx < rawNodes.size(); nodeidx++) {
+            String[] node = rawNodes.get(nodeidx);
+            RTreeData rd = new RTreeData(nodeidx);
+            rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
+            //System.out.println(Arrays.toString(node));
+            double cx = new Double(node[1]);
+            double cy = new Double(node[2]);
+            float minx = (float) (cx - graph.getBboxW() * overlappingThreshold / 2);
+            float miny = (float) (cy - graph.getBboxH() * overlappingThreshold / 2);
+            float maxx = (float) (cx + graph.getBboxW() * overlappingThreshold / 2);
+            float maxy = (float) (cy + graph.getBboxH() * overlappingThreshold / 2);
+            
+            rd.minx = minx;
+            rd.miny = miny;
+            rd.maxx = maxx;
+            rd.maxy = maxy;
+
+            float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
+            rd.convexHull = convexHullCopy;
+
+            // scale the convex hulls
+            for (int p = 0; p < rd.convexHull.length; p++)
+                for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();
+
+
+            for (int k = 0; k < rawNodesTitles.length; k++)
+                preparedStmt.setString(
+                        k + 1, rawNodes.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
+
+            preparedStmt.setString(
+                    numRawColumnsNodes + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
+            
+            
+            // bounding box fields
+            preparedStmt.setDouble(numRawColumnsNodes + 2, (rd.minx + rd.maxx) / 2.0);
+            preparedStmt.setDouble(numRawColumnsNodes + 3, (rd.miny + rd.maxy) / 2.0);
+            preparedStmt.setDouble(numRawColumnsNodes + 4, rd.minx);
+            preparedStmt.setDouble(numRawColumnsNodes + 5, rd.miny);
+            preparedStmt.setDouble(numRawColumnsNodes + 6, rd.maxx);
+            preparedStmt.setDouble(numRawColumnsNodes + 7, rd.maxy);
+
+            System.out.println(preparedStmt);
+            preparedStmt.addBatch();
+            insertCount++;
+            if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
+        }
+
+        /*
         for (Entry<RTreeData, Rectangle> o : clusters) {
             RTreeData rd = o.value();
             System.out.println("rowID: " + rd.rowId);
 
             // raw data fields
-            for (int k = 0; k < numRawColumnsNodes; k++)
+            for (int k = 0; k < rawNodesTitles.length; k++)
                 preparedStmt.setString(
                         k + 1, rawNodes.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
 
             // cluster agg
+            System.out.println(preparedStmt);
             preparedStmt.setString(
-                    numRawColumnsNodes + 1, rd.getClusterAggString().replaceAll("\'", "\'\'"));
+                    numRawColumnsNodes + 1, "");//rd.getClusterAggString().replaceAll("\'", "\'\'"));
 
             // bounding box fields
             preparedStmt.setDouble(numRawColumnsNodes + 2, (rd.minx + rd.maxx) / 2.0);
@@ -449,6 +498,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             insertCount++;
             if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
         }
+        */
+        
         preparedStmt.executeBatch();
         preparedStmt.close();
 
