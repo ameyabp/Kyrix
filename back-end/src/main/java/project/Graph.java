@@ -22,7 +22,7 @@ public class Graph {
     // private double overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1, zColId = -1;
-    private double loX = Double.NaN, loY, hiX, hiY;
+    // private double loX = Double.NaN, loY, hiX, hiY;
     private String mergeClusterAggs,
             getCoordinatesFromLatLonBody,
             getCitusSpatialHashKeyBody,
@@ -214,21 +214,21 @@ public class Graph {
         return zoomFactor;
     }
 
-    public double getLoX() {
-        return loX;
-    }
+    // public double getLoX() {
+    //     return loX;
+    // }
 
-    public double getLoY() {
-        return loY;
-    }
+    // public double getLoY() {
+    //     return loY;
+    // }
 
-    public double getHiX() {
-        return hiX;
-    }
+    // public double getHiX() {
+    //     return hiX;
+    // }
 
-    public double getHiY() {
-        return hiY;
-    }
+    // public double getHiY() {
+    //     return hiY;
+    // }
 
     // public double getGeoLat() {
     //     return geoLat;
@@ -275,38 +275,38 @@ public class Graph {
     }
 
     // get the canvas coordinate of a raw value
-    public double getCanvasCoordinate(int level, double v, boolean isX) throws Exception {
+    // public double getCanvasCoordinate(int level, double v, boolean isX) throws Exception {
 
-        setXYExtent();
-        if (isX)
-            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
-                    * Math.pow(zoomFactor, level);
-        else
-            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0)
-                    * Math.pow(zoomFactor, level);
-    }
+    //     setXYExtent();
+    //     if (isX)
+    //         return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
+    //                 * Math.pow(zoomFactor, level);
+    //     else
+    //         return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0)
+    //                 * Math.pow(zoomFactor, level);
+    // }
 
-    public void setXYExtent() throws Exception {
-        // calculate range if have not
-        if (Double.isNaN(loX)) {
+    // public void setXYExtent() throws Exception {
+    //     // calculate range if have not
+    //     if (Double.isNaN(loX)) {
 
-            System.out.println("\n Calculating Graph x & y ranges...\n");
-            loX = loY = Double.MAX_VALUE;
-            hiX = hiY = Double.MIN_VALUE;
-            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQueryNodes());
-            while (rs.next()) {
-                double cx = rs.getDouble(getXColId() + 1);
-                double cy = rs.getDouble(getYColId() + 1);
-                loX = Math.min(loX, cx);
-                hiX = Math.max(hiX, cx);
-                loY = Math.min(loY, cy);
-                hiY = Math.max(hiY, cy);
-            }
-            rawDBStmt.close();
-            DbConnector.closeConnection(getDb());
-        }
-    }
+    //         System.out.println("\n Calculating Graph x & y ranges...\n");
+    //         loX = loY = Double.MAX_VALUE;
+    //         hiX = hiY = Double.MIN_VALUE;
+    //         Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+    //         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQueryNodes());
+    //         while (rs.next()) {
+    //             double cx = rs.getDouble(getXColId() + 1);
+    //             double cy = rs.getDouble(getYColId() + 1);
+    //             loX = Math.min(loX, cx);
+    //             hiX = Math.max(hiX, cx);
+    //             loY = Math.min(loY, cy);
+    //             hiY = Math.max(hiY, cy);
+    //         }
+    //         rawDBStmt.close();
+    //         DbConnector.closeConnection(getDb());
+    //     }
+    // }
 
     @Override
     public String toString() {

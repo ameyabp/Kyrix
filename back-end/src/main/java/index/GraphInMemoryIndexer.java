@@ -179,11 +179,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // set common variables
         setCommonVariables();
 
-
         // compute layout
         System.out.println("Computing Layout...");
         //computeLayout();
-
 
         // compute cluster aggregations
         System.out.println("Computing Clusters...");
@@ -728,12 +726,12 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         Canvas c = Main.getProject().getCanvases().get(level);
         for (Layer l : c.getLayers()) {
             if (l.getGraphId().contains("node"))
-                return "bbox" +
+                return "bbox_" +
                         Main.getProject().getName() +
                         "_" +
                         c.getId() +
-                        "_layer" + 
-                        l.getGraphId().substring(l.getGraphId().indexOf("_"));
+                        "layer0";// + 
+                        // l.getGraphId().substring(l.getGraphId().indexOf("_"));
         }
 
         return "";
@@ -743,12 +741,12 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         Canvas c = Main.getProject().getCanvases().get(level);
         for (Layer l : c.getLayers()) {
             if (l.getGraphId().contains("edge"))
-                return "bbox" +
+                return "bbox_" +
                         Main.getProject().getName() +
                         "_" +
                         c.getId() +
-                        "_layer" + 
-                        l.getGraphId().substring(l.getGraphId().indexOf("_"));
+                        "layer1";// + 
+                        // l.getGraphId().substring(l.getGraphId().indexOf("_"));
         }
 
         return "";
