@@ -22,6 +22,7 @@ project.addRenderingParams(renderers.renderingParams);
 project.addStyles("../nba/nba.css");
 
 // ================== canvas ===================
+/*
 var testingCanvas = new Canvas("canvas", width, height);
 project.addCanvas(testingCanvas);
 
@@ -36,12 +37,12 @@ testingLayer.addPlacement({
     width: "full",
     height: "full"
 });
-
+*/
 var graph = {
     data: {
-        db: "nba",
-        queryNodes: "select * from teams;",
-        queryEdges: "select * from teams;"
+        db: "graphvis",
+        queryNodes: "select * from authorNodes;",
+        queryEdges: "select * from authorEdges;"
     },
     layout: {
         name: "openORD",
@@ -85,7 +86,7 @@ project.addGraph(new Graph(graph));
 
 var view = new View("testing", 960*2, 500*2);
 project.addView(view);
-project.setInitialStates(view, testingCanvas, 0, 0);
+//project.setInitialStates(view, testingCanvas, 0, 0);
 
 
 

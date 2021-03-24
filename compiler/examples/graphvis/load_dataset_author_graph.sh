@@ -1,5 +1,5 @@
-docker cp graphNodesData.csv kyrix_db_1:/graphNodesData.csv         # copy the csv file to the db container
-docker cp graphEdgesData.csv kyrix_db_1:/graphEdgesData.csv         # copy the csv file to the db container
+docker cp ../../../OpenORD/Clustering/graphNodesData_l0.csv kyrix_db_1:/graphNodesData.csv         # copy the csv file to the db container
+docker cp ../../../OpenORD/Clustering/graphEdgesDataWeighted_l0.csv kyrix_db_1:/graphEdgesData.csv         # copy the csv file to the db container
 
 docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgres -c "CREATE DATABASE graphVis;"
 #docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgres -c "USE recfut;"      # connect to recFut database

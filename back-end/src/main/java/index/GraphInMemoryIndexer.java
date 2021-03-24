@@ -172,7 +172,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             return;
 
         rpKey = "graph_" + curGraphId.substring(0, curGraphId.lastIndexOf("_"));
-        System.out.println("rpKey: " + rpKey);
+        //System.out.println("rpKey: " + rpKey);
 
         graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
 
@@ -205,7 +205,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
             while ((s = br.readLine()) != null)
-                System.out.println("line: " + s);
+                System.out.println("layout step: " + s);
             p.waitFor();
             System.out.println ("exit: " + p.exitValue());
             p.destroy();
@@ -223,7 +223,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
             while ((s = br.readLine()) != null)
-                System.out.println("line: " + s);
+                System.out.println("computing clustering: " + s);
             p.waitFor();
             System.out.println ("exit: " + p.exitValue());
             p.destroy();
@@ -290,7 +290,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
         for (int i = 0; i <= numLevels - 1; i++) {
-            System.out.println(i);
+            System.out.println("Computing for level " + i + " ...");
             rtree0 = RTree.star().create();
             String edgesFile = "/Clustering/graphEdgesData_level_" + i + ".csv";
             String nodesFile = "/Clustering/graphNodesData_level_" + i + ".csv";
@@ -440,7 +440,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String sql = "drop table if exists " + bboxTableName + ";";
         bboxStmt.executeUpdate(sql);
 
-        System.out.println("test");
         // create the bbox table
         sql = "create unlogged table " + bboxTableName + " (";
         for (int j = 0; j < rawNodesTitles.length; j++)
@@ -501,7 +500,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             preparedStmt.setDouble(numRawColumnsNodes + 6, rd.maxx);
             preparedStmt.setDouble(numRawColumnsNodes + 7, rd.maxy);
 
-            System.out.println(preparedStmt);
+            //System.out.println(preparedStmt);
             preparedStmt.addBatch();
             insertCount++;
             if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
@@ -630,7 +629,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             preparedStmt.setDouble(numRawColumnsEdges + 6, rd.maxx);
             preparedStmt.setDouble(numRawColumnsEdges + 7, rd.maxy);
 
-            System.out.println(preparedStmt);
+            //System.out.println(preparedStmt);
             preparedStmt.addBatch();
             insertCount++;
             if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
