@@ -733,7 +733,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                         Main.getProject().getName() +
                         "_" +
                         c.getId() +
-                        "layer" + 
+                        "_layer" + 
                         l.getGraphId().substring(l.getGraphId().indexOf("_"));
         }
 
@@ -748,7 +748,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                         Main.getProject().getName() +
                         "_" +
                         c.getId() +
-                        "layer" + 
+                        "_layer" + 
                         l.getGraphId().substring(l.getGraphId().indexOf("_"));
         }
 

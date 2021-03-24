@@ -18,7 +18,7 @@ RUN chmod 644 /usr/share/postgresql/11/extension/plcoffee* \
     && chmod 755 /usr/lib/postgresql/11/lib/plv8*.so
 
 # install d3 - requires postgres startup script
-RUN apt-get -qq update >/dev/null && apt-get install -qq curl wget >/dev/null && curl -sL https://deb.nodesource.com/setup_11.x | bash - >/dev/null && \
+RUN apt-get update && apt-get -qq update >/dev/null && apt-get install -qq curl wget >/dev/null && curl -sL https://deb.nodesource.com/setup_11.x | bash - >/dev/null && \
     apt-get install -qq --no-install-recommends nodejs >/dev/null && \
     su - postgres -c "npm install d3" >/dev/null && \
     rm -rf /var/lib/apt/lists/* >/dev/null && \
@@ -31,8 +31,8 @@ ADD docker-scripts/install-d3.sh /var/lib/postgresql
 #CMD su - postgres -c "/usr/lib/postgresql/11/bin/initdb -D /var/lib/postgresql/data; /usr/lib/postgresql/11/bin/postgres -D /var/lib/postgresql/data"
 
 # install pgfutter for one-command csv loading
-RUN wget -nc -q -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v1.2/pgfutter_linux_amd64
-RUN chmod +x pgfutter
+RUN wget https://github.com/lukasmartinelli/pgfutter/releases/download/v1.2/pgfutter_linux_amd64
+RUN chmod +x pgfutter_linux_amd64
 
 # add health check script
 COPY docker-scripts/pg_healthcheck /
