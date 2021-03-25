@@ -288,10 +288,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
         for (int i = 0; i <= numLevels - 1; i++) {
-            System.out.println("Computing for level " + i + " ...");
+            System.out.println("Loading clusters for level " + i + " ...");
             rtree0 = RTree.star().create();
-            String edgesFile = "/Clustering/graphEdgesData_level_" + i + ".csv";
-            String nodesFile = "/Clustering/graphNodesData_level_" + i + ".csv";
+            String edgesFile = "/Clustering/graphEdgesData_level_" + (numLevels-i-1) + ".csv";
+            String nodesFile = "/Clustering/graphNodesData_level_" + (numLevels-i-1) + ".csv";
 
             // an Rtree for level clusters
             rtree1 = RTree.star().create();
