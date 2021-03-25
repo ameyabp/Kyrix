@@ -71,8 +71,8 @@ function addGraph(graph, args) {
         curCanvas.addLayer(curEdgeLayer);
 
         // set fetching scheme
-        curNodeLayer.setFetchingScheme("dbox", false);
-        curEdgeLayer.setFetchingScheme("dbox", false);
+        curNodeLayer.setFetchingScheme("dbox", true);
+        curEdgeLayer.setFetchingScheme("dbox", true);
         //curLayer.setFetchingScheme("tiling");
 
         // set ssv ID
