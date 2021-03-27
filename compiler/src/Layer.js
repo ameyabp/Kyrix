@@ -26,6 +26,7 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
+    this.graphId = "";
     this.staticAggregationId = "";
 }
 

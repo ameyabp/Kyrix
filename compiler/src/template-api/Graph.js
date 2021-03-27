@@ -132,27 +132,29 @@ function processClusterAgg(data, params) {
 
 // get rendering function for the graph edges layer
 function getEdgeLayerRenderer() {
+    // console.log("node renderer set for edge layer");
     function renderEdges() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        params.processClusterAgg(data, params);
+        // params.processClusterAgg(data, params);
 
-        g = svg.append("g").attr("id", "linkLayer0");
+        // console.log("rohila rendering edges");
+        g = svg.append("g").attr("id", "linkLayer");
         g.selectAll("line")
         .data(data)
         .enter()
         .append("line")
         .attr("x1", function(d) {
-            return d.x1;
+            return d.minx;
         })
         .attr("y1", function(d) {
-            return d.y1;
+            return d.miny;
         })
         .attr("x2", function(d) {
-            return d.x2;
+            return d.maxx;
         })
         .attr("y2", function(d) {
-            return d.y2;
+            return d.maxy;
         })
         .attr("stroke-width", 1)
         .style("stroke", "rgba(225, 225, 225, 0.5)")
@@ -171,31 +173,225 @@ function getEdgeLayerRenderer() {
         // for hover
         var hoverSelector = "circle";
     }
-    return new Function("svg", "data", "args", renderEdges);
+
+    function regularHoverBody() {
+        function convexRenderer(svg, d) {
+            var line = d3
+                .line()
+                .x(d => d.x)
+                .y(d => d.y);
+            var g = svg.append("g");
+            g.append("path")
+                .datum(d)
+                .attr("class", "convexHull")
+                .attr("id", "ssv_boundary_hover")
+                .attr("d", d => line(d.convexHull))
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        function bboxRenderer(svg, d) {
+            var minx = 1e100,
+                miny = 1e100;
+            var maxx = -1e100,
+                maxy = -1e100;
+            for (var i = 0; i < d.convexHull.length; i++) {
+                minx = Math.min(minx, d.convexHull[i].x);
+                miny = Math.min(miny, d.convexHull[i].y);
+                maxx = Math.max(maxx, d.convexHull[i].x);
+                maxy = Math.max(maxy, d.convexHull[i].y);
+            }
+            g = svg.append("g");
+            g.append("rect")
+                .attr("x", minx)
+                .attr("y", miny)
+                .attr("rx", 5)
+                .attr("ry", 5)
+                .attr("width", maxx - minx)
+                .attr("height", maxy - miny)
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        function tabularRankListRenderer(svg, data, args) {
+            var rpKey =
+                "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            var params = args.renderingParams[rpKey];
+            var charW = 8;
+            var charH = 15;
+            var paddingH = 10;
+            var paddingW = 14;
+            var headerH = charH + 20;
+
+            var g = svg
+                .append("g")
+                .attr("id", "tabular_hover")
+                .attr("class", "tabular ranklist");
+            var fields = params.hoverTableFields;
+            var widths = [];
+            var totalW = 0,
+                totalH = data.length * (charH + paddingH) + headerH;
+            for (var i = 0; i < fields.length; i++) {
+                var maxlen = 0;
+                for (var j = 0; j < data.length; j++) {
+                    if (!isNaN(data[j][fields[i]]))
+                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                            +data[j][fields[i]]
+                        );
+                    maxlen = Math.max(
+                        maxlen,
+                        data[j][fields[i]].toString().length
+                    );
+                }
+                maxlen = Math.max(maxlen, fields[i].length);
+                widths.push(maxlen * charW + paddingW);
+                totalW += widths[i];
+            }
+            var basex = data[0].cx - totalW / 2;
+            var basey = data[0].cy - totalH / 2;
+            var runx = basex,
+                runy = basey;
+            for (var i = 0; i < fields.length; i++) {
+                var width = widths[i];
+                // th
+                g.append("rect")
+                    .attr("x", runx)
+                    .attr("y", runy)
+                    .attr("width", width)
+                    .attr("height", headerH)
+                    .attr("style", "fill: #888888; stroke: #c0c4c3;");
+                g.append("text")
+                    .text(fields[i])
+                    .attr("x", runx + width / 2)
+                    .attr("y", runy + headerH / 2)
+                    .attr("style", "fill: #f8f4ed;")
+                    .style("text-anchor", "middle")
+                    .style("font-size", charH + "px")
+                    .attr("dy", "0.35em");
+                runy += headerH;
+                // tr
+                for (var j = 0; j < data.length; j++) {
+                    g.append("rect")
+                        .attr("x", runx)
+                        .attr("y", runy)
+                        .attr("width", width)
+                        .attr("height", charH + paddingH)
+                        .attr("style", "fill: #ebebeb; stroke: #c0c4c3;");
+                    g.append("text")
+                        .text(data[j][fields[i]])
+                        .attr("x", runx + width / 2)
+                        .attr("y", runy + (charH + paddingH) / 2)
+                        .style("text-anchor", "middle")
+                        .style("font-size", charH + "px")
+                        .attr("dy", "0.35em");
+                    runy += charH + paddingH;
+                }
+                runx += width;
+                runy = basey;
+            }
+        }
+
+        // ranklist
+        if ("hoverRankListMode" in params) {
+            var rankListRenderer;
+            if (params.hoverRankListMode == "tabular")
+                rankListRenderer = tabularRankListRenderer;
+            else rankListRenderer = params.hoverCustomRenderer;
+            g.selectAll(hoverSelector)
+                .on("mouseenter.ranklist", function(d) {
+                    // deal with top-k here
+                    // run rankListRenderer for each of the top-k
+                    // for tabular renderer, add a header first
+                    // use params.hoverRankListOrientation for deciding layout
+                    // use params.bboxH(W) for bounding box size
+                    var g = svg.append("g").attr("id", "ssv_ranklist_hover");
+                    var topKData = d.clusterAgg.topk;
+                    var topk = topKData.length;
+                    for (var i = 0; i < topk; i++) {
+                        topKData[i].cx = +d.cx;
+                        topKData[i].cy = +d.cy;
+                    }
+                    if (params.hoverRankListMode == "tabular")
+                        rankListRenderer(g, topKData, args);
+                    else {
+                        var orientation = params.hoverRankListOrientation;
+                        var bboxW = params.bboxW;
+                        var bboxH = params.bboxH;
+                        for (var i = 0; i < topk; i++) {
+                            var transX = 0,
+                                transY = 0;
+                            if (orientation == "vertical")
+                                transY = bboxH * (-topk / 2.0 + 0.5 + i);
+                            else transX = bboxW * (-topk / 2.0 + 0.5 + i);
+                            topKData[i].cx += transX;
+                            topKData[i].cy += transY;
+                            rankListRenderer(g, [topKData[i]], args);
+                        }
+                    }
+                    g.style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("g")
+                        .selectAll("*")
+                        .datum({cx: +d.cx, cy: +d.cy})
+                        .classed("kyrix-retainsizezoom", true)
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave.ranklist", function() {
+                    d3.selectAll("#ssv_ranklist_hover").remove();
+                });
+        }
+
+        // boundary
+        if ("hoverBoundary" in params)
+            g.selectAll(hoverSelector)
+                .on("mouseover.boundary", function(d) {
+                    var g = svg.append("g").attr("id", "ssv_boundary_hover");
+                    if (params.hoverBoundary == "convexhull")
+                        convexRenderer(g, d);
+                    else if (params.hoverBoundary == "bbox") bboxRenderer(g, d);
+                })
+                .on("mouseleave.boundary", function() {
+                    d3.selectAll("#ssv_boundary_hover").remove();
+                });
+    }
+
+    var renderFuncBody = getBodyStringOfFunction(renderEdges);
+    // renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+    return new Function("svg", "data", "args", renderFuncBody);
 }
 
 
 // get rendering function for the graph nodes layer
 function getNodeLayerRenderer() {
+    // console.log("node renderer set for node layer");
     function renderNodes() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        params.processClusterAgg(data, params);
+        // params.processClusterAgg(data, params);
 
-        g = svg.append("g").attr("id", "nodeLayer0");
+        // console.log("rohila rendering nodes");
+        g = svg.append("g").attr("id", "nodeLayer");
         g.selectAll("circle")
         .data(data)
         .enter()
         .append("circle")
         .attr("cx", function(d) {
-            return d.x;
+            return d.cx;
         })
         .attr("cy", function(d) {
-            return d.y;
+            return d.cy;
         })
         .attr("r", function(d) {
             //return d.memberNodeCount;
-            return max(3, Math.sqrt(d.memberNodeCount));
+            return Math.max(3, Math.sqrt(parseInt(d.membernodecount)));
         })
         .attr("fill", function(d) {
             return "rgba(255, 0, 0, 0.7)";
@@ -203,14 +399,14 @@ function getNodeLayerRenderer() {
         .on("mouseover", function(d) {
             d3.select("#linkLayer0").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeId.includes(d.nodeId);
+                    return l.edgeid.includes(d.nodeid);
                 })
                 .style("stroke", "rgba(0, 0, 0, 0.8)");
         })
         .on("mouseout", function(d) {
             d3.select("#linkLayer0").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeId.includes(d.nodeId);
+                    return l.edgeid.includes(d.nodeid);
                 })
                 .style("stroke", "rgba(225, 225, 225, 0.5)");
         });
@@ -223,7 +419,199 @@ function getNodeLayerRenderer() {
         // for hover
         var hoverSelector = "circle";
     }
-    return new Function("svg", "data", "args", renderNodes);
+
+    function regularHoverBody() {
+        function convexRenderer(svg, d) {
+            var line = d3
+                .line()
+                .x(d => d.x)
+                .y(d => d.y);
+            var g = svg.append("g");
+            g.append("path")
+                .datum(d)
+                .attr("class", "convexHull")
+                .attr("id", "ssv_boundary_hover")
+                .attr("d", d => line(d.convexHull))
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        function bboxRenderer(svg, d) {
+            var minx = 1e100,
+                miny = 1e100;
+            var maxx = -1e100,
+                maxy = -1e100;
+            for (var i = 0; i < d.convexHull.length; i++) {
+                minx = Math.min(minx, d.convexHull[i].x);
+                miny = Math.min(miny, d.convexHull[i].y);
+                maxx = Math.max(maxx, d.convexHull[i].x);
+                maxy = Math.max(maxy, d.convexHull[i].y);
+            }
+            g = svg.append("g");
+            g.append("rect")
+                .attr("x", minx)
+                .attr("y", miny)
+                .attr("rx", 5)
+                .attr("ry", 5)
+                .attr("width", maxx - minx)
+                .attr("height", maxy - miny)
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        function tabularRankListRenderer(svg, data, args) {
+            var rpKey =
+                "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            var params = args.renderingParams[rpKey];
+            var charW = 8;
+            var charH = 15;
+            var paddingH = 10;
+            var paddingW = 14;
+            var headerH = charH + 20;
+
+            var g = svg
+                .append("g")
+                .attr("id", "tabular_hover")
+                .attr("class", "tabular ranklist");
+            var fields = params.hoverTableFields;
+            var widths = [];
+            var totalW = 0,
+                totalH = data.length * (charH + paddingH) + headerH;
+            for (var i = 0; i < fields.length; i++) {
+                var maxlen = 0;
+                for (var j = 0; j < data.length; j++) {
+                    if (!isNaN(data[j][fields[i]]))
+                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                            +data[j][fields[i]]
+                        );
+                    maxlen = Math.max(
+                        maxlen,
+                        data[j][fields[i]].toString().length
+                    );
+                }
+                maxlen = Math.max(maxlen, fields[i].length);
+                widths.push(maxlen * charW + paddingW);
+                totalW += widths[i];
+            }
+            var basex = data[0].cx - totalW / 2;
+            var basey = data[0].cy - totalH / 2;
+            var runx = basex,
+                runy = basey;
+            for (var i = 0; i < fields.length; i++) {
+                var width = widths[i];
+                // th
+                g.append("rect")
+                    .attr("x", runx)
+                    .attr("y", runy)
+                    .attr("width", width)
+                    .attr("height", headerH)
+                    .attr("style", "fill: #888888; stroke: #c0c4c3;");
+                g.append("text")
+                    .text(fields[i])
+                    .attr("x", runx + width / 2)
+                    .attr("y", runy + headerH / 2)
+                    .attr("style", "fill: #f8f4ed;")
+                    .style("text-anchor", "middle")
+                    .style("font-size", charH + "px")
+                    .attr("dy", "0.35em");
+                runy += headerH;
+                // tr
+                for (var j = 0; j < data.length; j++) {
+                    g.append("rect")
+                        .attr("x", runx)
+                        .attr("y", runy)
+                        .attr("width", width)
+                        .attr("height", charH + paddingH)
+                        .attr("style", "fill: #ebebeb; stroke: #c0c4c3;");
+                    g.append("text")
+                        .text(data[j][fields[i]])
+                        .attr("x", runx + width / 2)
+                        .attr("y", runy + (charH + paddingH) / 2)
+                        .style("text-anchor", "middle")
+                        .style("font-size", charH + "px")
+                        .attr("dy", "0.35em");
+                    runy += charH + paddingH;
+                }
+                runx += width;
+                runy = basey;
+            }
+        }
+
+        // ranklist
+        if ("hoverRankListMode" in params) {
+            var rankListRenderer;
+            if (params.hoverRankListMode == "tabular")
+                rankListRenderer = tabularRankListRenderer;
+            else rankListRenderer = params.hoverCustomRenderer;
+            g.selectAll(hoverSelector)
+                .on("mouseenter.ranklist", function(d) {
+                    // deal with top-k here
+                    // run rankListRenderer for each of the top-k
+                    // for tabular renderer, add a header first
+                    // use params.hoverRankListOrientation for deciding layout
+                    // use params.bboxH(W) for bounding box size
+                    var g = svg.append("g").attr("id", "ssv_ranklist_hover");
+                    var topKData = d.clusterAgg.topk;
+                    var topk = topKData.length;
+                    for (var i = 0; i < topk; i++) {
+                        topKData[i].cx = +d.cx;
+                        topKData[i].cy = +d.cy;
+                    }
+                    if (params.hoverRankListMode == "tabular")
+                        rankListRenderer(g, topKData, args);
+                    else {
+                        var orientation = params.hoverRankListOrientation;
+                        var bboxW = params.bboxW;
+                        var bboxH = params.bboxH;
+                        for (var i = 0; i < topk; i++) {
+                            var transX = 0,
+                                transY = 0;
+                            if (orientation == "vertical")
+                                transY = bboxH * (-topk / 2.0 + 0.5 + i);
+                            else transX = bboxW * (-topk / 2.0 + 0.5 + i);
+                            topKData[i].cx += transX;
+                            topKData[i].cy += transY;
+                            rankListRenderer(g, [topKData[i]], args);
+                        }
+                    }
+                    g.style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("g")
+                        .selectAll("*")
+                        .datum({cx: +d.cx, cy: +d.cy})
+                        .classed("kyrix-retainsizezoom", true)
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave.ranklist", function() {
+                    d3.selectAll("#ssv_ranklist_hover").remove();
+                });
+        }
+
+        // boundary
+        if ("hoverBoundary" in params)
+            g.selectAll(hoverSelector)
+                .on("mouseover.boundary", function(d) {
+                    var g = svg.append("g").attr("id", "ssv_boundary_hover");
+                    if (params.hoverBoundary == "convexhull")
+                        convexRenderer(g, d);
+                    else if (params.hoverBoundary == "bbox") bboxRenderer(g, d);
+                })
+                .on("mouseleave.boundary", function() {
+                    d3.selectAll("#ssv_boundary_hover").remove();
+                });
+    }
+
+    var renderFuncBody = getBodyStringOfFunction(renderNodes);
+    // renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+    return new Function("svg", "data", "args", renderFuncBody);
 }
 
 //define prototype

@@ -457,13 +457,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         int insertCount = 0;
         //Iterable<Entry<RTreeData, Rectangle>> clusters = rtree0.entries().toBlocking().toIterable();
 
+        Canvas c = Main.getProject().getCanvases().get(level);
+        int canvasWidth = c.getW();
+        int canvasHeight = c.getH();
+
         for (int nodeidx = 0; nodeidx < rawNodes.size(); nodeidx++) {
             String[] node = rawNodes.get(nodeidx);
             RTreeData rd = new RTreeData(nodeidx);
             rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
-            double cx = new Double(node[1]);
-            double cy = new Double(node[2]);
+            double cx = new Double(node[1]) * canvasWidth;
+            double cy = new Double(node[2]) * canvasHeight;
             float minx = (float) (cx - graph.getBboxW() * overlappingThreshold / 2);
             float miny = (float) (cy - graph.getBboxH() * overlappingThreshold / 2);
             float maxx = (float) (cx + graph.getBboxW() * overlappingThreshold / 2);
@@ -575,17 +579,21 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int insertCount = 0;
-        Iterable<Entry<RTreeData, Rectangle>> clusters = rtree1.entries().toBlocking().toIterable();
+        // Iterable<Entry<RTreeData, Rectangle>> clusters = rtree1.entries().toBlocking().toIterable();
+
+        Canvas c = Main.getProject().getCanvases().get(level);
+        int canvasWidth = c.getW();
+        int canvasHeight = c.getH();
 
         for (int edgeidx = 0; edgeidx < rawEdges.size(); edgeidx++) {
             String[] edge = rawEdges.get(edgeidx);
             RTreeData rd = new RTreeData(edgeidx);
             //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
-            double n1x = new Double(edge[1]);
-            double n2x = new Double(edge[3]);
-            double n1y = new Double(edge[2]);
-            double n2y = new Double(edge[4]);
+            double n1x = new Double(edge[1]) * canvasWidth;
+            double n1y = new Double(edge[2]) * canvasHeight;
+            double n2x = new Double(edge[3]) * canvasWidth;
+            double n2y = new Double(edge[4]) * canvasHeight;
             double cx = (n1x + n2x)/2;
             double cy = (n1y + n2y)/2;
 
