@@ -358,7 +358,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 System.out.println("finished writing nodes to db level "+ i + "...");
 
                 //read edges
-                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(0).build();
+                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(edgesFile)).withSkipLines(0).build();
                 List<String[]> edges = edgesReader.readAll();
 
                 numRawColumnsEdges = edges.get(0).length;
@@ -614,7 +614,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
             rd.convexHull = convexHullCopy;
-
             // scale the convex hulls
             for (int p = 0; p < rd.convexHull.length; p++)
                 for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();
