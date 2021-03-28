@@ -31,6 +31,10 @@ public class BoxandData {
             Layer curLayer = c.getLayers().get(i);
             ArrayList<String> fields = curLayer.getTransform().getColumnNames();
 
+            // for Graph objects
+            boolean isEdgeLayer = curLayer.getGraphId().length() > 0 ? curLayer.getGraphId().contains("edge") : false;
+            boolean isNodeLayer = curLayer.getGraphId().length() > 0 ? curLayer.getGraphId().contains("node") : false;
+
             for (int j = 0; j < numRows; j++) {
                 int numFields = fields.size();
                 // raw data fields
@@ -48,21 +52,33 @@ public class BoxandData {
                 // need to check if rowArray has cx, cy, minx, ..
                 // since the introduction of StaticAggregationIndexer
                 // which does generate cx, cy, minx...
-                rowDict.put("cx", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
-                rowDict.put(
-                        "cy", numFields + 1 >= rowArray.size() ? "0" : rowArray.get(numFields + 1));
-                rowDict.put(
-                        "minx",
-                        numFields + 2 >= rowArray.size() ? "0" : rowArray.get(numFields + 2));
-                rowDict.put(
-                        "miny",
-                        numFields + 3 >= rowArray.size() ? "0" : rowArray.get(numFields + 3));
-                rowDict.put(
-                        "maxx",
-                        numFields + 4 >= rowArray.size() ? "0" : rowArray.get(numFields + 4));
-                rowDict.put(
-                        "maxy",
-                        numFields + 5 >= rowArray.size() ? "0" : rowArray.get(numFields + 5));
+                if (isEdgeLayer) {
+                    rowDict.put("n1x", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
+                    rowDict.put("n1y", numFields+1 >= rowArray.size() ? "0" : rowArray.get(numFields+1));
+                    rowDict.put("n2x", numFields+2 >= rowArray.size() ? "0" : rowArray.get(numFields+2));
+                    rowDict.put("n2y", numFields+3 >= rowArray.size() ? "0" : rowArray.get(numFields+3));
+                    rowDict.put("minx", numFields+4 >= rowArray.size() ? "0" : rowArray.get(numFields+4));
+                    rowDict.put("miny", numFields+5 >= rowArray.size() ? "0" : rowArray.get(numFields+5));
+                    rowDict.put("maxx", numFields+6 >= rowArray.size() ? "0" : rowArray.get(numFields+6));
+                    rowDict.put("maxy", numFields+7 >= rowArray.size() ? "0" : rowArray.get(numFields+7));
+                }
+                else if (isNodeLayer) {
+                    rowDict.put("cx", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
+                    rowDict.put("cy", numFields + 1 >= rowArray.size() ? "0" : rowArray.get(numFields + 1));
+                    rowDict.put("minx", numFields + 2 >= rowArray.size() ? "0" : rowArray.get(numFields + 2));
+                    rowDict.put("miny", numFields + 3 >= rowArray.size() ? "0" : rowArray.get(numFields + 3));
+                    rowDict.put("maxx", numFields + 4 >= rowArray.size() ? "0" : rowArray.get(numFields + 4));
+                    rowDict.put("maxy", numFields + 5 >= rowArray.size() ? "0" : rowArray.get(numFields + 5));
+                }
+                else {
+                    rowDict.put("cx", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
+                    rowDict.put("cy", numFields + 1 >= rowArray.size() ? "0" : rowArray.get(numFields + 1));
+                    rowDict.put("minx", numFields + 2 >= rowArray.size() ? "0" : rowArray.get(numFields + 2));
+                    rowDict.put("miny", numFields + 3 >= rowArray.size() ? "0" : rowArray.get(numFields + 3));
+                    rowDict.put("maxx", numFields + 4 >= rowArray.size() ? "0" : rowArray.get(numFields + 4));
+                    rowDict.put("maxy", numFields + 5 >= rowArray.size() ? "0" : rowArray.get(numFields + 5));
+                }
+
                 ret.get(i).add(rowDict);
             }
         }

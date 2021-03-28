@@ -132,31 +132,31 @@ function processClusterAgg(data, params) {
 
 // get rendering function for the graph edges layer
 function getEdgeLayerRenderer() {
-    // console.log("node renderer set for edge layer");
     function renderEdges() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         // params.processClusterAgg(data, params);
 
-        // console.log("rohila rendering edges");
         g = svg.append("g").attr("id", "linkLayer");
         g.selectAll("line")
         .data(data)
         .enter()
         .append("line")
         .attr("x1", function(d) {
-            return d.minx;
+            return d.n1x;
         })
         .attr("y1", function(d) {
-            return d.miny;
+            return d.n1y;
         })
         .attr("x2", function(d) {
-            return d.maxx;
+            return d.n2x;
         })
         .attr("y2", function(d) {
-            return d.maxy;
+            return d.n2y;
         })
-        .attr("stroke-width", 1)
+        .attr("stroke-width", function(d) {
+            return Math.max(3, Math.sqrt(parseInt(d.papercount)));
+        })
         .style("stroke", "rgba(225, 225, 225, 0.5)")
         .on("mouseover", function(d) {
             d3.select(this).style("stroke", "rgba(0, 0, 0, 0.8)");
@@ -171,7 +171,7 @@ function getEdgeLayerRenderer() {
             .style("opacity", 1);
 
         // for hover
-        var hoverSelector = "circle";
+        var hoverSelector = "line";
     }
 
     function regularHoverBody() {
@@ -371,13 +371,11 @@ function getEdgeLayerRenderer() {
 
 // get rendering function for the graph nodes layer
 function getNodeLayerRenderer() {
-    // console.log("node renderer set for node layer");
     function renderNodes() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         // params.processClusterAgg(data, params);
 
-        // console.log("rohila rendering nodes");
         g = svg.append("g").attr("id", "nodeLayer");
         g.selectAll("circle")
         .data(data)
@@ -390,21 +388,20 @@ function getNodeLayerRenderer() {
             return d.cy;
         })
         .attr("r", function(d) {
-            //return d.memberNodeCount;
-            return Math.max(3, Math.sqrt(parseInt(d.membernodecount)));
+            return Math.max(5, Math.sqrt(parseInt(d.membernodecount)));
         })
         .attr("fill", function(d) {
             return "rgba(255, 0, 0, 0.7)";
         })
         .on("mouseover", function(d) {
-            d3.select("#linkLayer0").selectAll("line")
+            d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
                     return l.edgeid.includes(d.nodeid);
                 })
                 .style("stroke", "rgba(0, 0, 0, 0.8)");
         })
         .on("mouseout", function(d) {
-            d3.select("#linkLayer0").selectAll("line")
+            d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
                     return l.edgeid.includes(d.nodeid);
                 })

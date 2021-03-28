@@ -264,7 +264,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumnsNodes; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw nodes: " + rawRows.size());
+        System.out.println("Total raw nodes: " + rawRows.size() + " total node attributes: " +rawRows.get(0).size());
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughNodes", String.valueOf(rawRows.size()));
@@ -274,7 +274,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumnsEdges; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw edges: " + rawRows.size());
+        System.out.println("Total raw edges: " + rawRows.size() + " total edge attributes: " + rawRows.get(0).size());
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughEdges", String.valueOf(rawRows.size()));
@@ -358,7 +358,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 System.out.println("finished writing nodes to db level "+ i + "...");
 
                 //read edges
-                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(0).build();
+                CSVReader edgesReader = new CSVReaderBuilder(new FileReader(edgesFile)).withSkipLines(0).build();
                 List<String[]> edges = edgesReader.readAll();
 
                 numRawColumnsEdges = edges.get(0).length;
@@ -442,8 +442,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         sql = "create unlogged table " + bboxTableName + " (";
         for (int j = 0; j < rawNodesTitles.length; j++)
             sql += rawNodesTitles[j] + " text, ";
-        sql +=
-                "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+        sql += "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
                         + "maxx double precision, maxy double precision, geom box);";
         bboxStmt.executeUpdate(sql);
 
@@ -452,8 +451,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int j = 0; j < numRawColumnsNodes + 6; j++) insertSql += "?, ";
         insertSql += "?);";
 
-        PreparedStatement preparedStmt =
-                DbConnector.getPreparedStatement(Config.databaseName, insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int insertCount = 0;
         //Iterable<Entry<RTreeData, Rectangle>> clusters = rtree0.entries().toBlocking().toIterable();
 
@@ -490,8 +488,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 preparedStmt.setString(
                         k + 1, rawNodes.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
 
-            preparedStmt.setString(
-                    numRawColumnsNodes + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
+            preparedStmt.setString(numRawColumnsNodes + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
             
             
             // bounding box fields
@@ -565,16 +562,19 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // create the bbox table
         sql = "create unlogged table " + bboxTableName + " (";
-        for (int j = 0; j < graph.getColumnNamesEdges().size(); j++)
-            sql += graph.getColumnNamesEdges().get(j) + " text, ";
+        for (int j = 0; j < rawEdgesTitles.length; j++)
+            sql += rawEdgesTitles[j] + " text, ";
+        // sql +=
+            // "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                    // + "maxx double precision, maxy double precision, geom box);";
         sql +=
-                "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                "clusterAgg text, n1x double precision, n1y double precision, n2x double precision, n2y double precision, minx double precision, miny double precision, "
                         + "maxx double precision, maxy double precision, geom box);";
         bboxStmt.executeUpdate(sql);
 
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
-        for (int j = 0; j < numRawColumnsEdges + 6; j++) insertSql += "?, ";
+        for (int j = 0; j < numRawColumnsEdges + 8; j++) insertSql += "?, ";
         insertSql += "?);";
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
@@ -594,12 +594,12 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             double n1y = new Double(edge[2]) * canvasHeight;
             double n2x = new Double(edge[3]) * canvasWidth;
             double n2y = new Double(edge[4]) * canvasHeight;
-            double cx = (n1x + n2x)/2;
-            double cy = (n1y + n2y)/2;
+            // double cx = (n1x + n2x)/2;
+            // double cy = (n1y + n2y)/2;
 
             double mincx = (n1x < n2x) ? n1x : n2x;
-            double mincy = (n1x > n2x) ? n1x : n2x;
-            double maxcx = (n1y < n2y) ? n1y : n2y;
+            double maxcx = (n1x > n2x) ? n1x : n2x;
+            double mincy = (n1y < n2y) ? n1y : n2y;
             double maxcy = (n1y > n2y) ? n1y : n2y;
             
             float minx = (float) (mincx - graph.getBboxW() * overlappingThreshold / 2);
@@ -628,12 +628,14 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             
             
             // bounding box fields
-            preparedStmt.setDouble(numRawColumnsEdges + 2, cx);
-            preparedStmt.setDouble(numRawColumnsEdges + 3, cy);
-            preparedStmt.setDouble(numRawColumnsEdges + 4, rd.minx);
-            preparedStmt.setDouble(numRawColumnsEdges + 5, rd.miny);
-            preparedStmt.setDouble(numRawColumnsEdges + 6, rd.maxx);
-            preparedStmt.setDouble(numRawColumnsEdges + 7, rd.maxy);
+            preparedStmt.setDouble(numRawColumnsEdges + 2, n1x);
+            preparedStmt.setDouble(numRawColumnsEdges + 3, n1y);
+            preparedStmt.setDouble(numRawColumnsEdges + 4, n2x);
+            preparedStmt.setDouble(numRawColumnsEdges + 5, n2y);
+            preparedStmt.setDouble(numRawColumnsEdges + 6, rd.minx);
+            preparedStmt.setDouble(numRawColumnsEdges + 7, rd.miny);
+            preparedStmt.setDouble(numRawColumnsEdges + 8, rd.maxx);
+            preparedStmt.setDouble(numRawColumnsEdges + 9, rd.maxy);
 
             //System.out.println(preparedStmt);
             preparedStmt.addBatch();

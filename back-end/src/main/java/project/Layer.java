@@ -81,7 +81,15 @@ public class Layer implements Serializable {
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
         if (getIndexerType().equals("SSVInMemoryIndexer")) colListStr += "clusterAgg, ";
-        colListStr += "cx, cy, minx, miny, maxx, maxy";
+
+        if (graphId.length() != 0 && graphId.contains("edge")) {
+            // this is an edge layer in graphvis
+            // it does not have 'cx', and 'cy', it instead has the following
+            colListStr += "n1x, n1y, n2x, n2y, minx, miny, maxx, maxy";
+        }
+        else
+            colListStr += "cx, cy, minx, miny, maxx, maxy";
+
         return colListStr;
     }
 
