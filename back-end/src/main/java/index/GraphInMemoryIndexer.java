@@ -614,7 +614,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
             rd.convexHull = convexHullCopy;
-
             // scale the convex hulls
             for (int p = 0; p < rd.convexHull.length; p++)
                 for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();

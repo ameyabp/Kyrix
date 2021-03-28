@@ -117,7 +117,7 @@ function addGraph(graph, args) {
             ) {
                 if (this.jumps[j].destId != curPyramid[i + 1].id)
                     throw new Error(
-                        "Adding SSV: malformed literal zoom pyramid."
+                        "Adding Graph: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomIn = true;
             }
@@ -127,7 +127,7 @@ function addGraph(graph, args) {
             ) {
                 if (this.jumps[j].destId != curPyramid[i].id)
                     throw new Error(
-                        "Adding SSV: malformed literal zoom pyramid."
+                        "Adding Graph: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomOut = true;
             }
