@@ -487,6 +487,7 @@ function renderDynamicBoxes(
                     optionalArgsMore["layerId"] = i;
                     optionalArgsMore["ssvId"] = curLayer.ssvId;
                     optionalArgsMore["usmapId"] = curLayer.usmapId;
+                    optionalArgsMore["graphId"] = curLayer.graphId;
                     optionalArgsMore["staticAggregationId"] =
                         curLayer.staticAggregationId;
                     curLayer.rendering.parseFunction()(
