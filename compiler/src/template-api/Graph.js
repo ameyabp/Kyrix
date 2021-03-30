@@ -69,7 +69,8 @@ function Graph(args_) {
     this.queryNodes = args.data.queryNodes;
     this.queryEdges = args.data.queryEdges;
 
-    this.numLevels = args.marks.cluster.numClusters.length;
+    this.numLevels = args.marks.cluster.clusterLevels.length;
+    this.clusterLevels = args.marks.cluster.clusterLevels;
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;
     this.zoomFactor = args.config.zoomFactor;
@@ -78,7 +79,7 @@ function Graph(args_) {
      * setting cluster params
      ************************/
     this.clusterParams = {};
-    this.clusterParams.numClusters = args.marks.cluster.numClusters;
+    this.clusterParams.clusterLevels = args.marks.cluster.clusterLevels;
     this.clusterParams.clusteringAlgorithm = args.marks.cluster.algorithm;
     this.clusterParams.clusteringRandomStateParameter = args.marks.cluster.randomState;
     this.clusterParams.aggregateParams = {
@@ -126,7 +127,7 @@ function Graph(args_) {
 }
 
 // function used for processing cluster aggs
-function processClusterAgg(data, params) {
+function processClusterAggEdges(data, params) {
 
 }
 
@@ -135,7 +136,7 @@ function getEdgeLayerRenderer() {
     function renderEdges() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        // params.processClusterAgg(data, params);
+        // params.processClusterAggEdges(data, params);
 
         g = svg.append("g").attr("id", "linkLayer");
         g.selectAll("line")
@@ -221,7 +222,7 @@ function getEdgeLayerRenderer() {
 
         function tabularRankListRenderer(svg, data, args) {
             var rpKey =
-                "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+                "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -299,6 +300,7 @@ function getEdgeLayerRenderer() {
 
         // ranklist
         if ("hoverRankListMode" in params) {
+            console.log("rohila found rankListMode for hover with selector " + hoverSelector);
             var rankListRenderer;
             if (params.hoverRankListMode == "tabular")
                 rankListRenderer = tabularRankListRenderer;
@@ -364,17 +366,22 @@ function getEdgeLayerRenderer() {
     }
 
     var renderFuncBody = getBodyStringOfFunction(renderEdges);
-    // renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+    renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
+// function used for processing cluster aggs
+function processClusterAggNodes(data, params) {
+
+}
 
 // get rendering function for the graph nodes layer
 function getNodeLayerRenderer() {
     function renderNodes() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        // params.processClusterAgg(data, params);
+        // params.processClusterAggNodes(data, params);
 
         g = svg.append("g").attr("id", "nodeLayer");
         g.selectAll("circle")
@@ -464,7 +471,7 @@ function getNodeLayerRenderer() {
 
         function tabularRankListRenderer(svg, data, args) {
             var rpKey =
-                "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+                "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -607,7 +614,8 @@ function getNodeLayerRenderer() {
     }
 
     var renderFuncBody = getBodyStringOfFunction(renderNodes);
-    // renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+    renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
@@ -620,5 +628,6 @@ Graph.prototype = {
 // exports
 module.exports = {
     Graph,
-    processClusterAgg
+    processClusterAggNodes,
+    processClusterAggEdges,
 };

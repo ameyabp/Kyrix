@@ -18,7 +18,8 @@ function addGraph(graph, args) {
     // add stuff to renderingParam
     var renderingParams = {
         textwrap: require("./Utilities").textwrap,
-        processClusterAgg: require("./Graph").processClusterAgg,
+        processClusterAggNodes: require("./Graph").processClusterAggNodes,
+        processClusterAggEdges: require("./Graph").processClusterAggEdges,
         serializePath: require("./Utilities").serializePath,
         translatePathSegments: require("./Utilities").translatePathSegments,
         parsePathIntoSegments: require("./Utilities").parsePathIntoSegments,
@@ -42,7 +43,7 @@ function addGraph(graph, args) {
     // dummy transforms
     var transformNodes = new Transform(graph.queryNodes, graph.db, "", [], true);
     var transformEdges = new Transform(graph.queryEdges, graph.db, "", [], true);
-    var numLevels = graph.numLevels
+    var numLevels = graph.numLevels;
 
     for (var i=0; i<numLevels; i++) {
         var width = (graph.topLevelWidth * Math.pow(graph.zoomFactor, i)) | 0;

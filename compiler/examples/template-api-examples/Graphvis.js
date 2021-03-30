@@ -31,7 +31,7 @@ var graph = {
                     function: "sum"
                 }
             },
-            numClusters: [200, 100, 40],
+            clusterLevels: [200, 100, 40],
             randomState: 0,
             algorithm: "elkan"
         },

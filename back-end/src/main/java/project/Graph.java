@@ -19,6 +19,7 @@ public class Graph {
     private ArrayList<String> columnNamesEdges, queriedColumnNamesEdges = null, columnTypesEdges = null;
     private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int numLevels, topLevelWidth, topLevelHeight;
+    private ArrayList<Integer> clusterLevels;
     // private double overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1, zColId = -1;
@@ -214,6 +215,10 @@ public class Graph {
         return zoomFactor;
     }
 
+    public ArrayList<Integer> getClusterLevels() {
+        return clusterLevels;
+    }
+
     // public double getLoX() {
     //     return loX;
     // }
@@ -337,6 +342,8 @@ public class Graph {
                 + columnNamesEdges
                 + ", numLevels="
                 + numLevels
+                + ", clusterLevels="
+                + clusterLevels
                 + ", topLevelWidth="
                 + topLevelWidth
                 + ", topLevelHeight="

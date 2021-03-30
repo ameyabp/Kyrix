@@ -212,11 +212,20 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private static void computeClustering() throws Exception {
-        String s;
+    private static void computeClustering(ArrayList<Integer> clusterLevels) throws Exception {
+        // String s;
         Process p;
+
+        String s = "sh -c python3 kMeansClusteringIterative.py ";
+        for (int i : clusterLevels) {
+            s += String.valueOf(i) + ",";
+        }
+        s = s.substring(0, s.length()-1);
+        
+        System.out.println("Executing clustering script " + s);
+
         try {
-            p = Runtime.getRuntime().exec("sh -c python3 kMeansClusteringIterative.py 2", null, new File("/Clustering"));
+            p = Runtime.getRuntime().exec(s, null, new File("/Clustering"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
@@ -283,7 +292,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void computeClusterAggs() throws Exception {
 
         //TODO: UNCOMMENT THIS
-        //computeClustering();
+        ArrayList<Integer> clusterLevels = graph.getClusterLevels();
+        computeClustering(clusterLevels);
         
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
