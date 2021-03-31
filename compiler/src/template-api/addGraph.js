@@ -103,8 +103,8 @@ function addGraph(graph, args) {
         curEdgeLayer.addRenderingFunc(graph.getEdgeLayerRenderer());
 
         // tooltips
-        curNodeLayer.addTooltip(graph.tooltipColumns, graph.tooltipAliases);
-        curEdgeLayer.addTooltip(graph.tooltipColumns, graph.tooltipAliases);
+        curNodeLayer.addTooltip(graph.tooltipNodeColumns, graph.tooltipNodeAliases);
+        curEdgeLayer.addTooltip(graph.tooltipEdgeColumns, graph.tooltipEdgeAliases);
     }
 
     // literal zooms

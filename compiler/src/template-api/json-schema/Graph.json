@@ -271,14 +271,20 @@
                         "tooltip": {
                             "type": "object",
                             "properties": {
-                                "columns": {
+                                "nodecolumns": {
                                     "$ref": "#/definitions/nonEmptyStringArray"
                                 },
-                                "aliases": {
+                                "nodealiases": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
+                                "edgecolumns": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
+                                "edgealiases": {
                                     "$ref": "#/definitions/nonEmptyStringArray"
                                 }
                             },
-                            "required": ["columns"],
+                            "required": ["nodecolumns", "edgecolumns"],
                             "additionalProperties": false
                         },
                         "boundary": {

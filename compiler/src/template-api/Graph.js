@@ -55,9 +55,12 @@ function Graph(args_) {
 
     if ("tooltip" in args.marks.hover) {
         if (
-            "aliases" in args.marks.hover.tooltip &&
-            args.marks.hover.tooltip.aliases.length !==
-                args.marks.hover.tooltip.columns.length
+            ("nodealiases" in args.marks.hover.tooltip &&
+            args.marks.hover.tooltip.nodealiases.length !==
+                args.marks.hover.tooltip.nodecolumns.length) ||
+            ("edgealiases" in args.marks.hover.tooltip &&
+            args.marks.hover.tooltip.edgealiases.length !==
+                args.marks.hover.tooltip.edgecolumns.length)
         )
             throw new Error(
                 "Constructing Graph: tooltip aliases (marks.hover.tooltip.aliases) " +
@@ -117,12 +120,17 @@ function Graph(args_) {
     this.topk = "topk" in this.hoverParams ? this.hoverParams.topk : 0;
     this.hoverSelector =
         "selector" in args.marks.hover ? args.marks.hover.selector : null;
-    this.tooltipColumns = this.tooltipAliases = null;
+    this.tooltipNodeColumns = this.tooltipNodeAliases = this.tooltipEdgeColumns = this.tooltipEdgeAliases = null;
     if ("tooltip" in args.marks.hover) {
-        this.tooltipColumns = args.marks.hover.tooltip.columns;
-        if ("aliases" in args.marks.hover.tooltip)
-            this.tooltipAliases = args.marks.hover.tooltip.aliases;
-        else this.tooltipAliases = this.tooltipColumns;
+        this.tooltipNodeColumns = args.marks.hover.tooltip.nodecolumns;
+        if ("nodealiases" in args.marks.hover.tooltip)
+            this.tooltipNodeAliases = args.marks.hover.tooltip.nodealiases;
+        else this.tooltipNodeAliases = this.tooltipNodeColumns;
+
+        this.tooltipEdgeColumns = args.marks.hover.tooltip.edgecolumns;
+        if ("edgealiases" in args.marks.hover.tooltip)
+            this.tooltipEdgeAliases = args.marks.hover.tooltip.edgealiases;
+        else this.tooltipEdgeAliases = this.tooltipEdgeColumns;
     }
 }
 
@@ -549,6 +557,7 @@ function getNodeLayerRenderer() {
 
         // ranklist
         if ("hoverRankListMode" in params) {
+            console.log("rohila found rankListMode for hover with selector " + hoverSelector);
             var rankListRenderer;
             if (params.hoverRankListMode == "tabular")
                 rankListRenderer = tabularRankListRenderer;

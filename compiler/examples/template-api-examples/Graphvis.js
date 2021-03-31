@@ -4,7 +4,7 @@ const Graph = require("../../src/template-api/Graph").Graph;
 //const renderers = require("../nba/renderers");
 
 // construct a project
-var p = new Project("graphvis", "../../../config.txt");
+var p = new Project("coauthor_graph", "../../../config.txt");
 // p.addRenderingParams(renderers.renderingParams);
 // p.addStyles("../nba/nba.css");
 
@@ -31,7 +31,7 @@ var graph = {
                     function: "sum"
                 }
             },
-            clusterLevels: [200, 100, 40],
+            clusterLevels: [2000, 500, 50],
             randomState: 0,
             algorithm: "elkan"
         },
@@ -39,17 +39,16 @@ var graph = {
             nodeSize: "memberNodeCount"
         },
         hover: {
-            rankList: {
-                mode: "tabular",
-                fields: ["name", "affiliation", "paperCount", "memberNodeCount"],
-                topk: 3,
-                orientation: "vertical"
-            },
-            boundary: "convexhull"
+            tooltip: {
+                nodecolumns: ["authorname", "affiliation", "papercount", "coauthorcount", "membernodecount"],
+                nodealiases: ["Name", "Affiliation", "Paper count", "Coauthor count", "Member Node count"],
+                edgecolumns: ["author1", "author2", "papercount"],
+                edgealiases: ["Author1", "Author2", "Paper count"]
+            }
         }
     },
     config: {
-        projectName: "authorGraph"
+        projectName: "coauthor_graph"
     }
 };
 
