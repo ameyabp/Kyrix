@@ -181,7 +181,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // compute layout
         System.out.println("Computing Layout...");
-        //computeLayout();
+        computeLayout();
 
         // compute cluster aggregations
         System.out.println("Computing Clusters...");
@@ -216,7 +216,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // String s;
         Process p;
 
-        String s = "sh -c python3 kMeansClusteringIterative.py ";
+        String s = "sh -c ./clustering.sh -c ";
         for (int i : clusterLevels) {
             s += String.valueOf(i) + ",";
         }

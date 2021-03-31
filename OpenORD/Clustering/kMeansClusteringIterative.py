@@ -9,6 +9,13 @@ import pandas as pd
 import sys
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        # default 
+        clusterLevels = [1000, 500, 50]
+    else:
+        clusterLevels = sys.argv[1].split(',')
+        # print("Rohila ", clusterLevels)
+
     nodes = pd.read_csv('/OpenOrd-master/examples/recursive/authorship.coord', names = ['id', 'x', 'y'], sep='\t', header=None)
     edges = pd.read_csv('/OpenOrd-master/examples/recursive/authorship.edges', names = ['source', 'target', 'weight'], dtype={'source': str, 'target': str, 'weight': float}, sep='\t', header=None)
 
@@ -120,19 +127,19 @@ if __name__ == "__main__":
 
 
     ##### iterative clustering #####
-    if len(sys.argv) < 2:
-        clusterLevels = 1
-    else:
-        clusterLevels = int(sys.argv[1])
+    # if len(sys.argv) < 2:
+    #     # default 
+    #     clusterLevels = [1000, 500, 50]
+    # else:
+    #     clusterLevels = sys.argv[1].split(',')
+    #     print("Rohila ", clusterLevels)
 
-    numNodes = np.zeros(clusterLevels + 1)
-    numEdges = np.zeros(clusterLevels + 1)
+    numNodes = np.zeros(len(clusterLevels) + 1)
+    numEdges = np.zeros(len(clusterLevels) + 1)
 
     # keep track of TOTAL number of nodes/edges at the index level (0 for base, 1 for first level, etc.)
     numNodes[0] = len(nodeDict)+1000
     numEdges[0] = len(edgeDict)+1000
-
-    numClusters = [0, 200, 50]
 
     levelNodeDict = {}
     levelEdgeDict = {}
@@ -140,8 +147,8 @@ if __name__ == "__main__":
     levelNodeDict[0] = nodeDict
     levelEdgeDict[0] = edgeDict
 
-    for i in range(1, clusterLevels + 1):
-        kmeans = KMeans(n_clusters=numClusters[i], random_state=0, algorithm='elkan').fit(np_clustering_input)
+    for i in range(1, len(clusterLevels) + 1):
+        kmeans = KMeans(n_clusters=int(clusterLevels[i-1]), random_state=0, algorithm='elkan').fit(np_clustering_input)
 
         levelNodeDict[i] = {}
         levelEdgeDict[i] = {}
