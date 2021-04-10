@@ -31,8 +31,13 @@
         "aggregationFunctions": {
             "enum": ["count", "sum", "avg", "min", "max", "sqrsum"]
         },
+        "layout": {
+            "enum": ["openORD", "fm3", "forceAtlas2"],
+            "default": "openORD"
+        },
         "clusteringAlgorithms": {
-            "enum": ["elkan"]
+            "enum": ["elkan"],
+            "default": "elkan"
         }
     },
     "properties": {
@@ -59,27 +64,51 @@
             "type": "object",
             "properties": {
                 "name": {
-                    "enum": ["openORD"]
+                    "$ref": "#/definitions/layout"
                 },
-                "maxLevel": {
+                "ord_maxLevel": {
                     "type": "number",
                     "default": 2
                 },
-                "startLevel": {
+                "ord_startLevel": {
                     "type": "number",
                     "default": 1
                 },
-                "lastCut": {
+                "ord_lastCut": {
                     "type": "number",
                     "default": 0.8
                 },
-                "refineCut": {
+                "ord_refineCut": {
                     "type": "number",
                     "default": 0.5
                 },
-                "finalCut": {
+                "ord_finalCut": {
                     "type": "number",
                     "default": 0.5
+                },
+                "fm3_param1": {
+                    "type": "number",
+                    "default": 0.2
+                },
+                "fm3_param2": {
+                    "type": "number",
+                    "default": 0.5
+                },
+                "fm3_param3": {
+                    "type": "number",
+                    "default": 0.8
+                },
+                "fa2_param1": {
+                    "type": "number",
+                    "default": 0.2
+                },
+                "fa2_param2": {
+                    "type": "number",
+                    "default": 0.7
+                },
+                "fa2_param3": {
+                    "type": "number",
+                    "default": 1.2
                 }
             },
             "required": ["name"],
@@ -89,13 +118,41 @@
                     "if": {
                         "properties": {
                             "name": {
-                                "enum": ["openORD"]
+                                "const": "openORD"
                             }
                         }
                     },
                     "then": {
                         "preoperties": {
-                            "required": ["maxLevel", "startLevel", "lastCut", "refineCut", "finalCut"]
+                            "required": ["ord_maxLevel", "ord_startLevel", "ord_lastCut", "ord_refineCut", "ord_finalCut"]
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "name": {
+                                "const": "fm3"
+                            }
+                        }
+                    },
+                    "then": {
+                        "preoperties": {
+                            "required": ["fm3_param1", "fm3_param2", "fm3_param3"]
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "name": {
+                                "const": "fa2"
+                            }
+                        }
+                    },
+                    "then": {
+                        "preoperties": {
+                            "required": ["fa2_param1", "fa2_param2", "fa2_param3"]
                         }
                     }
                 }

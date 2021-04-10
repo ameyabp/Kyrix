@@ -27,7 +27,8 @@ function Graph(args_) {
             "Constructing Graph: " + formatAjvErrorMessage(validator.errors[0])
         );
 
-    // console.log("-------- Successfully verified schema ---------")
+    console.log("-------- Successfully verified schema ---------");
+
     /*******************************************************************************
      * check constraints/add defaults that can't be easily expressed by json-schema
      *******************************************************************************/    
@@ -72,11 +73,36 @@ function Graph(args_) {
     this.queryNodes = args.data.queryNodes;
     this.queryEdges = args.data.queryEdges;
 
-    this.numLevels = args.marks.cluster.clusterLevels.length;
+    this.numLevels = args.marks.cluster.clusterLevels.length+1;
     this.clusterLevels = args.marks.cluster.clusterLevels;
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;
     this.zoomFactor = args.config.zoomFactor;
+
+    /************************
+     * setting layout params
+     ************************/
+    this.layoutAlgo = args.layout.name;
+    this.layoutParams = [];
+    if (args.layout.name == 'openORD') {
+        this.layoutParams.push(args.layout.ord_maxLevel);
+        this.layoutParams.push(args.layout.ord_startLevel);
+        this.layoutParams.push(args.layout.ord_lastCut);
+        this.layoutParams.push(args.layout.ord_refineCut);
+        this.layoutParams.push(args.layout.ord_finalCut);
+    }
+    else if (args.layout.name == 'fm3') {
+        this.layoutParams.push(args.layout.fm3_param1);
+        this.layoutParams.push(args.layout.fm3_param2);
+        this.layoutParams.push(args.layout.fm3_param3);
+    }
+    else {
+        // args.layout.name == 'fa2'
+        this.layout.algorithm = "fa2";
+        this.layoutParams.push(args.layout.fa2_param1);
+        this.layoutParams.push(args.layout.fa2_param2);
+        this.layoutParams.push(args.layout.fa2_param3);
+    }
 
     /************************
      * setting cluster params

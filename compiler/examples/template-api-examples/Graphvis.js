@@ -16,12 +16,12 @@ var graph = {
         queryEdges: "select * from authoredges"
     },
     layout: {
-        name: "openORD",
-        maxLevel: 2,
-        startLevel: 1,
-        lastCut: 0.8,
-        refineCut: 0.5,
-        finalCut: 0.5
+        name: "fm3",
+        ord_maxLevel: 2,
+        ord_startLevel: 1,
+        ord_lastCut: 0.8,
+        ord_refineCut: 0.5,
+        ord_finalCut: 0.5
     },
     marks: {
         cluster: {
@@ -31,7 +31,7 @@ var graph = {
                     function: "sum"
                 }
             },
-            clusterLevels: [2000, 500, 50],
+            clusterLevels: [1000, 200, 50],
             randomState: 0,
             algorithm: "elkan"
         },

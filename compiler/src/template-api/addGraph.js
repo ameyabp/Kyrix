@@ -29,6 +29,7 @@ function addGraph(graph, args) {
     };
     renderingParams = {
         ...renderingParams,
+        ...graph.layoutParams,
         ...graph.clusterParams,
         ...graph.hoverParams
     };

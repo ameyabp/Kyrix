@@ -33,6 +33,8 @@ public class Graph {
     // private String geoLatCol, geoLonCol;
     // private int geoInitialLevel;
     // private boolean mapBackground;
+    private String layoutAlgo;
+    private ArrayList<Float> layoutParams;
 
     public String getQueryNodes() {
         return queryNodes;
@@ -217,6 +219,14 @@ public class Graph {
 
     public ArrayList<Integer> getClusterLevels() {
         return clusterLevels;
+    }
+
+    public String getLayoutAlgorithm() {
+        return layoutAlgo;
+    }
+
+    public ArrayList<Float> getLayoutParams() {
+        return layoutParams;
     }
 
     // public double getLoX() {

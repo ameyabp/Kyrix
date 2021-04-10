@@ -172,7 +172,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             return;
 
         rpKey = "graph_" + curGraphId.substring(0, curGraphId.lastIndexOf("_"));
-        //System.out.println("rpKey: " + rpKey);
 
         graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
 
@@ -194,21 +193,46 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
 
-    private static void computeLayout() throws Exception {
+    private void computeLayout() throws Exception {
         String s;
         Process p;
-        try {
-            p = Runtime.getRuntime().exec("sh -c ./authorship.sh", null, new File("/OpenOrd-master/examples/recursive"));
 
-            BufferedReader br = new BufferedReader(
-                new InputStreamReader(p.getInputStream()));
-            while ((s = br.readLine()) != null)
-                System.out.println("layout step: " + s);
-            p.waitFor();
-            System.out.println ("exit: " + p.exitValue());
-            p.destroy();
-        } catch (Exception e) {
-        	System.out.println(e.getMessage());
+        String algorithm = graph.getLayoutAlgorithm();
+        ArrayList<Float> params = graph.getLayoutParams();
+
+        if (algorithm.equals("openORD")) {
+            float maxLevel = params.get(0);
+            float startLevel = params.get(1);
+            float lastCut = params.get(2);
+            float refineCut = params.get(3);
+            float finalCut = params.get(4);
+            System.out.println("Running OpenORD layout algorithm with params: maxLevel=" + maxLevel + ", startLevel=" + startLevel + ", lastCut=" + lastCut + ", refineCut=" + refineCut + ", finalCut=" + finalCut);
+            try {
+                p = Runtime.getRuntime().exec("sh -c ./authorship.sh", null, new File("/OpenOrd-master/examples/recursive"));
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+                while ((s = br.readLine()) != null)
+                    System.out.println("layout step: " + s);
+                p.waitFor();
+                System.out.println ("exit: " + p.exitValue());
+                p.destroy();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        else if (algorithm.equals("fm3")) {
+            float param1 = params.get(0);
+            float param2 = params.get(1);
+            float param3 = params.get(2);
+            System.out.println("Running FM3 layout algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
+        }
+        else {
+            // algorithm.equals("fa2")
+            float param1 = params.get(0);
+            float param2 = params.get(1);
+            float param3 = params.get(2);
+            System.out.println("Running ForceAtlas2 layout algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
         }
     }
 
@@ -297,7 +321,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
-        for (int i = 0; i <= numLevels - 1; i++) {
+        for (int i = 0; i < numLevels; i++) {
             System.out.println("Loading clusters for level " + i + " ...");
             rtree0 = RTree.star().create();
             String edgesFile = "/Clustering/graphEdgesData_level_" + (numLevels-i-1) + ".csv";
