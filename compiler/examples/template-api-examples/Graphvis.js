@@ -16,7 +16,7 @@ var graph = {
         queryEdges: "select * from authoredges"
     },
     layout: {
-        name: "fm3",
+        name: "openORD",
         ord_maxLevel: 2,
         ord_startLevel: 1,
         ord_lastCut: 0.8,

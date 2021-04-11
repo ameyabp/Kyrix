@@ -206,9 +206,11 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             float lastCut = params.get(2);
             float refineCut = params.get(3);
             float finalCut = params.get(4);
+            String openORDParams = " -m " + maxLevel + " -s " + startLevel + " -l " + lastCut + " -r " + refineCut + " -f " + finalCut;
+            String layout = "sh -c ./authorship.sh " + openORDParams;
             System.out.println("Running OpenORD layout algorithm with params: maxLevel=" + maxLevel + ", startLevel=" + startLevel + ", lastCut=" + lastCut + ", refineCut=" + refineCut + ", finalCut=" + finalCut);
             try {
-                p = Runtime.getRuntime().exec("sh -c ./authorship.sh", null, new File("/OpenOrd-master/examples/recursive"));
+                p = Runtime.getRuntime().exec(layout, null, new File("/OpenOrd-master/examples/recursive"));
 
                 BufferedReader br = new BufferedReader(
                     new InputStreamReader(p.getInputStream()));
