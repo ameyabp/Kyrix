@@ -120,7 +120,11 @@ public abstract class Indexer implements Serializable {
                 }
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
-                l.getTransform().getColumnNames();
+                if (!indexerType.equals("GraphInMemoryIndexer")) {
+                    // get column names only for non-graph projects
+                    // grpah projects do not necessarily push the raw data to the backend
+                    l.getTransform().getColumnNames();
+                }
             }
     }
 

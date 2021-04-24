@@ -69,6 +69,8 @@ function Graph(args_) {
             );
     }
 
+    this.nodesCsv = args.data.nodesCsv;
+    this.edgesCsv = args.data.edgesCsv;
     this.db = args.data.db;
     this.queryNodes = args.data.queryNodes;
     this.queryEdges = args.data.queryEdges;

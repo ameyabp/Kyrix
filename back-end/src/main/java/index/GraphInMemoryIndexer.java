@@ -13,6 +13,7 @@ import com.opencsv.CSVReaderBuilder;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
@@ -135,6 +136,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     // private final String aggKeyDelimiter = "__";
     private final Gson gson;
     private String rpKey;
+    private String rawNodesCsv, rawEdgesCsv;
+    private String[] rawColumnsNodes, rawColumnsEdges;
     private int graphIndex, numLevels, numRawColumnsNodes, numRawColumnsEdges;
     private Statement bboxStmt, rawDbStmt;
 
@@ -158,6 +161,29 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         return instance;
     }
 
+    private void loadRawData(String nodesCsvFile, String edgesCsvFile) throws FileNotFoundException, IOException {
+        this.rawNodesCsv = nodesCsvFile;
+        this.rawEdgesCsv = edgesCsvFile;
+        // System.out.println("cwd: " + System.getProperty("user.dir"));
+        // System.out.println("raw data files set to: " + this.rawNodesCsv + " " + this.rawEdgesCsv);
+
+        try {
+            CSVReader reader = new CSVReader(new FileReader(this.rawNodesCsv));
+            this.rawColumnsNodes = reader.readNext();
+            this.numRawColumnsNodes = this.rawColumnsNodes.length;
+
+            reader = new CSVReader(new FileReader(this.rawEdgesCsv));
+            this.rawColumnsEdges = reader.readNext();
+            this.numRawColumnsEdges = this.rawColumnsEdges.length;
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        System.out.println(this.rawColumnsNodes.toString());
+        System.out.println(this.rawColumnsEdges.toString());
+    }
+
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
@@ -172,7 +198,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             return;
 
         rpKey = "graph_" + curGraphId.substring(0, curGraphId.lastIndexOf("_"));
-
         graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
 
         // set common variables
@@ -268,51 +293,33 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void setCommonVariables() throws Exception {
         // get current Graph object
         graph = Main.getProject().getGraphs().get(graphIndex);
+
+        // load raw nodes and edges data
+        loadRawData(graph.getNodesCsv(), graph.getEdgesCsv());
         numLevels = graph.getNumLevels(); 
-        numRawColumnsNodes = graph.getColumnNamesNodes().size();
-        numRawColumnsEdges = graph.getColumnNamesEdges().size();
-        
-        //System.out.println("aggDimensionFields: " + graph.getAggDimensionFields());
-        //System.out.println("aggMeasureFields: " + graph.getAggMeasureFields());
-        //System.out.println("aggMeasureFuncs: " + graph.getAggMeasureFuncs());
-
-        // calculate overlapping threshold
-        // overlappingThreshold =
-        //         Math.max(
-        //                 0.2,
-        //                 Math.sqrt(
-        //                                 4
-        //                                         * (virtualViewportSize + ssv.getBboxW() * 2)
-        //                                         * (virtualViewportSize + ssv.getBboxH() * 2)
-        //                                         / objectNumLimit
-        //                                         / ssv.getBboxH()
-        //                                         / ssv.getBboxW())
-        //                         - 1);
-        // overlappingThreshold = Math.max(overlappingThreshold, ssv.getOverlap());
-        // System.out.println("Overlapping threshold: " + overlappingThreshold);
-
-        // transform geo to screen coordinates if needed
-        // if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
 
         // store raw query results into memory
-        rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryNodes());
-        for (int i = 0; i < rawRows.size(); i++)
-            for (int j = 0; j < numRawColumnsNodes; j++)
-                if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw nodes: " + rawRows.size() + " total node attributes: " +rawRows.get(0).size());
+        // rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryNodes());
+        // for (int i = 0; i < rawRows.size(); i++)
+        //     for (int j = 0; j < numRawColumnsNodes; j++)
+        //         if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
+        // System.out.println("Total raw nodes: " + rawRows.size() + " total node attributes: " +rawRows.get(0).size());
 
-        // add row number as a BGRP
-        Main.getProject().addBGRP(rpKey, "roughNodes", String.valueOf(rawRows.size()));
+        // // add row number as a BGRP
+        // Main.getProject().addBGRP(rpKey, "roughNodes", String.valueOf(rawRows.size()));
 
-        // store raw query results into memory
-        rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryEdges());
-        for (int i = 0; i < rawRows.size(); i++)
-            for (int j = 0; j < numRawColumnsEdges; j++)
-                if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
-        System.out.println("Total raw edges: " + rawRows.size() + " total edge attributes: " + rawRows.get(0).size());
+        // // store raw query results into memory
+        // rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryEdges());
+        // for (int i = 0; i < rawRows.size(); i++)
+        //     for (int j = 0; j < numRawColumnsEdges; j++)
+        //         if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
+        // System.out.println("Total raw edges: " + rawRows.size() + " total edge attributes: " + rawRows.get(0).size());
 
-        // add row number as a BGRP
-        Main.getProject().addBGRP(rpKey, "roughEdges", String.valueOf(rawRows.size()));
+        // // add row number as a BGRP
+        // Main.getProject().addBGRP(rpKey, "roughEdges", String.valueOf(rawRows.size()));
+
+        // Read csv and load raw data
+
     }
 
     private void computeClusterAggs() throws Exception {

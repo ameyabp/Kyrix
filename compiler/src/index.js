@@ -451,7 +451,7 @@ function saveProject() {
         },
         4
     );
-    //console.log(logJSON);
+    // console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")

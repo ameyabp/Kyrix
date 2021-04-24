@@ -44,6 +44,12 @@
         "data": {
             "type": "object",
             "properties": {
+                "nodesCsv": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
+                "edgesCsv": {
+                    "$ref": "#/definitions/nonEmptyString"
+                },
                 "db": {
                     "$ref": "#/definitions/nonEmptyString"
                 },
@@ -57,7 +63,7 @@
                     "default": []
                 }
             },
-            "required": ["db", "queryNodes", "queryEdges"],
+            "required": ["nodesCsv", "edgesCsv", "db", "queryNodes", "queryEdges"],
             "additionalProperties": false
         },
         "layout": {

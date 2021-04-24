@@ -9,7 +9,7 @@ import main.DbConnector;
 /** Created on 3/15/21. */
 public class Graph {
 
-    private String queryNodes, queryEdges, db, rawTable;
+    private String queryNodes, queryEdges, db, rawTable, nodesCsv, edgesCsv;
     private String xCol, yCol, zCol;
     private int bboxW, bboxH;
     private int topk;
@@ -78,6 +78,14 @@ public class Graph {
 
     public String getzOrder() {
         return zOrder;
+    }
+
+    public String getNodesCsv() {
+        return nodesCsv;
+    }
+
+    public String getEdgesCsv() {
+       return edgesCsv;
     }
 
     // public String getClusterMode() {
