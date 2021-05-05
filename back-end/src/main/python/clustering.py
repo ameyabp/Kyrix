@@ -46,7 +46,8 @@ if __name__ == "__main__":
 
 
     # read in layout of nodes and edges from layout algorithm TODO: MODIFY FOR MORE ALGORITHMS
-    layoutNodes = pd.read_csv('../../../../OpenORD/OpenOrd-master/examples/recursive/authorship.coord', names = ['id', 'x', 'y'], sep='\t', header=None)
+    layoutNodes = pd.read_csv('../../../../OpenORD/OpenOrd-master/examples/recursive/'+ project + '.coord', names = ['id', 'x', 'y'], sep='\t', header=None)
+    layoutEdges = pd.read_csv('../../../../OpenORD/OpenOrd-master/examples/recursive/'+ project + '.edges', names = ['source', 'target', 'weight'], sep='\t', header=None)
 
     # read in user input nodes and edges and infer column types
     inputNodes = pd.read_csv(nodesDir, na_values=[''])
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 
     ### re-id the source and target in layout output to ids used in user input, 
     ### important for creating unique edge ids
-    edgeDataID_to_id = dict(zip(inputNodes['id'].astype(str), inputNodes[edgeDataID]))
+    reIdEdges = dict(zip(inputNodes['id'].astype(str), inputNodes[edgeDataID]))
 
 
     ### work on creating finalEdges df for finalized lowest level edges
@@ -92,14 +93,24 @@ if __name__ == "__main__":
     # create unique edge id for input edges
     inputEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(inputEdges['source'], inputEdges['target'])]
 
-    # merge edges on unique edge id
-    finalEdges = inputEdges
+    layoutEdges['source'] = [reIdEdges[str(x)] for x in layoutEdges['source']]
+    layoutEdges['target'] = [reIdEdges[str(x)] for x in layoutEdges['target']]
+    layoutEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(layoutEdges['source'], layoutEdges['target'])]
+    layoutEdges = layoutEdges.drop(columns = ['source', 'target'])
+
+
+
+    # merge edges on unique edge id -> we need to keep edges that result from layout since edges may be dropped (???, need to figure this out)
+    #finalEdges = inputEdges
+    finalEdges = pd.merge(inputEdges, layoutEdges, on='source_target')
+    finalEdges = finalEdges.drop_duplicates()
+
 
     ### done with finalEdges for now
 
     ### prepare finalNodes df
 
-    # merge nodes on unique node id (input nodes merge onto layout nodes to keep new coordinate values)
+    # merge nodes on unique id used for edge endpoints (input nodes merge onto layout nodes to keep new coordinate values)
     finalNodes = pd.merge(layoutNodes, inputNodes, on='id')
 
     # create nodeDict using edgeDataID as index to set x and y coordinates for edges df
@@ -113,16 +124,51 @@ if __name__ == "__main__":
 
     # set x and y coordinates in edges df
     finalEdges['x1'] = [getX(x) for x in finalEdges['source']]
-    finalEdges['y1'] = [getY(x) for x in finalEdges['source']]
+    finalEdges['y1'] = [getY(y) for y in finalEdges['source']]
 
     finalEdges['x2'] = [getX(x) for x in finalEdges['target']]
-    finalEdges['y2'] = [getY(x) for x in finalEdges['target']]
+    finalEdges['y2'] = [getY(y) for y in finalEdges['target']]
 
     # create new node id used specifically for clustering
     finalNodes = finalNodes.reset_index()
     finalNodes = finalNodes.rename(columns = {'index' : 'clusterNodeID'})
     finalNodes['clusterNodeID'] = finalNodes.index
 
-    ### done preparing finalNodes df
 
-    #print(finalEdges.head(5))
+
+    ### done preparing finalNodes df
+    print(finalEdges.head(6))
+
+    ### Prepare input for clustering algorithm
+    nodeAttributes = finalNodes.columns
+    edgeAttributes = finalEdges.columns
+
+    ds = dataStructures(nodeAttributes, edgeAttributes)
+
+    Node = ds.getNodeClass()
+    Edge = ds.getEdgeClass()
+
+    # map node id to node objects
+    clusterNodeDict = {}
+    for _, row in finalNodes.iterrows():
+        argDict = dict((key, val) for key, val in zip(nodeAttributes, row))
+        node = Node(_id = row['clusterNodeID'], _x = row['x'], _y = row['y'], _level=0, **argDict)
+        clusterNodeDict[node._id] = node
+    
+    # map edge id to edge objects
+    clusterEdgeDict = {}
+    for _, row in finalEdges.iterrows():
+        argDict = dict((key, val) for key, val in zip(edgeAttributes, row))
+        edge = Edge(_id = row['source_target'], _srcId = row['source'], _dstId = row['target'], _level = 0, **argDict)
+        clusterEdgeDict[edge._id] = edge
+
+
+    for _id in clusterNodeDict:
+        node = clusterNodeDict[_id]
+        print("Node:", node._id, node.authorName, node.affiliation)
+    print(len(clusterEdgeDict))
+
+
+    ###### CALL TO CLUSTERING METHOD ######
+    # if clusterAlgorithm == 'kmeans':
+    #       call it
