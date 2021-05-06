@@ -23,6 +23,7 @@ class dataStructures:
         nodeAttributeDict['_x'] = None
         nodeAttributeDict['_y'] = None
         nodeAttributeDict['_level'] = None
+        nodeAttributeDict['_memberNodes'] = None
 
         for nodeAttribute in self.nodeAttributes:
             nodeAttributeDict[nodeAttribute] = None
@@ -43,12 +44,14 @@ class dataStructures:
         edgeAttributeDict['_srcId'] = None
         edgeAttributeDict['_dstId'] = None
         edgeAttributeDict['_level'] = None
+        edgeAttributeDict['_memberEdges'] = None
+        edgeAttributeDict['_edgeWeight'] = None
 
         for edgeAttribute in self.edgeAttributes:
             edgeAttributeDict[edgeAttribute] = None
 
         """
-            This is the constructor method definition for the node class
+            This is the constructor method definition for the edge class
         """
         def edgeCtor(obj, **kwargs):
             for varName, varValue in kwargs.items():
@@ -107,6 +110,7 @@ if __name__ == '__main__':
     # map edge id to edge object
     edgeDict = {}
 
+    # edge id created as <lex_smaller_node_id>_<level>_<lex_bigger_node_id>
     edge = Edge(_id='0_0_1', _srcId=0, _dstId=1, _level=0, author1_name='Ameya B Patil', author2_name='Ishan Sen', papers=['Kyrix-G'])
     edgeDict[edge._id] = edge
 

@@ -28,7 +28,7 @@ ROOTNAME=authorship				# root name of project
 MEMORY=1				# use multiple scans to conserve memory
 
 # initial layout & clustering
-TRUNCATE_LINKS=10	# initial truncation number of edges
+TRUNCATE_LINKS=1	# initial truncation number of edges
 INIT_CUT=1		# initial edge cutting parameter
 INIT_NORM=0		# normalize during initial layout
 
