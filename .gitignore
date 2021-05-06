@@ -185,3 +185,19 @@ front-end/js/embed/kyrix.js
 compile.sh
 !docker-scripts/compile.sh
 *.sql
+
+####### Layout and clustering ######
+*.coord
+*.edges
+*.full
+*.ind
+*.real
+*.coarse_icoord
+*.coarse_iedges
+*.coarse_int
+*.clust
+*.refine_icoord
+*.refine_iedges
+*.refine_int
+*.sim
+*.pyc
