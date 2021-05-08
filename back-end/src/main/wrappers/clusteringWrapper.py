@@ -1,4 +1,5 @@
 from dataStructures import *
+from clustering import *
 
 #from sklearn.cluster import KMeans
 #from sklearn.preprocessing import MinMaxScaler
@@ -152,23 +153,23 @@ if __name__ == "__main__":
     clusterNodeDict = {}
     for _, row in finalNodes.iterrows():
         argDict = dict((key, val) for key, val in zip(nodeAttributes, row))
-        node = Node(_id = row['clusterNodeID'], _x = row['x'], _y = row['y'], _level=0, **argDict)
+        node = Node(_id = int(row['clusterNodeID']), _x = row['x'], _y = row['y'], _level=0, **argDict)
         clusterNodeDict[node._id] = node
     
     # map edge id to edge objects
     clusterEdgeDict = {}
     for _, row in finalEdges.iterrows():
         argDict = dict((key, val) for key, val in zip(edgeAttributes, row))
-        edge = Edge(_id = row['source_target'], _srcId = row['source'], _dstId = row['target'], _level = 0, **argDict)
+        edge = Edge(_id = row['source_target'], _srcId = int(row['source']), _dstId = int(row['target']), _level = 0, **argDict)
         clusterEdgeDict[edge._id] = edge
 
-
-    for _id in clusterNodeDict:
-        node = clusterNodeDict[_id]
-        print("Node:", node._id, node.authorName, node.affiliation)
-    print(len(clusterEdgeDict))
-
+    # for _id in clusterNodeDict:
+    #     node = clusterNodeDict[_id]
+    #     print("Node:", node._id, node.authorName, node.affiliation)
+    # print(len(clusterEdgeDict))
 
     ###### CALL TO CLUSTERING METHOD ######
-    # if clusterAlgorithm == 'kmeans':
-    #       call it
+    if clusterAlgorithm == 'kmeans':
+        nodeDict, edgeDict = kMeansClustering(randomState=0, clusterLevels=[1500, 500, 80], nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict)
+
+        # writeToCsv()
