@@ -80,6 +80,7 @@ function Graph(args_) {
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;
     this.zoomFactor = args.config.zoomFactor;
+    this.projectName = args.config.projectName;
 
     /************************
      * setting layout params

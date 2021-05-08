@@ -29,13 +29,13 @@ var graph = {
         cluster: {
             aggregate: {
                 measures: {
-                    fields: ["memberNodeCount", "paperCount"],
-                    function: "sum"
+                    fields: ["papers", "coauthors"],
+                    function: "count"
                 }
             },
             clusterLevels: [1000, 200, 50],
             randomState: 0,
-            algorithm: "elkan"
+            algorithm: "kmeans"
         },
         encoding: {
             nodeSize: "memberNodeCount"

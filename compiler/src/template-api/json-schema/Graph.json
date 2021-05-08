@@ -36,8 +36,8 @@
             "default": "openORD"
         },
         "clusteringAlgorithms": {
-            "enum": ["elkan"],
-            "default": "elkan"
+            "enum": ["kmeans"],
+            "default": "kmeans"
         }
     },
     "properties": {

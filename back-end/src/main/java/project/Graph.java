@@ -35,6 +35,7 @@ public class Graph {
     // private boolean mapBackground;
     private String layoutAlgo;
     private ArrayList<Float> layoutParams;
+    private String projectName;
 
     public String getQueryNodes() {
         return queryNodes;
@@ -235,6 +236,10 @@ public class Graph {
 
     public ArrayList<Float> getLayoutParams() {
         return layoutParams;
+    }
+
+    public String getProjectName() {
+        return projectName;
     }
 
     // public double getLoX() {
