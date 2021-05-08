@@ -11,8 +11,8 @@ var p = new Project("coauthor_graph", "../../../config.txt");
 // set up graph
 var graph = {
     data: {
-        nodesCsv: "../compiler/examples/graphvis/coauthor_graph_nodes.csv",
-        edgesCsv: "../compiler/examples/graphvis/coauthor_graph_edges.csv",
+        nodesCsv: "graphNodesData.csv",
+        edgesCsv: "graphEdgesData.csv",
         db: "coauthor_graph",
         queryNodes: "select * from authornodes",
         queryEdges: "select * from authoredges"

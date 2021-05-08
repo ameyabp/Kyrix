@@ -136,7 +136,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     // private final String aggKeyDelimiter = "__";
     private final Gson gson;
     private String rpKey;
-    private String rawNodesCsv, rawEdgesCsv;
+    private String rawNodesCsv, rawEdgesCsv, projectName;
     private String[] rawColumnsNodes, rawColumnsEdges;
     private int graphIndex, numLevels, numRawColumnsNodes, numRawColumnsEdges;
     private Statement bboxStmt, rawDbStmt;
@@ -224,6 +224,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         String algorithm = graph.getLayoutAlgorithm();
         ArrayList<Float> params = graph.getLayoutParams();
+        String layoutAlgorithmParams;
 
         if (algorithm.equals("openORD")) {
             float maxLevel = params.get(0);
@@ -231,27 +232,15 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             float lastCut = params.get(2);
             float refineCut = params.get(3);
             float finalCut = params.get(4);
-            String openORDParams = " -m " + maxLevel + " -s " + startLevel + " -l " + lastCut + " -r " + refineCut + " -f " + finalCut;
-            String layout = "sh -c ./authorship.sh " + openORDParams;
+            layoutAlgorithmParams = "" + maxLevel + "," + startLevel + "," + lastCut + "," +  refineCut + "," + finalCut + " ";
             System.out.println("Running OpenORD layout algorithm with params: maxLevel=" + maxLevel + ", startLevel=" + startLevel + ", lastCut=" + lastCut + ", refineCut=" + refineCut + ", finalCut=" + finalCut);
-            try {
-                p = Runtime.getRuntime().exec(layout, null, new File("/OpenOrd-master/examples/recursive"));
-
-                BufferedReader br = new BufferedReader(
-                    new InputStreamReader(p.getInputStream()));
-                while ((s = br.readLine()) != null)
-                    System.out.println("layout step: " + s);
-                p.waitFor();
-                System.out.println ("exit: " + p.exitValue());
-                p.destroy();
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
+            System.out.println("layoutAlgoParams: " + layoutAlgorithmParams);
         }
         else if (algorithm.equals("fm3")) {
             float param1 = params.get(0);
             float param2 = params.get(1);
             float param3 = params.get(2);
+            layoutAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
             System.out.println("Running FM3 layout algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
         }
         else {
@@ -259,8 +248,35 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             float param1 = params.get(0);
             float param2 = params.get(1);
             float param3 = params.get(2);
+            layoutAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
             System.out.println("Running ForceAtlas2 layout algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
         }
+
+        String generalParams = "--projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv + " --algorithm " + algorithm + " ";
+        
+        String layout = "./layout.sh " + generalParams + "--layoutParams " + layoutAlgorithmParams;
+        
+        System.out.println("layout call: " + layout);
+
+        String[] layoutTest = {"sh", "-c", layout};
+        
+        try {
+            p = Runtime.getRuntime().exec(layoutTest, null, new File("/kyrix/back-end/src/main/wrappers"));
+
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(p.getInputStream()));
+            while ((s = br.readLine()) != null)
+                System.out.println("layout step: " + s);
+            p.waitFor();
+            System.out.println ("exit: " + p.exitValue());
+            if (p.exitValue() == 0) {
+                System.out.println("layout computed without errors...");
+            }
+            p.destroy();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 
     private static void computeClustering(ArrayList<Integer> clusterLevels) throws Exception {
@@ -293,10 +309,15 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void setCommonVariables() throws Exception {
         // get current Graph object
         graph = Main.getProject().getGraphs().get(graphIndex);
+        
+        // get current project name
+        projectName = graph.getProjectName();
+        String userFilePath = "/kyrix/compiler/examples/" + projectName + "/";
 
         // load raw nodes and edges data
-        loadRawData(graph.getNodesCsv(), graph.getEdgesCsv());
+        loadRawData(userFilePath + graph.getNodesCsv(), userFilePath + graph.getEdgesCsv());
         numLevels = graph.getNumLevels(); 
+        
 
         // store raw query results into memory
         // rawRows = DbConnector.getQueryResult(graph.getDb(), graph.getQueryNodes());

@@ -1,28 +1,3 @@
-# multistage build to include python as well, makes container a bit larger...
-
-#FROM python:3.7-alpine as clusteringStuff
-#ENV PACKAGES=" \
-#    dumb-init \
-#    musl  \
-#    build-base \
-#    ca-certificates  \
-#    libgfortran \
-#    openblas  \
-#    "
-#ENV PYTHON_PACKAGES=" \
-#    numpy   \
-#    scikit-learn \
-#    pandas  \
-#    " 
-#RUN apk add --no-cache --virtual build-dependencies python3 \
-#    && apk add --virtual build-runtime \
-#    build-base python3-dev openblas-dev freetype-dev pkgconfig gfortran \
-#    && python3 -m ensurepip \
-#    && pip3 install --upgrade pip setuptools \
-#    && pip install --no-cache-dir $PYTHON_PACKAGES \
-#    && apk del build-runtime \
-#    && apk add --no-cache --virtual build-dependencies $PACKAGES
-
 #
 # Dockerfile with Alpine Linux as the container OS
 #
@@ -68,11 +43,10 @@ RUN apk add --no-cache --virtual .build-dependencies -q --update \
 # ADDING MAKE AND G++ FOR OPENORD LAYOUT
 RUN apk add --update make
 RUN apk add --update g++
-RUN mkdir /OpenOrd-master
-RUN mkdir /Clustering
-ADD ./OpenORD/OpenOrd-master /OpenOrd-master/
-ADD ./OpenORD/Clustering /Clustering/
-RUN cd /OpenOrd-master/src/ && make clean && make 
+#RUN mkdir /OpenOrd-master
+#RUN mkdir /Clustering
+#ADD ./OpenORD/OpenOrd-master /OpenOrd-master/
+#ADD ./OpenORD/Clustering /Clustering/
 
 # optional: uncomment if instead you want to get from git...
 #RUN git clone https://github.com/tracyhenry/kyrix > git-clone.out
@@ -91,6 +65,9 @@ RUN sed -i 's/\(.\+equest\)/\/\/\1/g' node_modules/d3/build/d3.node.js
 # setup backend server - uncomment >/dev/null for debugging
 ADD ./back-end /kyrix/back-end/
 WORKDIR /kyrix/back-end
+
+# run make clean and make for openORD layout
+RUN cd /kyrix/back-end/src/main/layout/OpenOrd-master/src && make clean && make 
 
 ADD ./docker-scripts /kyrix/docker-scripts/
 COPY docker-scripts/wait-for-postgres docker-scripts/start-kyrix.sh /

@@ -23,7 +23,7 @@ if __name__ == "__main__":
         edgesDir = sys.argv[3] # ../../../../OpenORD/graphEdgesData_level_0.csv
 
         # layout algorithm name (str), one from 'openORD', 'force-directed', TODO: IMPLEMENT MORE LAYOUT ALGORITHMS
-        layout = sys.argv[4]
+        layoutAlgorithm = sys.argv[4]
 
         # cluster algorithm name (str), one from 'kmeans', 'spectral', TODO: IMPLEMENT MORE CLUSTERING ALGORITHMS
         clusterAlgorithm = sys.argv[5] 
@@ -47,8 +47,9 @@ if __name__ == "__main__":
 
 
     # read in layout of nodes and edges from layout algorithm TODO: MODIFY FOR MORE ALGORITHMS
-    layoutNodes = pd.read_csv('../../../../OpenORD/OpenOrd-master/examples/recursive/'+ project + '.coord', names = ['id', 'x', 'y'], sep='\t', header=None)
-    layoutEdges = pd.read_csv('../../../../OpenORD/OpenOrd-master/examples/recursive/'+ project + '.edges', names = ['source', 'target', 'weight'], sep='\t', header=None)
+
+    layoutNodes = pd.read_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", names = ['id', 'x', 'y'], sep=',', header=None)
+    layoutEdges = pd.read_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", names = ['source', 'target', 'weight'], sep=',', header=None)
 
     # read in user input nodes and edges and infer column types
     inputNodes = pd.read_csv(nodesDir, na_values=[''])
