@@ -2,8 +2,6 @@ import sys, os, re, subprocess
 import pandas as pd
 
 
-# sample call: python3 layoutWrapper.py authorshipTest ../../../../OpenORD/graphNodesData_level_0.csv ../../../../OpenORD/graphEdgesData_level_0.csv 1 authorName openORD 1000,500,50 0
-
 if __name__ == "__main__":
     if len(sys.argv) < 8:
         # default 
@@ -30,8 +28,8 @@ if __name__ == "__main__":
 
 
         # read in edges csv, this is turned into our sparse adjacency matrix
-        inputEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/' + edgesDir, na_values=[''])
-        inputNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/' + nodesDir, na_values=[''])
+        inputEdges = pd.read_csv(edgesDir, na_values=[''])
+        inputNodes = pd.read_csv(nodesDir, na_values=[''])
 
         if computeWeight == '0':
             edges = inputEdges[['source', 'target', 'weight']]

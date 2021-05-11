@@ -59,6 +59,6 @@ do
     esac
 done
 
-mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/clustering/$ALGORITHM/
+mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/clustering/$CLUSTERING_ALGORITHM/
 
 python3 clusteringWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $LAYOUT_ALGORITHM $CLUSTERING_ALGORITHM $CLUSTERING_LEVELS $CLUSTERING_PARAMS $DIRECTED

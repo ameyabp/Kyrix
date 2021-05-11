@@ -9,10 +9,45 @@ import sys
 sys.path.append("../clustering")
 from kMeansClustering import *
 
-# sample call: python3 clustering.py authorship ../../../../OpenORD/graphNodesData_level_0.csv ../../../../OpenORD/graphEdgesData_level_0.csv openORD kmeans 1000,500,50 memberNodeCount,paperCount 0.9,0.3 authorName 0
+def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
+    # get random node for attribute headers for csv file
+    randomNode = list(nodeDicts[0].values())[0] 
+    
+    for level in nodeDicts:
+        # create dataframe using headers from the node data structure
+        nodeDf = pd.DataFrame(columns = randomNode.__dict__.keys())
+        nodeDictList = []
 
+        for id in nodeDicts[level]:
+            node = nodeDicts[level][id]
+            nodeDictList.append(node.__dict__) # append a dictionary of {node attributes -> node values} to our list
+        
+        # create dataframe from list of dictionaries (i.e. setting up our csv file)
+        df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
+        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" \
+            + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
+        with open(fileName, 'w') as g:
+            df.to_csv(path_or_buf=g, index=False)
+            g.close()
 
+def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
+    randomEdge = list(edgeDicts[0].values())[0]
+    
+    for level in edgeDicts:
 
+        nodeDf = pd.DataFrame(columns = randomEdge.__dict__.keys())
+        nodeDictList = []
+
+        for id in edgeDicts[level]:
+            node = edgeDicts[level][id]
+            nodeDictList.append(node.__dict__)
+        
+        df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
+        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" \
+            + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
+        with open(fileName, 'w') as g:
+            df.to_csv(path_or_buf=g, index=False)
+            g.close()
 
 
 if __name__ == "__main__":
@@ -175,6 +210,9 @@ if __name__ == "__main__":
         ###### CALL TO CLUSTERING METHOD ######
         if clusterAlgorithm == 'kmeans':
             kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict)
-            nodeDict, edgeDict = kmClustering.run()
+            nodeDicts, edgeDicts = kmClustering.run()
 
-            # writeToCSV(nodeDict, edgeDict)
+        writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
+        writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
+
+        print("done with clustering...")

@@ -347,7 +347,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         
         // get current project name
         projectName = graph.getProjectName();
-        String userFilePath = "../compiler/examples/" + projectName + "/";
+        String userFilePath = "/kyrix/compiler/examples/" + projectName + "/";
 
         // load raw nodes and edges data
         loadRawData(userFilePath + graph.getNodesCsv(), userFilePath + graph.getEdgesCsv());
@@ -383,14 +383,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         //TODO: UNCOMMENT THIS
         ArrayList<Integer> clusterLevels = graph.getClusterLevels();
         computeClustering(clusterLevels);
-        
+
+        String clusteringAlgorithm = graph.getClusteringAlgorithm();
+        String layoutAlgorithm = graph.getLayoutAlgorithm();
+        String userFilePath = "/kyrix/compiler/examples/" + projectName + "/intermediary/clustering/";
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
         for (int i = 0; i < numLevels; i++) {
             System.out.println("Loading clusters for level " + i + " ...");
             rtree0 = RTree.star().create();
-            String edgesFile = "/Clustering/graphEdgesData_level_" + (numLevels-i-1) + ".csv";
-            String nodesFile = "/Clustering/graphNodesData_level_" + (numLevels-i-1) + ".csv";
+            String edgesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + i + ".csv";
+            String nodesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + i + ".csv";
 
             // an Rtree for level clusters
             rtree1 = RTree.star().create();
