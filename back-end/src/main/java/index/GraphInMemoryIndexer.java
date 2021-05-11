@@ -286,7 +286,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String clusteringAlgorithm = "kmeans"; //graph.getClusteringAlgorithm();
         String layoutAlgorithm = graph.getLayoutAlgorithm();
         ArrayList<Float> params = graph.getLayoutParams(); //TODO: NEED CLUSTERING PARAMS
-        String clusteringAlgorithmParams = "";
+        String clusteringAlgorithmParams = "1";
 
         if (clusteringAlgorithm.equals("kmeans")) {
             // float param1 = params.get(0);
