@@ -1,5 +1,4 @@
 from sklearn.cluster import KMeans
-from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import sys
 
@@ -28,19 +27,21 @@ class kMeansClustering:
         # get class definitions for node and edge objects
         nodeAttributes = nodeDict[0].__dict__.keys()
         nodeAttributes = filter(lambda x: x[0] != '_', nodeAttributes)
-        edgeAttributes = edgeDict[0].__dict__.keys()
+        edgeAttributes = list(edgeDict.values())[0].__dict__.keys()
         edgeAttributes = filter(lambda x: x[0] != '_', edgeAttributes)
 
         self.dataStructures = dataStructures(nodeAttributes, edgeAttributes)
         self.Node = self.dataStructures.getNodeClass()
         self.Edge = self.dataStructures.getEdgeClass()
 
-
     def run(self):
         nodeCounter = 0
         edgeCounter = 0
 
+        prevNodeCounter = 0
+
         for level, numMetaNodes in enumerate(self.clusterLevels):
+            print("Creating cluster level", level+1)
             prevNodeDict = self.nodeDicts[level]
             prevEdgeDict = self.edgeDicts[level]
             clustering_input = []
@@ -54,27 +55,39 @@ class kMeansClustering:
             kmeans = KMeans(n_clusters=numMetaNodes, random_state=self.randomState, algorithm=self.algorithm).fit(np_clustering_input)
             
             nodeCounter += len(prevNodeDict)
-            edgeCounter += len(edgeDict)
+            edgeCounter += len(prevEdgeDict)
 
             currNodeDict = {}
             currEdgeDict = {}
 
+            # total = 0
+            # for nodeId in prevNodeDict:
+            #     total += nodeId
+
+            # summation = ((nodeCounter-1) * (nodeCounter-2)) / 2
+
+            # if total != summation:
+            #     print(total, summation)
+
+
             for id, label in enumerate(kmeans.labels_):
-                nodeId = nodeCounter + id
+                nodeId = nodeCounter + label
                 if nodeId not in currNodeDict:
-                    currNodeDict[nodeId] = self.Node(_id=nodeId, _x=kmeans.cluster_centers_[label][0], _y=kmeans.cluster_labels_[label][1], _level=level+1)
+                    currNodeDict[nodeId] = self.Node(_id=nodeId, _x=kmeans.cluster_centers_[label][0], _y=kmeans.cluster_centers_[label][1], _level=level+1)
                 
                 newNode = currNodeDict[nodeId]
-                newNode._memberNodes.append(id)
-                prevNodeDict[id]._parentNode = nodeId
+                newNode._memberNodes.append(prevNodeCounter + id)
+                prevNodeDict[prevNodeCounter + id]._parentNode = nodeId
 
                 # aggregate the required node attributes as per user specification
                 # HERE
 
+            prevNodeCounter += len(prevNodeDict)
+
             for edgeIdx in prevEdgeDict:
                 edge = prevEdgeDict[edgeIdx]
-                srcId = currNodeDict[edge._srcId]._parentNode
-                dstId = currNodeDict[edge._dstId]._parentNode
+                srcId = prevNodeDict[edge._srcId]._parentNode
+                dstId = prevNodeDict[edge._dstId]._parentNode
 
                 if srcId != dstId:
                     # create meta edge only if the parent nodes are different, otherwise the edge connects

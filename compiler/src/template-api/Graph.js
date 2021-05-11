@@ -75,8 +75,6 @@ function Graph(args_) {
     this.queryNodes = args.data.queryNodes;
     this.queryEdges = args.data.queryEdges;
 
-    this.numLevels = args.marks.cluster.clusterLevels.length+1;
-    this.clusterLevels = args.marks.cluster.clusterLevels;
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;
     this.zoomFactor = args.config.zoomFactor;
@@ -110,14 +108,17 @@ function Graph(args_) {
     /************************
      * setting cluster params
      ************************/
-    this.clusterParams = {};
-    this.clusterParams.clusterLevels = args.marks.cluster.clusterLevels;
-    this.clusterParams.clusteringAlgorithm = args.marks.cluster.algorithm;
-    this.clusterParams.clusteringRandomStateParameter = args.marks.cluster.randomState;
-    this.clusterParams.aggregateParams = {
-        aggMeasures: args.marks.cluster.aggregate.measures,
-        aggDimensions: args.marks.cluster.aggregate.dimensions
-    };
+    this.clusteringAlgo = args.marks.cluster.algorithm;
+    this.numLevels = args.marks.cluster.clusterLevels.length+1;
+    this.clusterLevels = args.marks.cluster.clusterLevels;
+    this.clusteringParams = [];
+    if (args.marks.cluster.algorithm == 'kmeans') {
+        this.clusteringParams.push(args.marks.cluster.randomState);
+    }
+    this.clusterAggMeasures = args.marks.cluster.aggregate.measures.fields;
+    this.clusterAggMeasuresFunctions = args.marks.cluster.aggregate.measures.functions;
+    this.clusterAggDimensions = args.marks.cluster.aggregate.dimensions.fields;
+    this.clusterAggDimensionsFunctions = args.marks.cluster.aggregate.dimensions.functions;
 
     /************************
      * setting hover params

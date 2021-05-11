@@ -30,7 +30,7 @@ var graph = {
             aggregate: {
                 measures: {
                     fields: ["papers", "coauthors"],
-                    function: "count"
+                    functions: "count"
                 }
             },
             clusterLevels: [1000, 200, 50],

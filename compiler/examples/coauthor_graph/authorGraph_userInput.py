@@ -46,7 +46,7 @@ class Edge:
 
 if __name__ == '__main__':
     # PARSE THE CSV TO EXTRACT REQUIRED DATA
-    df = pd.read_csv('/home/ameya/Documents/Kyrix/compiler/examples/graphvis/vispub.csv', dtype={'Conference': str, 'Year': int, 'Title': str, 'AuthorNames': str, 'AuthorAffiliation': str}, na_values=[''])
+    df = pd.read_csv('./vispub.csv', dtype={'Conference': str, 'Year': int, 'Title': str, 'AuthorNames': str, 'AuthorAffiliation': str}, na_values=[''])
 
     # gather nodes and index by node id
     nodeDict = {}
@@ -131,11 +131,11 @@ if __name__ == '__main__':
 
     # Create the dataframes
     # node dataframe
-    nodeDf = {'nodeId': [], 'authorName': [], 'affiliation': [], 'papers': [], 'coauthors': []}
+    nodeDf = {'id': [], 'authorName': [], 'affiliation': [], 'papers': [], 'coauthors': []}
 
     for nodeId in nodeDict:
         node = nodeDict[nodeId]
-        nodeDf['nodeId'].append(node.nodeId)
+        nodeDf['id'].append(node.nodeId)
         nodeDf['authorName'].append(node.name)
         nodeDf['affiliation'].append(node.affiliation)
         nodeDf['papers'].append(";".join(node.papers))
@@ -143,14 +143,14 @@ if __name__ == '__main__':
         nodeDf['coauthors'].append(";".join(coauthorList))
 
     # edge dataframe
-    edgeDf = {'edgeId': [], 'weight': [], 'author1': [], 'author2': [], 'papers': []}
+    edgeDf = {'edgeId': [], 'weight': [], 'source': [], 'target': [], 'papers': []}
     
     for edgeId in edgeDict:
         edge = edgeDict[edgeId]
         edgeDf['edgeId'].append(edge.edgeId)
         edgeDf['weight'].append(edge.weight)
-        edgeDf['author1'].append(edge.author1Id)
-        edgeDf['author2'].append(edge.author2Id)
+        edgeDf['source'].append(edge.author1Id)
+        edgeDf['target'].append(edge.author2Id)
         edgeDf['papers'].append(";".join(edge.papers))
     
     df = pd.DataFrame(data=nodeDf)

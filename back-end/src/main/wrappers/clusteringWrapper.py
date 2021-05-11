@@ -1,5 +1,4 @@
 from dataStructures import *
-from clustering import *
 
 #from sklearn.cluster import KMeans
 #from sklearn.preprocessing import MinMaxScaler
@@ -7,6 +6,8 @@ import numpy as np
 import pandas as pd
 import sys
 
+sys.path.append("../clustering")
+from kMeansClustering import *
 
 # sample call: python3 clustering.py authorship ../../../../OpenORD/graphNodesData_level_0.csv ../../../../OpenORD/graphEdgesData_level_0.csv openORD kmeans 1000,500,50 memberNodeCount,paperCount 0.9,0.3 authorName 0
 
@@ -34,10 +35,10 @@ if __name__ == "__main__":
         clusterAlgorithm = sys.argv[5] 
 
         # number of levels, passed in as a string "1000,500,50,..." -> list
-        clusterLevels = sys.argv[6].split(',') 
+        clusterLevels = [int(i) for i in sys.argv[6].split(',')]
 
         # clustering parameters, passed in as a string "0.9,0.3,..." -> list | specific to clustering method
-        clusterParams = sys.argv[7].split(',') 
+        clusterParams = [float(i) for i in sys.argv[7].split(',')]
 
         # boolean for whether graph is directed or not, 1 if directed, 0 if not
         directed = sys.argv[8]
@@ -47,8 +48,8 @@ if __name__ == "__main__":
 
         # read in layout of nodes and edges from layout algorithm, files are fully processed.
 
-        finalNodes = pd.read_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
-        finalEdges = pd.read_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
+        finalNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
+        finalEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
 
         # ## commenting out old file from here
 
@@ -141,7 +142,7 @@ if __name__ == "__main__":
 
 
         ### done preparing finalNodes df
-        print(finalEdges.head(6))
+        # print(finalEdges.head(6))
 
         ### Prepare input for clustering algorithm
         nodeAttributes = finalNodes.columns
@@ -173,6 +174,7 @@ if __name__ == "__main__":
 
         ###### CALL TO CLUSTERING METHOD ######
         if clusterAlgorithm == 'kmeans':
-            nodeDict, edgeDict = kMeansClustering(randomState=0, clusterLevels=[1500, 500, 80], nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict)
+            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict)
+            nodeDict, edgeDict = kmClustering.run()
 
             # writeToCSV(nodeDict, edgeDict)

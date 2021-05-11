@@ -180,10 +180,10 @@
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "field": {
+                                                    "fields": {
                                                         "$ref": "#/definitions/nonEmptyString"
                                                     },
-                                                    "function": {
+                                                    "functions": {
                                                         "$ref": "#/definitions/aggregationFunctions"
                                                     },
                                                     "extent": {
@@ -191,8 +191,8 @@
                                                     }
                                                 },
                                                 "required": [
-                                                    "field",
-                                                    "function"
+                                                    "fields",
+                                                    "functions"
                                                 ],
                                                 "additionalProperties": false
                                             }
@@ -203,14 +203,14 @@
                                                 "fields": {
                                                     "$ref": "#/definitions/nonEmptyStringArray"
                                                 },
-                                                "function": {
+                                                "functions": {
                                                     "$ref": "#/definitions/aggregationFunctions"
                                                 },
                                                 "extent": {
                                                     "$ref": "#/definitions/twoNumberArray"
                                                 }
                                             },
-                                            "required": ["fields", "function"],
+                                            "required": ["fields", "functions"],
                                             "additionalProperties": false
                                         }
                                     ],

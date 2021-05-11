@@ -17,9 +17,8 @@ public class Graph {
     private String zOrder;
     private ArrayList<String> columnNamesNodes, queriedColumnNamesNodes = null, columnTypesNodes = null;
     private ArrayList<String> columnNamesEdges, queriedColumnNamesEdges = null, columnTypesEdges = null;
-    private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
-    private int numLevels, topLevelWidth, topLevelHeight;
-    private ArrayList<Integer> clusterLevels;
+    // private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
+    private int topLevelWidth, topLevelHeight;
     // private double overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1, zColId = -1;
@@ -35,6 +34,16 @@ public class Graph {
     // private boolean mapBackground;
     private String layoutAlgo;
     private ArrayList<Float> layoutParams;
+
+    private String clusteringAlgo;
+    private ArrayList<Float> clusteringParams;
+    private ArrayList<Integer> clusterLevels;
+    private int numLevels;
+    private ArrayList<String> clusterAggMeasuresFields;
+    private ArrayList<String> clusterAggMeasuresFunctions;
+    private ArrayList<String> clusterAggDimensionsFields;
+    private ArrayList<String> clusterAggDimensionsFunctions;
+
     private String projectName;
 
     public String getQueryNodes() {
@@ -198,16 +207,20 @@ public class Graph {
         return columnTypesEdges;
     }
 
-    public ArrayList<String> getAggDimensionFields() {
-        return aggDimensionFields;
+    public ArrayList<String> getClusterAggDimensionsFields() {
+        return clusterAggDimensionsFields;
     }
 
-    public ArrayList<String> getAggMeasureFields() {
-        return aggMeasureFields;
+    public ArrayList<String> getClusterAggDimensionsFunctions() {
+        return clusterAggDimensionsFunctions;
     }
 
-    public ArrayList<String> getAggMeasureFuncs() {
-        return aggMeasureFuncs;
+    public ArrayList<String> getClusterAggMeasuresFields() {
+        return clusterAggMeasuresFields;
+    }
+
+    public ArrayList<String> getClusterAggMeasuresFunctions() {
+        return clusterAggMeasuresFunctions;
     }
 
     public int getNumLevels() {
@@ -224,6 +237,14 @@ public class Graph {
 
     public double getZoomFactor() {
         return zoomFactor;
+    }
+
+    public String getClusteringAlgorithm() {
+        return clusteringAlgo;
+    }
+
+    public ArrayList<Float> getClusteringParams() {
+        return clusteringParams;
     }
 
     public ArrayList<Integer> getClusterLevels() {

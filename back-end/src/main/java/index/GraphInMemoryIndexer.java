@@ -179,9 +179,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
-        System.out.println(this.rawColumnsNodes.toString());
-        System.out.println(this.rawColumnsEdges.toString());
     }
 
     @Override
@@ -261,7 +258,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String[] layoutCall = {"sh", "-c", layout};
         
         try {
-            p = Runtime.getRuntime().exec(layoutCall, null, new File("/kyrix/back-end/src/main/wrappers"));
+            p = Runtime.getRuntime().exec(layoutCall, null, new File("src/main/wrappers"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
@@ -283,23 +280,23 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String s;
         Process p;
 
-        String clusteringAlgorithm = "kmeans"; //graph.getClusteringAlgorithm();
+        String clusteringAlgorithm = graph.getClusteringAlgorithm();
         String layoutAlgorithm = graph.getLayoutAlgorithm();
-        ArrayList<Float> params = graph.getLayoutParams(); //TODO: NEED CLUSTERING PARAMS
-        String clusteringAlgorithmParams = "1";
+        ArrayList<Float> params = graph.getClusteringParams();
+        String clusteringAlgorithmParams = "";
 
         if (clusteringAlgorithm.equals("kmeans")) {
-            // float param1 = params.get(0);
+            float param1 = params.get(0);
             // float param2 = params.get(1);
             // float param3 = params.get(2);
-            // clusteringAlgorithmParams = "" + param1 + "," + param2 + "," + param3;
+            clusteringAlgorithmParams += param1;// + "," + param2 + "," + param3;
             System.out.println("Running kmeans clustering algorithm with params: ...");
         }
         else if (clusteringAlgorithm.equals("spectral")) {
             float param1 = params.get(0);
             float param2 = params.get(1);
             float param3 = params.get(2);
-            clusteringAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
+            clusteringAlgorithmParams += "[" + param1 + "," + param2 + "," + param3 +"] ";
             System.out.println("Running spectral clustering algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
         }
         else {
@@ -307,7 +304,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             float param1 = params.get(0);
             float param2 = params.get(1);
             float param3 = params.get(2);
-            clusteringAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
+            clusteringAlgorithmParams += "[" + param1 + "," + param2 + "," + param3 +"] ";
             System.out.println("Running ______ algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
         }
 
@@ -330,7 +327,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String[] clusteringCall = {"sh", "-c", clustering};
 
         try {
-            p = Runtime.getRuntime().exec(clusteringCall, null, new File("/kyrix/back-end/src/main/wrappers"));
+            p = Runtime.getRuntime().exec(clusteringCall, null, new File("src/main/wrappers"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
@@ -350,7 +347,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         
         // get current project name
         projectName = graph.getProjectName();
-        String userFilePath = "/kyrix/compiler/examples/" + projectName + "/";
+        String userFilePath = "../compiler/examples/" + projectName + "/";
 
         // load raw nodes and edges data
         loadRawData(userFilePath + graph.getNodesCsv(), userFilePath + graph.getEdgesCsv());
@@ -797,26 +794,26 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         //         && !ssv.getClusterMode().equals("heatmap")) return;
 
         String curGraphId = String.valueOf(graphIndex) + "_" + String.valueOf(level);
-        for (int i = 0; i < graph.getAggMeasureFields().size(); i++) {
-            String curField = graph.getAggMeasureFields().get(i);
-            String curFunction = graph.getAggMeasureFuncs().get(i);
+        // for (int i = 0; i < graph.getAggMeasureFields().size(); i++) {
+        //     String curField = graph.getAggMeasureFields().get(i);
+        //     String curFunction = graph.getAggMeasureFuncs().get(i);
 
-            // min
-            float minAgg = Float.MAX_VALUE;
-            float maxAgg = Float.MIN_VALUE;
-            for (RTreeData rd : rds) {
-                minAgg = Math.min(minAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
-                maxAgg = Math.max(maxAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
-            }
+        //     // min
+        //     float minAgg = Float.MAX_VALUE;
+        //     float maxAgg = Float.MIN_VALUE;
+        //     for (RTreeData rd : rds) {
+        //         minAgg = Math.min(minAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
+        //         maxAgg = Math.max(maxAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
+        //     }
 
-            Main.getProject()
-                    .addBGRP(rpKey, curGraphId + "_" + curFunction + "(" + curField + ")_min",
-                            String.valueOf(minAgg));
+        //     Main.getProject()
+        //             .addBGRP(rpKey, curGraphId + "_" + curFunction + "(" + curField + ")_min",
+        //                     String.valueOf(minAgg));
 
-            Main.getProject()
-                    .addBGRP(rpKey, curGraphId + "_" + curFunction + "(" + curField + ")_max",
-                            String.valueOf(maxAgg));
-        }
+        //     Main.getProject()
+        //             .addBGRP(rpKey, curGraphId + "_" + curFunction + "(" + curField + ")_max",
+        //                     String.valueOf(maxAgg));
+        // }
     }
 
     private void cleanUp() throws SQLException {

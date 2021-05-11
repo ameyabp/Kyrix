@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
 
         # read in edges csv, this is turned into our sparse adjacency matrix
-        inputEdges = pd.read_csv(edgesDir, na_values=[''])
-        inputNodes = pd.read_csv(nodesDir, na_values=[''])
+        inputEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/' + edgesDir, na_values=[''])
+        inputNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/' + nodesDir, na_values=[''])
 
         if computeWeight == '0':
             edges = inputEdges[['source', 'target', 'weight']]
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         # enter if-else ladder for layout algorithm
         if layoutAlgorithm == 'openORD':
             # prepare input as a .sim file (sparse adjacency matrix) for the openORD algorithm in the corresponding folder
-            with open('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.sim', 'w') as simFile:
+            with open('../layout/OpenOrd-master/examples/recursive/' + projectName + '.sim', 'w') as simFile:
                 edges.to_csv(path_or_buf=simFile, index=False, header=False, sep='\t')
                 simFile.close()
             
@@ -52,11 +52,11 @@ if __name__ == "__main__":
             openORD = "./openORD.sh"
             openORD = openORD + " -p " + projectName + " -m " + layoutParams[0] + " -s " + layoutParams[1] + " -l " + layoutParams[2] + " -r " + layoutParams[3] + " -f " + layoutParams[4]
             openORD = openORD.split(" ")
-            subprocess.run(openORD, cwd="/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive")
+            subprocess.run(openORD, cwd="../layout/OpenOrd-master/examples/recursive")
 
             # read in output 
-            layoutNodes = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', sep = '\t', names = ['id', 'x', 'y'])
-            layoutEdges = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', sep = '\t', names = ['source', 'target', 'weight'])
+            layoutNodes = pd.read_csv('../layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', sep = '\t', names = ['id', 'x', 'y'])
+            layoutEdges = pd.read_csv('../layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', sep = '\t', names = ['source', 'target', 'weight'])
 
             # normalize x and y coordinates to 0-1
             layoutNodes['x'] = (layoutNodes['x'] - layoutNodes['x'].min())/(layoutNodes['x'].max() - layoutNodes['x'].min())
@@ -65,7 +65,7 @@ if __name__ == "__main__":
             # done with layout part, next steps are after if-else ladder
             
 
-        elif algorithm == 'fm3':
+        elif layoutAlgorithm == 'fm3':
             print('todo')
         else:
             print('please specify a layout algorithm \n')
@@ -133,8 +133,8 @@ if __name__ == "__main__":
 
         # write layout nodes to corresponding folder, unique to project name and layout algorithm 
         # output file name is standard
-        finalNodes.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=",", index=False)
-        finalEdges.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + '/layoutEdges.csv', sep=",", index=False)
+        finalNodes.to_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=",", index=False)
+        finalEdges.to_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + '/layoutEdges.csv', sep=",", index=False)
         
 
 
