@@ -258,10 +258,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         
         System.out.println("layout call: " + layout);
 
-        String[] layoutTest = {"sh", "-c", layout};
+        String[] layoutCall = {"sh", "-c", layout};
         
         try {
-            p = Runtime.getRuntime().exec(layoutTest, null, new File("/kyrix/back-end/src/main/wrappers"));
+            p = Runtime.getRuntime().exec(layoutCall, null, new File("/kyrix/back-end/src/main/wrappers"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
@@ -279,20 +279,58 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     }
 
-    private static void computeClustering(ArrayList<Integer> clusterLevels) throws Exception {
-        // String s;
+    private void computeClustering(ArrayList<Integer> clusterLevels) throws Exception {
+        String s;
         Process p;
 
-        String s = "sh -c ./clustering.sh -c ";
-        for (int i : clusterLevels) {
-            s += String.valueOf(i) + ",";
+        String clusteringAlgorithm = "kmeans"; //graph.getClusteringAlgorithm();
+        String layoutAlgorithm = graph.getLayoutAlgorithm();
+        ArrayList<Float> params = graph.getLayoutParams(); //TODO: NEED CLUSTERING PARAMS
+        String clusteringAlgorithmParams = "";
+
+        if (clusteringAlgorithm.equals("kmeans")) {
+            // float param1 = params.get(0);
+            // float param2 = params.get(1);
+            // float param3 = params.get(2);
+            // clusteringAlgorithmParams = "" + param1 + "," + param2 + "," + param3;
+            System.out.println("Running kmeans clustering algorithm with params: ...");
         }
-        s = s.substring(0, s.length()-1);
+        else if (clusteringAlgorithm.equals("spectral")) {
+            float param1 = params.get(0);
+            float param2 = params.get(1);
+            float param3 = params.get(2);
+            clusteringAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
+            System.out.println("Running spectral clustering algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
+        }
+        else {
+            // algorithm.equals("fa2")
+            float param1 = params.get(0);
+            float param2 = params.get(1);
+            float param3 = params.get(2);
+            clusteringAlgorithmParams = "[" + param1 + "," + param2 + "," + param3 +"] ";
+            System.out.println("Running ______ algorithm with params: param1=" + param1 + ", param2=" + param2 + ", param3=" + param3);
+        }
+
+        // get clustering levels from input clusterLevels
+        String clusteringLevels = "";
+        for (int i : clusterLevels) {
+            clusteringLevels += String.valueOf(i) + ",";
+        }
+        clusteringLevels = clusteringLevels.substring(0, clusteringLevels.length()-1); //get rid of last comma
+
+        // set general parameters for clusteringWrapper
+        String generalParams = "--projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv;
+        generalParams = generalParams + " --layoutAlgorithm " + layoutAlgorithm + " --clusteringAlgorithm " + clusteringAlgorithm;
+        generalParams = generalParams + " --clusteringLevels " + clusteringLevels + " --clusteringParams " + clusteringAlgorithmParams;
         
-        System.out.println("Executing clustering script " + s);
+        String clustering = "./clustering.sh " + generalParams;
+        
+        System.out.println("clustering call: " + clustering);
+
+        String[] clusteringCall = {"sh", "-c", clustering};
 
         try {
-            p = Runtime.getRuntime().exec(s, null, new File("/Clustering"));
+            p = Runtime.getRuntime().exec(clusteringCall, null, new File("/kyrix/back-end/src/main/wrappers"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
@@ -418,7 +456,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rtree0 = rtree1;
 
                 System.out.println("writing nodes to db level " + i + "....");
-                writeToDBNodes(i);
+                writeToDBNodes(i); //we do the above commented out section in here?
                 System.out.println("finished writing nodes to db level "+ i + "...");
 
                 //read edges

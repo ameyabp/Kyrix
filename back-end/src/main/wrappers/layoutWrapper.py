@@ -2,7 +2,7 @@ import sys, os, re, subprocess
 import pandas as pd
 
 
-# sample call: python3 inputToLayoutSetup.py authorshipTest ../../../../OpenORD/graphNodesData_level_0.csv ../../../../OpenORD/graphEdgesData_level_0.csv 1 authorName openORD 1000,500,50 0
+# sample call: python3 layoutWrapper.py authorshipTest ../../../../OpenORD/graphNodesData_level_0.csv ../../../../OpenORD/graphEdgesData_level_0.csv 1 authorName openORD 1000,500,50 0
 
 if __name__ == "__main__":
     if len(sys.argv) < 8:
@@ -13,8 +13,8 @@ if __name__ == "__main__":
         projectName = sys.argv[1]
 
         # get node and edges input file directories
-        nodesDir = sys.argv[2] # ../../../../OpenORD/graphNodesData_level_0.csv
-        edgesDir = sys.argv[3] # ../../../../OpenORD/graphEdgesData_level_0.csv
+        nodesDir = sys.argv[2] # 
+        edgesDir = sys.argv[3] # 
 
         # compute weight or not -> 0 if weight is already there, 1 if we need to compute weight (equal weight for all edges)
         computeWeight = sys.argv[4]
@@ -33,17 +33,13 @@ if __name__ == "__main__":
         inputEdges = pd.read_csv(edgesDir, na_values=[''])
         inputNodes = pd.read_csv(nodesDir, na_values=[''])
 
-        reID = inputNodes.set_index('id').T.to_dict('series')
-
         if computeWeight == '0':
             edges = inputEdges[['source', 'target', 'weight']]
         else:
             edges = inputEdges[['source', 'target']]
             edges['weight'] = 1/len(edges['source'])
-        
-        #edges['source'] = [reID[s].id for s in edges['source']]
-        #edges['target'] = [reID[t].id for t in edges['target']]
 
+        # enter if-else ladder for layout algorithm
         if layoutAlgorithm == 'openORD':
             # prepare input as a .sim file (sparse adjacency matrix) for the openORD algorithm in the corresponding folder
             with open('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.sim', 'w') as simFile:
@@ -58,38 +54,87 @@ if __name__ == "__main__":
             openORD = openORD.split(" ")
             subprocess.run(openORD, cwd="/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive")
 
-            # convert openORD outputs to standardized output (layoutNodes.csv, layoutEdges.csv)
-            # nodes part
-            #with open('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", 'w') as layoutNodes:
-            #    layoutNodes.write("id,x,y")
-            #    with open('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', 'r') as openORDNodes:
-            #        for line in openORDNodes:
-            #            layoutNodes.write(re.sub('\t',',',line))
-
-            # edges part
-            #with open('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", 'w') as layoutEdges:
-            #    layoutEdges.write("source,target,weight")
-            #    with open('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', 'r') as openORDEdges:
-            #        for line in openORDEdges:
-            #            layoutEdges.write(re.sub('\t',',',line))
-
             # read in output 
-            openORDNodes = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', sep = '\t', names = ['id', 'x', 'y'], header=None)
-            openORDEdges = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', sep = '\t', names = ['source', 'target', 'weight'], header=None)
-            
+            layoutNodes = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', sep = '\t', names = ['id', 'x', 'y'])
+            layoutEdges = pd.read_csv('/kyrix/back-end/src/main/layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', sep = '\t', names = ['source', 'target', 'weight'])
+
             # normalize x and y coordinates to 0-1
-            openORDNodes['x'] = (openORDNodes['x'] - openORDNodes['x'].min())/(openORDNodes['x'].max() - openORDNodes['x'].min())
-            openORDNodes['y'] = (openORDNodes['y'] - openORDNodes['y'].min())/(openORDNodes['y'].max() - openORDNodes['y'].min())
-
-
+            layoutNodes['x'] = (layoutNodes['x'] - layoutNodes['x'].min())/(layoutNodes['x'].max() - layoutNodes['x'].min())
+            layoutNodes['y'] = (layoutNodes['y'] - layoutNodes['y'].min())/(layoutNodes['y'].max() - layoutNodes['y'].min())
             
-            openORDNodes.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=",", header=None)
-            openORDEdges.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + '/layoutEdges.csv', sep=",", header=None)
+            # done with layout part, next steps are after if-else ladder
+            
 
         elif algorithm == 'fm3':
             print('todo')
         else:
             print('please specify a layout algorithm \n')
+        
+
+        # perform join for nodes on 'id' to add node attributes to layout output for finalNodes
+
+        finalNodes = pd.merge(layoutNodes, inputNodes, on='id')
+
+        # create new node ids in case nodes are dropped
+        finalNodes = finalNodes.sort_values(['id']) # keeps ids the same if no nodes are dropped
+        finalNodes = finalNodes.reset_index(drop=True)
+        finalNodes = finalNodes.reset_index()
+        finalNodes = finalNodes.rename(columns = {'id' : 'originalID'})
+        finalNodes = finalNodes.rename(columns = {'index' : 'id'})
+        #finalNodes['clusterNodeID'] = finalNodes.index
+
+        # create finalEdges table
+
+        # create unique edge id using ordering of 'source' and 'target' nodes 
+        # where the smaller node id comes first and then target id comes next
+        def createUniqueEdgeID(x,y):
+            if directed == 1: # takes in x,y as source,target so return edge id as such
+                return x + '_0_' + y
+            small = x if x < y else y
+            big = y if y > x else x
+            return str(small) + '_0_' + str(big) # if they are both equal, result is y_0_x 
+
+        # create unique edge ids to perform join on edges for a final edges table (in case edges are dropped)
+        inputEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(inputEdges['source'], inputEdges['target'])]
+        layoutEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(layoutEdges['source'], layoutEdges['target'])]
+        layoutEdges = layoutEdges.drop(columns = ['source', 'target'])
+
+        # merge edges on unique edge id -> we need to keep edges that result from layout since edges may be dropped (???, need to figure this out)
+        finalEdges = pd.merge(inputEdges, layoutEdges, on='source_target')
+        finalEdges = finalEdges.drop_duplicates()
+        finalEdges = finalEdges.drop(columns = ['source_target'])
+
+        # create mapping of originalID -> new id + other values
+        nodeDict = finalNodes.set_index('originalID').T.to_dict('series')
+
+        # create getters
+        def getX(ID):
+            return nodeDict[ID].x
+
+        def getY(ID):
+            return nodeDict[ID].y
+
+        # set x and y coordinates in edges df
+        finalEdges['x1'] = [getX(x) for x in finalEdges['source']]
+        finalEdges['y1'] = [getY(y) for y in finalEdges['source']]
+
+        finalEdges['x2'] = [getX(x) for x in finalEdges['target']]
+        finalEdges['y2'] = [getY(y) for y in finalEdges['target']]
+
+        # reset ids for source and target to new node ids
+        finalEdges['source'] = [nodeDict[source].id for source in finalEdges['source']]
+        finalEdges['target'] = [nodeDict[target].id for target in finalEdges['target']]
+
+        # reset source_target in finalEdges
+        finalEdges['edgeId'] = [createUniqueEdgeID(x, y) for x, y in zip(finalEdges['source'], finalEdges['target'])]
+
+        # drop unneeded columns
+        finalNodes = finalNodes.drop(columns = ['originalID'])
+
+        # write layout nodes to corresponding folder, unique to project name and layout algorithm 
+        # output file name is standard
+        finalNodes.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=",", index=False)
+        finalEdges.to_csv('/kyrix/compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + '/layoutEdges.csv', sep=",", index=False)
         
 
 

@@ -5,6 +5,8 @@ NODES_CSV=""
 EDGES_CSV=""
 ALGORITHM=""
 LAYOUT_PARAMS=""
+COMPUTE_WEIGHT="0"
+DIRECTED="0"
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -34,6 +36,16 @@ do
             shift
             shift
             ;;
+        --computeWeight)
+            COMPUTE_WEIGHT="$2"
+            shift
+            shift
+            ;;
+        --directed)
+            DIRECTED="$2"
+            shift
+            shift
+            ;;
         *)
             echo "Wrong argument name $key"
             exit
@@ -43,4 +55,4 @@ done
 
 mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/layout/$ALGORITHM/
 
-python3 layoutWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV 0 $ALGORITHM $LAYOUT_PARAMS 0
+python3 layoutWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $COMPUTE_WEIGHT $ALGORITHM $LAYOUT_PARAMS $DIRECTED
