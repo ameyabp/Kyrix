@@ -31,10 +31,11 @@ class kMeansClustering:
         self.aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions
 
         # get class definitions for node and edge objects
-        nodeAttributes = list(nodeDict[0].__dict__.keys())
-        nodeAttributes = filter(lambda x: x[0] != '_', nodeAttributes) + self.aggMeasuresNodesFields
-        edgeAttributes = list(edgeDict.values())[0].__dict__.keys()
-        edgeAttributes = filter(lambda x: x[0] != '_', edgeAttributes) + self.aggMeasuresEdgesFields
+        nodeAttributes = list(nodeDict[0].__dict__.keys()) + self.aggMeasuresNodesFields
+        nodeAttributes = filter(lambda x: x[0] != '_', nodeAttributes)
+
+        edgeAttributes = list(list(edgeDict.values())[0].__dict__.keys()) + self.aggMeasuresEdgesFields
+        edgeAttributes = filter(lambda x: x[0] != '_', edgeAttributes)
 
         self.dataStructures = dataStructures(nodeAttributes, edgeAttributes)
         self.Node = self.dataStructures.getNodeClass()

@@ -24,8 +24,7 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
         
         # create dataframe from list of dictionaries (i.e. setting up our csv file)
         df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
-        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" \
-            + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
+        fileName = '../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
@@ -43,8 +42,7 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
             nodeDictList.append(node.__dict__)
         
         df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
-        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" \
-            + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
+        fileName = '../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
