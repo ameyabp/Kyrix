@@ -277,7 +277,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
     private void computeClustering(ArrayList<Integer> clusterLevels) throws Exception {
-        String s;
         Process p;
 
         String clusteringAlgorithm = graph.getClusteringAlgorithm();
@@ -353,14 +352,15 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         System.out.println("clustering call: " + clustering);
 
         String[] clusteringCall = {"sh", "-c", clustering};
+        String newLine;
 
         try {
             p = Runtime.getRuntime().exec(clusteringCall, null, new File("src/main/wrappers"));
 
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(p.getInputStream()));
-            while ((s = br.readLine()) != null)
-                System.out.println("computing clustering: " + s);
+            while ((newLine = br.readLine()) != null)
+                System.out.println("computing clustering: " + newLine);
             p.waitFor();
             System.out.println ("exit: " + p.exitValue());
             p.destroy();
