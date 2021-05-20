@@ -25,18 +25,26 @@ var graph = {
         ord_refineCut: 0.5,
         ord_finalCut: 0.5
     },
-    marks: {
+    summarization: {
         cluster: {
             aggregate: {
                 measures: {
-                    fields: ["papers", "coauthors"],
-                    functions: "count"
+                    nodes: {
+                        fields: ["papers", "coauthors"],
+                        functions: "count"
+                    },
+                    edges: {
+                        fields: ["papers"],
+                        functions: "count"
+                    }
                 }
             },
             clusterLevels: [1000, 200, 50],
             randomState: 0,
             algorithm: "kmeans"
-        },
+        }
+    },
+    marks: {
         encoding: {
             nodeSize: "memberNodeCount"
         },

@@ -23,7 +23,8 @@ class dataStructures:
         nodeAttributeDict['_x'] = None
         nodeAttributeDict['_y'] = None
         nodeAttributeDict['_level'] = None
-        nodeAttributeDict['_memberNodes'] = []
+        nodeAttributeDict['_memberNodes'] = []  
+        # member nodes attr only stores the children (member) nodes on the immediately lower level, and not on all the lower levels
         nodeAttributeDict['_parentNode'] = None
 
         for nodeAttribute in self.nodeAttributes:
@@ -50,6 +51,7 @@ class dataStructures:
         edgeAttributeDict['_y2'] = None
         edgeAttributeDict['_level'] = None
         edgeAttributeDict['_memberEdges'] = []
+        # member edges attr only stores the children (member) edges on the immediately lower level, and not on all the lower levels
         edgeAttributeDict['_edgeWeight'] = None
         edgeAttributeDict['_parentEdge'] = None
 

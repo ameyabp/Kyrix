@@ -7,6 +7,10 @@ LAYOUT_ALGORITHM=""
 CLUSTERING_ALGORITHM=""
 CLUSTERING_PARAMS=""
 CLUSTERING_LEVELS=""
+AGG_MEASURES_NODES_FIELDS=""
+AGG_MEASURES_NODES_FUNCTIONS=""
+AGG_MEASURES_EDGES_FIELDS=""
+AGG_MEASURES_EDGES_FUNCTIONS=""
 DIRECTED="0"
 while [[ $# -gt 0 ]]
 do
@@ -47,6 +51,26 @@ do
             shift
             shift
             ;;
+        --aggMeasuresNodesFields)
+            AGG_MEASURES_NODES_FIELDS="$2"
+            shift
+            shift
+            ;;
+        --aggMeasuresNodesFunctions)
+            AGG_MEASURES_NODES_FUNCTIONS="$2"
+            shift
+            shift
+            ;;
+        --aggMeasuresEdgesFields)
+            AGG_MEASURES_EDGES_FIELDS="$2"
+            shift
+            shift
+            ;;
+        --aggMeasuresEdgesFunctions)
+            AGG_MEASURES_EDGES_FUNCTIONS="$2"
+            shift
+            shift
+            ;;
         --directed)
             DIRECTED="$2"
             shift
@@ -61,4 +85,4 @@ done
 
 mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/clustering/$CLUSTERING_ALGORITHM/
 
-python3 clusteringWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $LAYOUT_ALGORITHM $CLUSTERING_ALGORITHM $CLUSTERING_LEVELS $CLUSTERING_PARAMS $DIRECTED
+python3 clusteringWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $LAYOUT_ALGORITHM $CLUSTERING_ALGORITHM $CLUSTERING_LEVELS $CLUSTERING_PARAMS $AGG_MEASURES_NODES_FIELDS $AGG_MEASURES_NODES_FUNCTIONS $AGG_MEASURES_EDGES_FIELDS $AGG_MEASURES_EDGES_FUNCTIONS $DIRECTED

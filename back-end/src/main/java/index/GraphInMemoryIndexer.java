@@ -285,6 +285,32 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         ArrayList<Float> params = graph.getClusteringParams();
         String clusteringAlgorithmParams = "";
 
+        String aggMeasuresNodesFields = "";
+        String aggMeasuresNodesFunctions = "";
+        String aggMeasuresEdgesFields = "";
+        String aggMeasuresEdgesFunctions = "";
+
+        for (String s : graph.getClusterAggMeasuresNodesFields()) {
+            aggMeasuresNodesFields += s + ",";
+        }
+
+        for (String s : graph.getClusterAggMeasuresNodesFunctions()) {
+            aggMeasuresNodesFunctions += s + ",";
+        }
+
+        for (String s : graph.getClusterAggMeasuresEdgesFields()) {
+            aggMeasuresEdgesFields += s + ",";
+        }
+
+        for (String s : graph.getClusterAggMeasuresEdgesFunctions()) {
+            aggMeasuresEdgesFunctions += s + ",";
+        }
+
+        aggMeasuresNodesFields = aggMeasuresNodesFields.substring(0, aggMeasuresNodesFields.length()-1);
+        aggMeasuresNodesFunctions = aggMeasuresNodesFunctions.substring(0, aggMeasuresNodesFunctions.length()-1);
+        aggMeasuresEdgesFields = aggMeasuresEdgesFields.substring(0, aggMeasuresEdgesFields.length()-1);
+        aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions.substring(0, aggMeasuresEdgesFunctions.length()-1);
+
         if (clusteringAlgorithm.equals("kmeans")) {
             float param1 = params.get(0);
             // float param2 = params.get(1);
@@ -317,8 +343,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // set general parameters for clusteringWrapper
         String generalParams = "--projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv;
-        generalParams = generalParams + " --layoutAlgorithm " + layoutAlgorithm + " --clusteringAlgorithm " + clusteringAlgorithm;
-        generalParams = generalParams + " --clusteringLevels " + clusteringLevels + " --clusteringParams " + clusteringAlgorithmParams;
+        generalParams += " --layoutAlgorithm " + layoutAlgorithm + " --clusteringAlgorithm " + clusteringAlgorithm;
+        generalParams += " --clusteringLevels " + clusteringLevels + " --clusteringParams " + clusteringAlgorithmParams;
+        generalParams += " --aggMeasuresNodesFields " + aggMeasuresNodesFields + " --aggMeasuresNodesFunctions " + aggMeasuresNodesFunctions;
+        generalParams += " --aggMeasuresEdgesFields " + aggMeasuresEdgesFields + " --aggMeasuresEdgesFunctions " + aggMeasuresEdgesFunctions;
         
         String clustering = "./clustering.sh " + generalParams;
         

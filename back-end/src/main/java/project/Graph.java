@@ -39,10 +39,16 @@ public class Graph {
     private ArrayList<Float> clusteringParams;
     private ArrayList<Integer> clusterLevels;
     private int numLevels;
-    private ArrayList<String> clusterAggMeasuresFields;
-    private ArrayList<String> clusterAggMeasuresFunctions;
-    private ArrayList<String> clusterAggDimensionsFields;
-    private ArrayList<String> clusterAggDimensionsFunctions;
+
+    private ArrayList<String> clusterAggMeasuresNodesFields;
+    private ArrayList<String> clusterAggMeasuresNodesFunctions;
+    private ArrayList<String> clusterAggDimensionsNodesFields;
+    private ArrayList<String> clusterAggDimensionsNodesFunctions;
+
+    private ArrayList<String> clusterAggMeasuresEdgesFields;
+    private ArrayList<String> clusterAggMeasuresEdgesFunctions;
+    private ArrayList<String> clusterAggDimensionsEdgesFields;
+    private ArrayList<String> clusterAggDimensionsEdgesFunctions;
 
     private String projectName;
 
@@ -207,20 +213,36 @@ public class Graph {
         return columnTypesEdges;
     }
 
-    public ArrayList<String> getClusterAggDimensionsFields() {
-        return clusterAggDimensionsFields;
+    public ArrayList<String> getClusterAggDimensionsNodesFields() {
+        return clusterAggDimensionsNodesFields;
     }
 
-    public ArrayList<String> getClusterAggDimensionsFunctions() {
-        return clusterAggDimensionsFunctions;
+    public ArrayList<String> getClusterAggDimensionsNodesFunctions() {
+        return clusterAggDimensionsNodesFunctions;
     }
 
-    public ArrayList<String> getClusterAggMeasuresFields() {
-        return clusterAggMeasuresFields;
+    public ArrayList<String> getClusterAggMeasuresNodesFields() {
+        return clusterAggMeasuresNodesFields;
     }
 
-    public ArrayList<String> getClusterAggMeasuresFunctions() {
-        return clusterAggMeasuresFunctions;
+    public ArrayList<String> getClusterAggMeasuresNodesFunctions() {
+        return clusterAggMeasuresNodesFunctions;
+    }
+    
+    public ArrayList<String> getClusterAggDimensionsEdgesFields() {
+        return clusterAggDimensionsEdgesFields;
+    }
+
+    public ArrayList<String> getClusterAggDimensionsEdgesFunctions() {
+        return clusterAggDimensionsEdgesFunctions;
+    }
+
+    public ArrayList<String> getClusterAggMeasuresEdgesFields() {
+        return clusterAggMeasuresEdgesFields;
+    }
+
+    public ArrayList<String> getClusterAggMeasuresEdgesFunctions() {
+        return clusterAggMeasuresEdgesFunctions;
     }
 
     public int getNumLevels() {

@@ -33,20 +33,68 @@ function Graph(args_) {
      * check constraints/add defaults that can't be easily expressed by json-schema
      *******************************************************************************/    
     // succinct object notation of the measures
-    if (!("length" in args.marks.cluster.aggregate.measures)) {
+    if (!("length" in args.summarization.cluster.aggregate.measures.nodes)) {
         var measureArray = [];
+        var aggFunctionArray = [];
         for (
             var i = 0;
-            i < args.marks.cluster.aggregate.measures.fields.length;
+            i < args.summarization.cluster.aggregate.measures.nodes.fields.length;
             i++
-        )
-            measureArray.push({
-                field: args.marks.cluster.aggregate.measures.fields[i],
-                function: args.marks.cluster.aggregate.measures.function
-            });
-        args.marks.cluster.aggregate.measures = measureArray;
+        ) {
+            measureArray.push(args.summarization.cluster.aggregate.measures.nodes.fields[i]);
+            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes.functions);
+        }
+        
+        args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
+        args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
+    }
+    else {
+        var measureArray = [];
+        var aggFunctionArray = [];   
+        for (
+            var i = 0;
+            i < args.summarization.cluster.aggregate.measures.nodes.length;
+            i++
+        ) {
+            measureArray.push(args.summarization.cluster.aggregate.measures.nodes[i].fields);
+            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes[i].functions);
+        }
+        
+        args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
+        args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
     }
     
+    if (!("length" in args.summarization.cluster.aggregate.measures.edges)) {
+        var measureArray = [];
+        var aggFunctionArray = [];
+        for (
+            var i = 0;
+            i < args.summarization.cluster.aggregate.measures.edges.fields.length;
+            i++
+        ) {
+            measureArray.push(args.summarization.cluster.aggregate.measures.edges.fields[i]);
+            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges.functions);
+        }
+        
+        args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
+        args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
+    }
+    else {
+        var measureArray = [];
+        var aggFunctionArray = [];   
+        for (
+            var i = 0;
+            i < args.summarization.cluster.aggregate.measures.edges.length;
+            i++
+        ) {
+            measureArray.push(args.summarization.cluster.aggregate.measures.edges[i].fields);
+            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges[i].functions);
+        }
+        
+        args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
+        args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
+    }
+
     if ("rankList" in args.marks.hover) {
         if ("tooltip" in args.marks.hover)
             throw new Error(
@@ -108,17 +156,31 @@ function Graph(args_) {
     /************************
      * setting cluster params
      ************************/
-    this.clusteringAlgo = args.marks.cluster.algorithm;
-    this.numLevels = args.marks.cluster.clusterLevels.length+1;
-    this.clusterLevels = args.marks.cluster.clusterLevels;
+    this.clusteringAlgo = args.summarization.cluster.algorithm;
+    this.numLevels = args.summarization.cluster.clusterLevels.length+1;
+    this.clusterLevels = args.summarization.cluster.clusterLevels;
     this.clusteringParams = [];
-    if (args.marks.cluster.algorithm == 'kmeans') {
-        this.clusteringParams.push(args.marks.cluster.randomState);
+    if (args.summarization.cluster.algorithm == 'kmeans') {
+        this.clusteringParams.push(args.summarization.cluster.randomState);
     }
-    this.clusterAggMeasures = args.marks.cluster.aggregate.measures.fields;
-    this.clusterAggMeasuresFunctions = args.marks.cluster.aggregate.measures.functions;
-    this.clusterAggDimensions = args.marks.cluster.aggregate.dimensions.fields;
-    this.clusterAggDimensionsFunctions = args.marks.cluster.aggregate.dimensions.functions;
+    
+    if ("measures" in args.summarization.cluster.aggregate) {
+        this.clusterAggMeasuresNodesFields = args.summarization.cluster.aggregate.measures.nodes.fields;
+        this.clusterAggMeasuresNodesFunctions = args.summarization.cluster.aggregate.measures.nodes.functions;
+    }
+    if ("dimensions" in args.summarization.cluster.aggregate) {
+        this.clusterAggDimensionsNodesFields = args.summarization.cluster.aggregate.dimensions.nodes.fields;
+        this.clusterAggDimensionsNodesFunctions = args.summarization.cluster.aggregate.dimensions.nodes.functions;
+    }
+    
+    if ("measures" in args.summarization.cluster.aggregate) {
+        this.clusterAggMeasuresEdgesFields = args.summarization.cluster.aggregate.measures.edges.fields;
+        this.clusterAggMeasuresEdgesFunctions = args.summarization.cluster.aggregate.measures.edges.functions;
+    }
+    if ("dimensions" in args.summarization.cluster.aggregate) {
+        this.clusterAggDimensionsEdgesFields = args.summarization.cluster.aggregate.dimensions.edges.fields;
+        this.clusterAggDimensionsEdgesFunctions = args.summarization.cluster.aggregate.dimensions.edges.functions;
+    }
 
     /************************
      * setting hover params

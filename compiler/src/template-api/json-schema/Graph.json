@@ -38,6 +38,10 @@
         "clusteringAlgorithms": {
             "enum": ["kmeans"],
             "default": "kmeans"
+        },
+        "partitioningAlgorithms": {
+            "enum": ["par1"],
+            "default": "par1"
         }
     },
     "properties": {
@@ -164,97 +168,275 @@
                 }
             ]
         },
+        "summarization": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "cluster": {
+                            "type": "object",
+                            "properties": {
+                                "aggregate": {
+                                    "type": "object",
+                                    "properties": {
+                                        "measures": {
+                                            "nodes": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "fields": {
+                                                                    "$ref": "#/definitions/nonEmptyString"
+                                                                },
+                                                                "functions": {
+                                                                    "$ref": "#/definitions/aggregationFunctions"
+                                                                }
+                                                            },
+                                                            "required": ["fields", "functions"],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fields": {
+                                                                "$ref": "#/definitions/nonEmptyStringArray"
+                                                            },
+                                                            "functions": {
+                                                                "$ref": "#/definitions/aggregationFunctions"
+                                                            }
+                                                        },
+                                                        "required": ["fields", "functions"],
+                                                        "additionalProperties": false
+                                                    }
+                                                ],
+                                                "default": []
+                                            },
+                                            "edges": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "fields": {
+                                                                    "$ref": "#/definitions/nonEmptyString"
+                                                                },
+                                                                "functions": {
+                                                                    "$ref": "#/definitions/aggregationFunctions"
+                                                                }
+                                                            },
+                                                            "required": ["fields", "functions"],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fields": {
+                                                                "$ref": "#/definitions/nonEmptyStringArray"
+                                                            },
+                                                            "functions": {
+                                                                "$ref": "#/definitions/aggregationFunctions"
+                                                            }
+                                                        },
+                                                        "required": ["fields", "functions"],
+                                                        "additionalProperties": false
+                                                    }
+                                                ],
+                                                "default": []
+                                            }
+                                        },
+                                        "dimensions": {
+                                            "nodes": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "field": {
+                                                            "$ref": "#/definitions/nonEmptyString"
+                                                        },
+                                                        "domain": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": ["field", "domain"],
+                                                    "additionalProperties": false
+                                                },
+                                                "default": []
+                                            },
+                                            "edges": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "field": {
+                                                            "$ref": "#/definitions/nonEmptyString"
+                                                        },
+                                                        "domain": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": ["field", "domain"],
+                                                    "additionalProperties": false
+                                                },
+                                                "default": []
+                                            }
+                                        }
+                                    },
+                                    "additionalProperties": false,
+                                    "default": {
+                                        "measures": [],
+                                        "dimensions": []
+                                    }
+                                },
+                                "clusterLevels": {
+                                    "$ref": "#/definitions/nonEmptyNumberArray"
+                                },
+                                "randomState": {
+                                    "type": "number",
+                                    "default": 0
+                                },
+                                "algorithm": {
+                                    "$ref": "#/definitions/clusteringAlgorithms"
+                                }
+                            }
+                        }
+                    },
+                    "required": ["cluster"],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "partition": {
+                            "aggregate": {
+                                "type": "object",
+                                "properties": {
+                                    "measures": {
+                                        "nodes": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fields": {
+                                                                "$ref": "#/definitions/nonEmptyString"
+                                                            },
+                                                            "functions": {
+                                                                "$ref": "#/definitions/aggregationFunctions"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "fields",
+                                                            "functions"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "fields": {
+                                                            "$ref": "#/definitions/nonEmptyStringArray"
+                                                        },
+                                                        "functions": {
+                                                            "$ref": "#/definitions/aggregationFunctions"
+                                                        }
+                                                    },
+                                                    "required": ["fields", "functions"],
+                                                    "additionalProperties": false
+                                                }
+                                            ],
+                                            "default": []
+                                        },
+                                        "edges": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fields": {
+                                                                "$ref": "#/definitions/nonEmptyString"
+                                                            },
+                                                            "functions": {
+                                                                "$ref": "#/definitions/aggregationFunctions"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "fields",
+                                                            "functions"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "fields": {
+                                                            "$ref": "#/definitions/nonEmptyStringArray"
+                                                        },
+                                                        "functions": {
+                                                            "$ref": "#/definitions/aggregationFunctions"
+                                                        }
+                                                    },
+                                                    "required": ["fields", "functions"],
+                                                    "additionalProperties": false
+                                                }
+                                            ],
+                                            "default": []
+                                        }
+                                    },
+                                    "dimensions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "field": {
+                                                    "$ref": "#/definitions/nonEmptyString"
+                                                },
+                                                "domain": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": ["field", "domain"],
+                                            "additionalProperties": false
+                                        },
+                                        "default": []
+                                    }
+                                },
+                                "additionalProperties": false,
+                                "default": {
+                                    "measures": [],
+                                    "dimensions": []
+                                }
+                            },
+                            "algorithm": {
+                                "$ref": "#/definitions/partitioningAlgorithms"
+                            }
+                        }
+                    },
+                    "required": ["partition"],
+                    "additionalProperties": false
+                }
+            ]
+        },
         "marks": {
             "type": "object",
             "properties": {
-                "cluster": {
-                    "type": "object",
-                    "properties": {
-                        "aggregate": {
-                            "type": "object",
-                            "properties": {
-                                "measures": {
-                                    "anyOf": [
-                                        {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "fields": {
-                                                        "$ref": "#/definitions/nonEmptyString"
-                                                    },
-                                                    "functions": {
-                                                        "$ref": "#/definitions/aggregationFunctions"
-                                                    },
-                                                    "extent": {
-                                                        "$ref": "#/definitions/twoNumberArray"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "fields",
-                                                    "functions"
-                                                ],
-                                                "additionalProperties": false
-                                            }
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "fields": {
-                                                    "$ref": "#/definitions/nonEmptyStringArray"
-                                                },
-                                                "functions": {
-                                                    "$ref": "#/definitions/aggregationFunctions"
-                                                },
-                                                "extent": {
-                                                    "$ref": "#/definitions/twoNumberArray"
-                                                }
-                                            },
-                                            "required": ["fields", "functions"],
-                                            "additionalProperties": false
-                                        }
-                                    ],
-                                    "default": []
-                                },
-                                "dimensions": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "field": {
-                                                "$ref": "#/definitions/nonEmptyString"
-                                            },
-                                            "domain": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        },
-                                        "required": ["field", "domain"],
-                                        "additionalProperties": false
-                                    },
-                                    "default": []
-                                }
-                            },
-                            "additionalProperties": false,
-                            "default": {
-                                "measures": [],
-                                "dimensions": []
-                            }
-                        },
-                        "clusterLevels": {
-                            "$ref": "#/definitions/nonEmptyNumberArray"
-                        },
-                        "randomState": {
-                            "type": "number",
-                            "default": 0
-                        },
-                        "algorithm": {
-                            "$ref": "#/definitions/clusteringAlgorithms"
-                        }
-                    }
-                },
                 "encoding": {
                     "nodeSize": {
                         "$ref": "#/definitions/nonEmptyString"
@@ -362,7 +544,6 @@
                     "default": {}                    
                 }
             },
-            "required": ["cluster"],
             "additionalProperties": false
         },        
         "config": {
@@ -395,6 +576,6 @@
             "required": ["projectName"]
         }
     },
-    "required": ["data", "layout", "marks", "config"],
+    "required": ["data", "layout", "summarization", "marks", "config"],
     "additionalProperties": false
 }

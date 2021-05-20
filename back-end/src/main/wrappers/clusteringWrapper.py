@@ -75,8 +75,14 @@ if __name__ == "__main__":
         # clustering parameters, passed in as a string "0.9,0.3,..." -> list | specific to clustering method
         clusterParams = [float(i) for i in sys.argv[7].split(',')]
 
+        # measure attributes to aggregate and the corresponding aggregation functions
+        aggMeasuresNodesFields = [s for s in sys.argv[8].split(',')]
+        aggMeasuresNodesFunctions = [s for s in sys.argv[9].split(',')]
+        aggMeasuresEdgesFields = [s for s in sys.argv[10].split(',')]
+        aggMeasuresEdgesFunctions = [s for s in sys.argv[11].split(',')]
+
         # boolean for whether graph is directed or not, 1 if directed, 0 if not
-        directed = sys.argv[8]
+        directed = sys.argv[12]
 
         
 
@@ -209,10 +215,16 @@ if __name__ == "__main__":
 
         ###### CALL TO CLUSTERING METHOD ######
         if clusterAlgorithm == 'kmeans':
-            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict)
+            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions)
             nodeDicts, edgeDicts = kmClustering.run()
 
-        writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
-        writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
+            writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
+            writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
 
-        print("done with clustering...")
+            print("done with clustering...")
+
+        elif clusterAlgorithm == 'spectral':
+            print("To be implemented...")
+
+        else:
+            print("Inavlid clustering algorithm")
