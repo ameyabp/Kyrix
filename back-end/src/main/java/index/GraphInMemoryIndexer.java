@@ -420,8 +420,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < numLevels; i++) {
             System.out.println("Loading clusters for level " + i + " ...");
             rtree0 = RTree.star().create();
-            String edgesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + i + ".csv";
-            String nodesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + i + ".csv";
+            int tempIndex = numLevels - 1 - i;
+            String edgesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + tempIndex + ".csv";
+            String nodesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + tempIndex + ".csv";
 
             // an Rtree for level clusters
             rtree1 = RTree.star().create();
@@ -543,7 +544,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rtree0 = null;
                 rtree0 = rtree1;
 
-                System.out.println("writing edges to db level "+ i + "....");
+                System.out.println("writing edges to db level " + i + "....");
                 writeToDBEdges(i);
                 System.out.println("finished writing edges to db level " + i + "...");
                 

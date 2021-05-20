@@ -256,7 +256,7 @@ function getEdgeLayerRenderer() {
             return d.n2y;
         })
         .attr("stroke-width", function(d) {
-            return Math.max(3, Math.sqrt(parseInt(d.papercount)));
+            return 3//Math.max(3, Math.sqrt(parseInt(d.memberedgecount)));
         })
         .style("stroke", "rgba(225, 225, 225, 0.5)")
         .on("mouseover", function(d) {
@@ -495,7 +495,7 @@ function getNodeLayerRenderer() {
             return d.cy;
         })
         .attr("r", function(d) {
-            return Math.max(5, Math.sqrt(parseInt(d.membernodecount)));
+            return 5//Math.max(5, Math.sqrt(parseInt(d.membernodecount)));
         })
         .attr("fill", function(d) {
             return "rgba(255, 0, 0, 0.7)";
@@ -503,14 +503,14 @@ function getNodeLayerRenderer() {
         .on("mouseover", function(d) {
             d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeid.includes(d.nodeid);
+                    return l.edgeid.includes(d._id);
                 })
                 .style("stroke", "rgba(0, 0, 0, 0.8)");
         })
         .on("mouseout", function(d) {
             d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeid.includes(d.nodeid);
+                    return l.edgeid.includes(d._id);
                 })
                 .style("stroke", "rgba(225, 225, 225, 0.5)");
         });
