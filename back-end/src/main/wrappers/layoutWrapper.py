@@ -55,6 +55,7 @@ if __name__ == "__main__":
             # read in output 
             layoutNodes = pd.read_csv('../layout/OpenOrd-master/examples/recursive/' + projectName + '.coord', sep = '\t', names = ['id', 'x', 'y'])
             layoutEdges = pd.read_csv('../layout/OpenOrd-master/examples/recursive/' + projectName + '.edges', sep = '\t', names = ['source', 'target', 'weight'])
+            layoutEdges = layoutEdges.drop(columns = ['weight'])
 
             # normalize x and y coordinates to 0-1
             layoutNodes['x'] = (layoutNodes['x'] - layoutNodes['x'].min())/(layoutNodes['x'].max() - layoutNodes['x'].min())

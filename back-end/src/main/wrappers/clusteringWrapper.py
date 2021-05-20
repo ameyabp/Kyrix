@@ -11,11 +11,9 @@ from kMeansClustering import *
 
 def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
     # get random node for attribute headers for csv file
-    randomNode = list(nodeDicts[0].values())[0] 
     
     for level in nodeDicts:
         # create dataframe using headers from the node data structure
-        nodeDf = pd.DataFrame(columns = randomNode.__dict__.keys())
         nodeDictList = []
 
         for id in nodeDicts[level]:
@@ -24,25 +22,23 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
         
         # create dataframe from list of dictionaries (i.e. setting up our csv file)
         df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
-        fileName = '../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
+        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
 
 def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
-    randomEdge = list(edgeDicts[0].values())[0]
     
     for level in edgeDicts:
 
-        nodeDf = pd.DataFrame(columns = randomEdge.__dict__.keys())
-        nodeDictList = []
+        edgeDictList = []
 
         for id in edgeDicts[level]:
-            node = edgeDicts[level][id]
-            nodeDictList.append(node.__dict__)
+            edge = edgeDicts[level][id]
+            edgeDictList.append(edge.__dict__)
         
-        df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
-        fileName = '../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
+        df = pd.DataFrame.from_dict(edgeDictList, orient='columns')
+        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
@@ -90,98 +86,6 @@ if __name__ == "__main__":
         finalNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
         finalEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
 
-        # ## commenting out old file from here
-
-        # # read in user input nodes and edges and infer column types
-        # inputNodes = pd.read_csv(nodesDir, na_values=[''])
-        # inputEdges = pd.read_csv(edgesDir, na_values=[''])
-
-        # # create unique edge id using ordering of 'source' and 'target' nodes 
-        # # where the smaller node id comes first and then target id comes next
-        # def createUniqueEdgeID(x,y):
-        #     if directed == 1: # takes in x,y as source,target so return edge id as such
-        #         return x + '_0_' + y
-
-        #     small = x if x < y else y
-        #     big = y if y > x else x
-        #     return small + '_0_' + big # if they are both equal, result is y_0_x 
-
-
-        # ### find and remove duplicate edges; may need to aggregate over them? 
-        # ### this might be an unnecessary step if duplicate edges are intentional
-
-        # # set of visited edges to remove any duplicate edges that may appear
-        # visitedEdges = set()
-
-        # def findDuplicate(x, y):
-        #     if directed == 1:
-        #         one = x + '_0_' + y
-        #         two = x + '_0_' + y
-        #     else:
-        #         one = x + "_0_" + y
-        #         two = y + '_0_' + x
-        #     if one in visitedEdges or two in visitedEdges:
-        #         return True
-        #     visitedEdges.add(one)
-        #     return False
-
-
-        # ### re-id the source and target in layout output to ids used in user input, 
-        # ### important for creating unique edge ids
-        # reIdEdges = dict(zip(inputNodes['id'].astype(str), inputNodes[edgeDataID]))
-
-
-        # ### work on creating finalEdges df for finalized lowest level edges
-
-        # # create unique edge id for input edges
-        # inputEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(inputEdges['source'], inputEdges['target'])]
-
-        # layoutEdges['source'] = [reIdEdges[str(x)] for x in layoutEdges['source']]
-        # layoutEdges['target'] = [reIdEdges[str(x)] for x in layoutEdges['target']]
-        # layoutEdges['source_target'] = [createUniqueEdgeID(x, y) for x, y in zip(layoutEdges['source'], layoutEdges['target'])]
-        # layoutEdges = layoutEdges.drop(columns = ['source', 'target'])
-
-
-
-        # # merge edges on unique edge id -> we need to keep edges that result from layout since edges may be dropped (???, need to figure this out)
-        # #finalEdges = inputEdges
-        # finalEdges = pd.merge(inputEdges, layoutEdges, on='source_target')
-        # finalEdges = finalEdges.drop_duplicates()
-
-
-        # ### done with finalEdges for now
-
-        # ### prepare finalNodes df
-
-        # # merge nodes on unique id used for edge endpoints (input nodes merge onto layout nodes to keep new coordinate values)
-        # finalNodes = pd.merge(layoutNodes, inputNodes, on='id')
-
-        # # create nodeDict using edgeDataID as index to set x and y coordinates for edges df
-        # nodeDict = finalNodes.set_index(edgeDataID).T.to_dict('series')
-
-        # def getX(ID):
-        #     return nodeDict[ID].x
-
-        # def getY(ID):
-        #     return nodeDict[ID].y
-
-        # # set x and y coordinates in edges df
-        # finalEdges['x1'] = [getX(x) for x in finalEdges['source']]
-        # finalEdges['y1'] = [getY(y) for y in finalEdges['source']]
-
-        # finalEdges['x2'] = [getX(x) for x in finalEdges['target']]
-        # finalEdges['y2'] = [getY(y) for y in finalEdges['target']]
-
-        # # create new node id used specifically for clustering
-        # finalNodes = finalNodes.reset_index()
-        # finalNodes = finalNodes.rename(columns = {'index' : 'clusterNodeID'})
-        # finalNodes['clusterNodeID'] = finalNodes.index
-
-        # ## end commenting out
-
-
-        ### done preparing finalNodes df
-        # print(finalEdges.head(6))
 
         ### Prepare input for clustering algorithm
         nodeAttributes = finalNodes.columns
@@ -203,7 +107,7 @@ if __name__ == "__main__":
         clusterEdgeDict = {}
         for _, row in finalEdges.iterrows():
             argDict = dict((key, val) for key, val in zip(edgeAttributes, row))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _level = 0, **argDict)
+            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), _level = 0, **argDict)
             clusterEdgeDict[edge._id] = edge
 
         # for _id in clusterNodeDict:
