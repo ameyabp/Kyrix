@@ -130,6 +130,15 @@ if __name__ == "__main__":
         # drop unneeded columns
         finalNodes = finalNodes.drop(columns = ['originalID'])
 
+        # reorder columns so necessary columns come first
+        nodesNeeded = ['id', 'x', 'y']
+        newNodesColumns = nodesNeeded + (finalNodes.columns.drop(nodesNeeded).tolist())
+        finalNodes = finalNodes[newNodesColumns]
+
+        edgesNeeded = ['edgeId', 'source', 'target', 'x1', 'y1', 'x2', 'y2', 'weight']
+        newEdgesColumns = edgesNeeded + (finalEdges.columns.drop(edgesNeeded).tolist())
+        finalEdges = finalEdges[newEdgesColumns]
+
         # write layout nodes to corresponding folder, unique to project name and layout algorithm 
         # output file name is standard
         finalNodes.to_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=",", index=False)
