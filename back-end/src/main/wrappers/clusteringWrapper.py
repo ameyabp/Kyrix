@@ -4,12 +4,13 @@ from dataStructures import *
 #from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import pandas as pd
+import json
 import sys
 
 sys.path.append("../clustering")
 from kMeansClustering import *
 
-def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
+def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresNodesFields, aggMeasuresNodesFunctions):
     # get random node for attribute headers for csv file
     
     for level in nodeDicts:
@@ -18,16 +19,26 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
 
         for id in nodeDicts[level]:
             node = nodeDicts[level][id]
+            
+            # convert the attributes aggregated as count, from python set to json string
+            for attr, func in zip(aggMeasuresNodesFields, aggMeasuresNodesFunctions):
+                if func == 'count':
+                    strList = list(getattr(node, attr))
+                    jsonStr = json.dumps(strList)
+                    setattr(node, attr, jsonStr)
+            
+            node._memberNodes = json.dumps(node._memberNodes)
+
             nodeDictList.append(node.__dict__) # append a dictionary of {node attributes -> node values} to our list
         
         # create dataframe from list of dictionaries (i.e. setting up our csv file)
         df = pd.DataFrame.from_dict(nodeDictList, orient='columns')
-        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
+        fileName = '../../../../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
 
-def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
+def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions):
     
     for level in edgeDicts:
 
@@ -35,10 +46,20 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm):
 
         for id in edgeDicts[level]:
             edge = edgeDicts[level][id]
+
+            # convert the attributes aggregated as count, from python set to json string
+            for attr, func in zip(aggMeasuresEdgesFields, aggMeasuresEdgesFunctions):
+                if func == 'count':
+                    strList = list(getattr(edge, attr))
+                    jsonStr = json.dumps(strList)
+                    setattr(edge, attr, jsonStr)
+
+            edge._memberEdges = json.dumps(edge._memberEdges)
+
             edgeDictList.append(edge.__dict__)
         
         df = pd.DataFrame.from_dict(edgeDictList, orient='columns')
-        fileName = '/kyrix/compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
+        fileName = '../../../../compiler/examples/' + projectName + '/intermediary/clustering/' + clusterAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + str(level) +  ".csv"
         with open(fileName, 'w') as g:
             df.to_csv(path_or_buf=g, index=False)
             g.close()
@@ -99,15 +120,15 @@ if __name__ == "__main__":
         # map node id to node objects
         clusterNodeDict = {}
         for _, row in finalNodes.iterrows():
-            argDict = dict((key, val) for key, val in zip(nodeAttributes, row))
-            node = Node(_id = int(row['id']), _x = row['x'], _y = row['y'], _level=0, **argDict)
+            argDict = dict((key, val) for key, val in zip(nodeAttributes[3:], row[3:]))
+            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0, **argDict)
             clusterNodeDict[node._id] = node
         
         # map edge id to edge objects
         clusterEdgeDict = {}
         for _, row in finalEdges.iterrows():
-            argDict = dict((key, val) for key, val in zip(edgeAttributes, row))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), _level = 0, **argDict)
+            argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
+            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), _weight = float(row['weight']), _level = 0, **argDict)
             clusterEdgeDict[edge._id] = edge
 
         # for _id in clusterNodeDict:
@@ -120,8 +141,8 @@ if __name__ == "__main__":
             kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions)
             nodeDicts, edgeDicts = kmClustering.run()
 
-            writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
-            writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm)
+            writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresNodesFields, aggMeasuresNodesFunctions)
+            writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions)
 
             print("done with clustering...")
 

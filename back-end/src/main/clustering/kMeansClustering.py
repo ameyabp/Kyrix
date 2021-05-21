@@ -37,6 +37,26 @@ class kMeansClustering:
         edgeAttributes = list(list(edgeDict.values())[0].__dict__.keys()) + self.aggMeasuresEdgesFields
         edgeAttributes = filter(lambda x: x[0] != '_', edgeAttributes)
 
+        # based on the attributes to be aggregated as count, convert the attribute values for level 0 elements to a set
+        # this is for ease of management down the pipeline
+        for attr, func in zip(self.aggMeasuresNodesFields, self.aggMeasuresNodesFunctions):
+            if func == 'count':
+                # by default, the data is read as a string of ';' separated strings
+                for key in self.nodeDicts[0]:
+                    node = self.nodeDicts[0][key]
+                    strVal = getattr(node, attr, None)
+                    strSet = set([str(s) for s in strVal.split(';')])
+                    setattr(node, attr, strSet)
+
+        for attr, func in zip(self.aggMeasuresEdgesFields, self.aggMeasuresEdgesFunctions):
+            if func == 'count':
+                # by default, the data is read as a string of ';' separated strings
+                for key in self.edgeDicts[0]:
+                    edge = self.edgeDicts[0][key]
+                    strVal = getattr(edge, attr, None)
+                    strSet = set([str(s) for s in strVal.split(";")])
+                    setattr(edge, attr, strSet)
+
         self.dataStructures = dataStructures(nodeAttributes, edgeAttributes)
         self.Node = self.dataStructures.getNodeClass()
         self.Edge = self.dataStructures.getEdgeClass()
@@ -53,6 +73,7 @@ class kMeansClustering:
             prevEdgeDict = self.edgeDicts[level]
             clustering_input = []
             for nodeId in prevNodeDict:
+                # gather all the node positions for input to clustering
                 pos = []
                 pos.append(prevNodeDict[nodeId]._x)
                 pos.append(prevNodeDict[nodeId]._y)
@@ -81,13 +102,13 @@ class kMeansClustering:
                     childNode = prevNodeDict[prevNodeCounter + id]
                     if func == 'count':
                         if not getattr(newNode, attr, None):
-                            # assign an empty list for the attr if nothing is assigned to it
-                            setattr(newNode, attr, [])
+                            # assign an empty string for the attr if nothing is assigned to it
+                            setattr(newNode, attr, set())
                         
-                        aggList = getattr(newNode, attr, None)
+                        aggSet = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        aggList.extend(getattr(childNode, attr, None))
-                        setattr(newNode, attr, aggList)
+                        aggSet = aggSet.union(getattr(childNode, attr, None))
+                        setattr(newNode, attr, aggSet)
 
                     if func == 'sum':
                         if not getattr(newNode, attr, None):
@@ -96,7 +117,7 @@ class kMeansClustering:
 
                         sumVar = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        sumVar += getattr(childNode, attr, None)
+                        sumVar += float(getattr(childNode, attr, None))
                         setattr(newNode, attr, sumVar)
 
                     if func == 'sqrsum':
@@ -106,7 +127,7 @@ class kMeansClustering:
 
                         sqrSumVar = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        sqrSumVar += pow(getattr(childNode, attr, None), 2)
+                        sqrSumVar += pow(float(getattr(childNode, attr, None)), 2)
                         setattr(newNode, attr, sqrSumVar)
 
                     if func == 'avg':
@@ -117,7 +138,7 @@ class kMeansClustering:
 
                         avgVar = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        avgVar = (avgVar * (len(newNode._memberNodes) - 1) + getattr(childNode, attr, None)) / len(newNode._memberNodes)
+                        avgVar = (avgVar * (len(newNode._memberNodes) - 1) + float(getattr(childNode, attr, None))) / len(newNode._memberNodes)
                         setattr(newNode, attr, avgVar)
 
                     if func == 'max':
@@ -127,7 +148,7 @@ class kMeansClustering:
 
                         maxVar = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        maxVar = max(maxVar, getattr(childNode, attr, None))
+                        maxVar = max(maxVar, float(getattr(childNode, attr, None)))
                         setattr(newNode, attr, maxVar)
 
                     if func == 'min':
@@ -137,7 +158,7 @@ class kMeansClustering:
 
                         minVar = getattr(newNode, attr, None)
                         assert (getattr(childNode, attr, None) != None)
-                        minVar = min(minVar, getattr(childNode, attr, None))
+                        minVar = min(minVar, float(getattr(childNode, attr, None)))
                         setattr(newNode, attr, minVar)
 
             prevNodeCounter += len(prevNodeDict)
@@ -152,80 +173,76 @@ class kMeansClustering:
                     # nodes in the same cluster, which should not be visible
                     newEdgeIdx = str(srcId) + '_' + str(level+1) + '_' + str(dstId) if str(srcId) < str(dstId) else str(dstId) + '_' + str(level+1) + '_' + str(srcId)
                     if newEdgeIdx not in currEdgeDict:
-                        currEdgeDict[newEdgeIdx] = self.Edge(_id=newEdgeIdx, _srcId=srcId, _dstId=dstId, _level=level+1)
+                        currEdgeDict[newEdgeIdx] = self.Edge(_id=newEdgeIdx, _srcId=srcId, _dstId=dstId, _level=level+1, _x1 = currNodeDict[srcId]._x, _y1 = currNodeDict[srcId]._y, _x2 = currNodeDict[dstId]._x, _y2 = currNodeDict[dstId]._y)
                         
                     newEdge = currEdgeDict[newEdgeIdx]
                     newEdge._memberEdges.append(edgeIdx)
                     prevEdgeDict[edgeIdx]._parentEdge = newEdgeIdx
-
-                    newEdge._x1 = currNodeDict[srcId]._x
-                    newEdge._y1 = currNodeDict[srcId]._y
-                    newEdge._x2 = currNodeDict[dstId]._x
-                    newEdge._y2 = currNodeDict[dstId]._y
+                    newEdge._weight += edge._weight
 
                     # aggregate the required edge attributes as per user specification
-                    for attr, func in zip(self.aggMeasuresNodesFields, self.aggMeasuresNodesFunctions):
+                    for attr, func in zip(self.aggMeasuresEdgesFields, self.aggMeasuresEdgesFunctions):
                         childEdge = edge
                         if func == 'count':
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign an empty list for the attr if nothing is assigned to it
-                                setattr(newNode, attr, [])
+                                setattr(newEdge, attr, set())
                             
-                            aggList = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            aggList.extend(getattr(childNode, attr, None))
-                            setattr(newNode, attr, aggList)
+                            aggSet = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            aggSet = aggSet.union(getattr(childEdge, attr, None))
+                            setattr(newEdge, attr, aggSet)
 
                         if func == 'sum':
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign '0' for the attr if nothing is assigned to it
-                                setattr(newNode, attr, 0)
+                                setattr(newEdge, attr, 0)
 
-                            sumVar = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            sumVar += getattr(childNode, attr, None)
-                            setattr(newNode, attr, sumVar)
+                            sumVar = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            sumVar += getattr(childEdge, attr, None)
+                            setattr(newEdge, attr, sumVar)
 
                         if func == 'sqrsum':
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign '0' for the attr if nothing is assigned to it
-                                setattr(newNode, attr, 0)
+                                setattr(newEdge, attr, 0)
 
-                            sqrSumVar = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            sqrSumVar += pow(getattr(childNode, attr, None), 2)
-                            setattr(newNode, attr, sqrSumVar)
+                            sqrSumVar = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            sqrSumVar += pow(getattr(childEdge, attr, None), 2)
+                            setattr(newEdge, attr, sqrSumVar)
 
                         if func == 'avg':
                             # TODO: Might be needed to be corrected
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign '0' for the attr if nothing is assigned to it
-                                setattr(newNode, attr, 0)
+                                setattr(newEdge, attr, 0)
 
-                            avgVar = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            avgVar = (avgVar * (len(newNode._memberNodes) - 1) + getattr(childNode, attr, None)) / len(newNode._memberNodes)
-                            setattr(newNode, attr, avgVar)
+                            avgVar = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            avgVar = (avgVar * (len(newEdge._memberNodes) - 1) + getattr(childEdge, attr, None)) / len(newEdge._memberNodes)
+                            setattr(newEdge, attr, avgVar)
 
                         if func == 'max':
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign '0' for the attr if nothing is assigned to it
-                                setattr(newNode, attr, 0)
+                                setattr(newEdge, attr, 0)
 
-                            maxVar = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            maxVar = max(maxVar, getattr(childNode, attr, None))
-                            setattr(newNode, attr, maxVar)
+                            maxVar = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            maxVar = max(maxVar, getattr(childEdge, attr, None))
+                            setattr(newEdge, attr, maxVar)
 
                         if func == 'min':
-                            if not getattr(newNode, attr, None):
+                            if not getattr(newEdge, attr, None):
                                 # assign '0' for the attr if nothing is assigned to it
-                                setattr(newNode, attr, 0)
+                                setattr(newEdge, attr, 0)
 
-                            minVar = getattr(newNode, attr, None)
-                            assert (getattr(childNode, attr, None) != None)
-                            minVar = min(minVar, getattr(childNode, attr, None))
-                            setattr(newNode, attr, minVar)
+                            minVar = getattr(newEdge, attr, None)
+                            assert (getattr(childEdge, attr, None) != None)
+                            minVar = min(minVar, getattr(childEdge, attr, None))
+                            setattr(newEdge, attr, minVar)
 
             self.nodeDicts[level+1] = currNodeDict
             self.edgeDicts[level+1] = currEdgeDict
