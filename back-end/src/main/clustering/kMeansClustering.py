@@ -91,7 +91,7 @@ class kMeansClustering:
             for id, label in enumerate(kmeans.labels_):
                 nodeId = nodeCounter + label
                 if nodeId not in currNodeDict:
-                    currNodeDict[nodeId] = self.Node(_id=nodeId, _x=kmeans.cluster_centers_[label][0], _y=kmeans.cluster_centers_[label][1], _level=level+1)
+                    currNodeDict[nodeId] = self.Node(_id=nodeId, _x=kmeans.cluster_centers_[label][0], _y=kmeans.cluster_centers_[label][1], _level=level+1, _parentNode=-1)
                 
                 newNode = currNodeDict[nodeId]
                 newNode._memberNodes.append(prevNodeCounter + id)
@@ -173,7 +173,9 @@ class kMeansClustering:
                     # nodes in the same cluster, which should not be visible
                     newEdgeIdx = str(srcId) + '_' + str(level+1) + '_' + str(dstId) if str(srcId) < str(dstId) else str(dstId) + '_' + str(level+1) + '_' + str(srcId)
                     if newEdgeIdx not in currEdgeDict:
-                        currEdgeDict[newEdgeIdx] = self.Edge(_id=newEdgeIdx, _srcId=srcId, _dstId=dstId, _level=level+1, _x1 = currNodeDict[srcId]._x, _y1 = currNodeDict[srcId]._y, _x2 = currNodeDict[dstId]._x, _y2 = currNodeDict[dstId]._y)
+                        currEdgeDict[newEdgeIdx] = self.Edge(_id=newEdgeIdx, _srcId=srcId, _dstId=dstId, _level=level+1, \
+                                                            _x1=currNodeDict[srcId]._x, _y1=currNodeDict[srcId]._y, \
+                                                            _x2=currNodeDict[dstId]._x, _y2=currNodeDict[dstId]._y, _parentEdge='orphan')
                         
                     newEdge = currEdgeDict[newEdgeIdx]
                     newEdge._memberEdges.append(edgeIdx)

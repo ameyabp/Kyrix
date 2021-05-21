@@ -121,14 +121,16 @@ if __name__ == "__main__":
         clusterNodeDict = {}
         for _, row in finalNodes.iterrows():
             argDict = dict((key, val) for key, val in zip(nodeAttributes[3:], row[3:]))
-            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0, **argDict)
+            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0, _parentNode=-1, **argDict)
             clusterNodeDict[node._id] = node
         
         # map edge id to edge objects
         clusterEdgeDict = {}
         for _, row in finalEdges.iterrows():
             argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), _weight = float(row['weight']), _level = 0, **argDict)
+            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
+                        _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
+                        _weight = float(row['weight']), _level = 0, _parentEdge = 'orphan', **argDict)
             clusterEdgeDict[edge._id] = edge
 
         # for _id in clusterNodeDict:

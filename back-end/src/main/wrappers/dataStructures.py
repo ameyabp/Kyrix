@@ -25,7 +25,7 @@ class dataStructures:
         nodeAttributeDict['_level'] = None
         nodeAttributeDict['_memberNodes'] = []  
         # member nodes attr only stores the children (member) nodes on the immediately lower level, and not on all the lower levels
-        nodeAttributeDict['_parentNode'] = -1
+        nodeAttributeDict['_parentNode'] = None
         # dummy parent node of -1 assigned to all the nodes by default
 
         for nodeAttribute in self.nodeAttributes:
@@ -54,7 +54,7 @@ class dataStructures:
         edgeAttributeDict['_memberEdges'] = []
         # member edges attr only stores the children (member) edges on the immediately lower level, and not on all the lower levels
         edgeAttributeDict['_weight'] = 0
-        edgeAttributeDict['_parentEdge'] = 'orphan'
+        edgeAttributeDict['_parentEdge'] = None
         # dummy parent edge with id 'null' assigned to all the edges by default
 
         for edgeAttribute in self.edgeAttributes:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     nodeDict = {}
 
     # the constructor for the node and edge classes has to be called as <var_name>=<var_value>
-    node = Node(_id=0, _x=2, _y=5, _level=0, name='Ameya B Patil', affiliation='University of Maryland, College Park', papers=['Kyrix-G'], coauthors=['Ishan Sen'])
+    node = Node(_id=0, _x=2, _y=5, _level=0, name='Ameya B Patil', affiliation='University of Maryland, College Park', papers=['Kyrix-G'], coauthors=['Ishan Sen'], _parentNode=-1)
     nodeDict[node._id] = node
 
     node = Node(_id=1, _x=5, _y=2, _level=0, name='Ishan Sen', affiliation='University of Maryland, College Park', papers=['Kyrix-G'], coauthors=['Ameya Patil'])
@@ -126,8 +126,8 @@ if __name__ == '__main__':
 
     for _id in nodeDict:
         node = nodeDict[_id]
-        print("Node:", node._id, node.name, node.affiliation, node.papers, node.coauthors)
+        print("Node:", node.__dict__)
 
     for _id in edgeDict:
         edge = edgeDict[_id]
-        print("Edge:", edge._id, edge.author1_name, edge.author2_name, edge.papers)
+        print("Edge:", edge.__dict__)
