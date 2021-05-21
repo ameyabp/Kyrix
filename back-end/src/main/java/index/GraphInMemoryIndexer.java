@@ -721,10 +721,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             RTreeData rd = new RTreeData(edgeidx);
             //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
-            double n1x = new Double(edge[1]) * canvasWidth;
-            double n1y = new Double(edge[2]) * canvasHeight;
-            double n2x = new Double(edge[3]) * canvasWidth;
-            double n2y = new Double(edge[4]) * canvasHeight;
+            double n1x = new Double(edge[4]) * canvasWidth;
+            double n1y = new Double(edge[5]) * canvasHeight;
+            double n2x = new Double(edge[6]) * canvasWidth;
+            double n2y = new Double(edge[7]) * canvasHeight;
             // double cx = (n1x + n2x)/2;
             // double cy = (n1y + n2y)/2;
 
