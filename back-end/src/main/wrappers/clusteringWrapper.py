@@ -128,9 +128,9 @@ if __name__ == "__main__":
         clusterEdgeDict = {}
         for _, row in finalEdges.iterrows():
             argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
+            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _level = 0, \
                         _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
-                        _weight = float(row['weight']), _level = 0, _parentEdge = 'orphan', **argDict)
+                        _weight = float(row['weight']), _parentEdge = 'orphan', **argDict)
             clusterEdgeDict[edge._id] = edge
 
         # for _id in clusterNodeDict:
