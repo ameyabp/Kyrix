@@ -30,6 +30,9 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
             # convert the memberNodes list attribute to json string
             node._memberNodes = json.dumps(node._memberNodes)
 
+            # convert the rankList to json string
+            node._rankList = json.dumps(node._rankList)
+
             nodeDictList.append(node.__dict__) # append a dictionary of {node attributes -> node values} to our list
         
         # create dataframe from list of dictionaries (i.e. setting up our csv file)
@@ -57,6 +60,9 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
 
             # convert the memberEdges list attribute to json string
             edge._memberEdges = json.dumps(edge._memberEdges)
+
+            # convert the rankList to json string
+            edge._rankList = json.dumps(edge._rankList)
 
             edgeDictList.append(edge.__dict__)
         
@@ -101,11 +107,18 @@ if __name__ == "__main__":
         # boolean for whether graph is directed or not, 1 if directed, 0 if not
         directed = sys.argv[12]
 
-        
+        # ranklist parameters
+        rankListNodes_topK = int(sys.argv[13])
+        rankListNodes_fields = [s for s in sys.argv[14].split(',')]
+        rankListNodes_orderBy = sys.argv[15]
+        rankListNodes_order = sys.argv[16]
 
+        rankListEdges_topK = int(sys.argv[17])
+        rankListEdges_fields = [s for s in sys.argv[18].split(',')]
+        rankListEdges_orderBy = sys.argv[19]
+        rankListEdges_order = sys.argv[20]
 
         # read in layout of nodes and edges from layout algorithm, files are fully processed.
-
         finalNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
         finalEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
 
@@ -131,7 +144,7 @@ if __name__ == "__main__":
         clusterEdgeDict = {}
         for _, row in finalEdges.iterrows():
             argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), _level = 0, \
+            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
                         _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
                         _level = 0, _memberEdges=[], _memberEdgeCount=1, _weight = float(row['weight']), \
                         _parentEdge = 'orphan', **argDict)
@@ -144,7 +157,11 @@ if __name__ == "__main__":
 
         ###### CALL TO CLUSTERING METHOD ######
         if clusterAlgorithm == 'kmeans':
-            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions)
+            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, \
+                                            aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, \
+                                            aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions, \
+                                            rankListNodes_topK=rankListNodes_topK, rankListNodes_fields=rankListNodes_fields, rankListNodes_orderBy=rankListNodes_orderBy, rankListNodes_order=rankListNodes_order, \
+                                            rankListEdges_topK=rankListEdges_topK, rankListEdges_fields=rankListEdges_fields, rankListEdges_orderBy=rankListEdges_orderBy, rankListEdges_order=rankListEdges_order)
             nodeDicts, edgeDicts = kmClustering.run()
 
             writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresNodesFields, aggMeasuresNodesFunctions)

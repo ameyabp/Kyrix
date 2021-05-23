@@ -7,8 +7,9 @@ from dataStructures import *
 
 class kMeansClustering:
     def __init__(self, randomState, clusterLevels, nodeDict, edgeDict, \
-                aggMeasuresNodesFields, aggMeasuresNodesFunctions, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions):#, \
-                # rankList_topK, rankList_fields, rankList_orderBy):
+                aggMeasuresNodesFields, aggMeasuresNodesFunctions, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions, \
+                rankListNodes_topK, rankListNodes_fields, rankListNodes_orderBy, rankListNodes_order, \
+                rankListEdges_topK, rankListEdges_fields, rankListEdges_orderBy, rankListEdges_order):
         # parameters for kMeans clustering algorithm
         self.algorithm = 'elkan'
         self.randomState = randomState
@@ -31,6 +32,17 @@ class kMeansClustering:
         self.aggMeasuresNodesFunctions = aggMeasuresNodesFunctions
         self.aggMeasuresEdgesFields = aggMeasuresEdgesFields
         self.aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions
+
+        # rankList parameters
+        self.rankListNodes_topK = rankListNodes_topK
+        self.rankListNodes_fields = rankListNodes_fields
+        self.rankListNodes_orderBy = rankListNodes_orderBy
+        self.rankListNodes_order = rankListNodes_order
+
+        self.rankListEdges_topK = rankListEdges_topK
+        self.rankListEdges_fields = rankListEdges_fields
+        self.rankListEdges_orderBy = rankListEdges_orderBy
+        self.rankListEdges_order = rankListEdges_order
 
         # get class definitions for node and edge objects
         nodeAttributes = list(nodeDict[0].__dict__.keys()) + self.aggMeasuresNodesFields
@@ -131,19 +143,78 @@ class kMeansClustering:
                         setattr(edge, attr, val / edge._memberEdgeCount)
 
         # create rank list with the specified fields and ordered by the specified attribute
-        # for level in self.nodeDicts:
-        #     nodeDict = self.nodeDicts[level]
+        if self.rankListNodes_topK > 0:
+            for level in self.nodeDicts:
+                nodeDict = self.nodeDicts[level]
 
-        #     for nodeId in nodeDict:
-        #         node = nodeDict[nodeId]
-        #         if getattr(node, 'rankList', None) == None:
-        #             # create a dict to save the rank list for the node
-        #             setattr(node, 'rankList', dict())
+                for nodeId in nodeDict:
+                    node = nodeDict[nodeId]
+                    if getattr(node, '_rankList', None) == None:
+                        # create a list to save the rank list for the node
+                        # rankList is a list of topk objects - where each object has the specified fields
+                        setattr(node, '_rankList', [])
 
-        #         rankList = {}
-        #         rankList
+                    rankList = []
 
-        
+                    # while len(rankList) < self.rankList_topK:
+                    if level == 0:
+                        # for level 0 - the highest zoom level (most detailed level)
+                        # there is only going to be one element in the rankList
+                        obj = {}
+                        for field in self.rankListNodes_fields:
+                            obj[field] = getattr(node, field)
+
+                        rankList.append(obj)
+                        setattr(node, '_rankList', rankList)
+
+                    else:
+                        # iterate over all the children nodes and get the topk objects from them
+                        childNodeDict = self.nodeDicts[level-1]
+                        for childNodeId in node._memberNodes:
+                            childNode = childNodeDict[childNodeId]
+                            childRankList = getattr(childNode, '_rankList')
+                            rankList.extend(childRankList)
+
+                        # assuming that the rankList_orderBy attribute is also a part of rankListNodes_fields
+                        rankList = sorted(rankList, key=lambda x: x[self.rankListNodes_orderBy], reverse=True if self.rankListNodes_order == 'desc' else False)
+                        setattr(node, '_rankList', rankList[:self.rankListNodes_topK])
+
+        if self.rankListEdges_topK > 0:
+            for level in self.edgeDicts:
+                edgeDict = self.edgeDicts[level]
+
+                for edgeIdx in edgeDict:
+                    edge = edgeDict[edgeIdx]
+                    if getattr(edge, '_rankList', None) == None:
+                        # create a list to save the rank list for the node
+                        # rankList is a list of topk objects - where each object has the specified fields
+                        setattr(edge, '_rankList', [])
+
+                    rankList = []
+
+                    # while len(rankList) < self.rankList_topK:
+                    if level == 0:
+                        # for level 0 - the highest zoom level (most detailed level)
+                        # there is only going to be one element in the rankList
+                        obj = {}
+                        for field in self.rankListEdges_fields:
+                            obj[field] = getattr(edge, field)
+
+                        rankList.append(obj)
+                        setattr(edge, '_rankList', rankList)
+
+                    else:
+                        # iterate over all the children nodes and get the topk objects from them
+                        childEdgeDict = self.edgeDicts[level-1]
+                        for childEdgeIdx in edge._memberEdges:
+                            childEdge = childEdgeDict[childEdgeIdx]
+                            childRankList = getattr(childEdge, '_rankList')
+                            rankList.extend(childRankList)
+
+                        # assuming that the rankList_orderBy attribute is also a part of rankListEdges_fields
+                        rankList = sorted(rankList, key=lambda x: x[self.rankListEdges_orderBy], reverse=True if self.rankListEdges_order == 'desc' else False)
+                        setattr(edge, '_rankList', rankList[:self.rankListEdges_topK])
+
         # gather aggregated stuff under clusterAgg as JSON string
 
         return self.nodeDicts, self.edgeDicts
