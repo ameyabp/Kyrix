@@ -30,6 +30,7 @@ if __name__ == "__main__":
         # read in edges csv, this is turned into our sparse adjacency matrix
         inputEdges = pd.read_csv(edgesDir, na_values=[''])
         inputNodes = pd.read_csv(nodesDir, na_values=[''])
+        inputNodes = inputNodes.drop(columns = ['x', 'y'], errors='ignore')
 
         if computeWeight == '0':
             edges = inputEdges[['source', 'target', 'weight']]
@@ -126,9 +127,10 @@ if __name__ == "__main__":
 
         # reset source_target in finalEdges
         finalEdges['edgeId'] = [createUniqueEdgeID(x, y) for x, y in zip(finalEdges['source'], finalEdges['target'])]
+        finalEdges['originalID'] = finalEdges['edgeId']
 
         # drop unneeded columns
-        finalNodes = finalNodes.drop(columns = ['originalID'])
+        # finalNodes = finalNodes.drop(columns = ['originalID'])
 
         # reorder columns so necessary columns come first
         nodesNeeded = ['id', 'x', 'y']
