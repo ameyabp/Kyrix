@@ -443,15 +443,55 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             // an Rtree for level clusters
             rtree1 = RTree.star().create();
+            // boolean flag to determine whether we start writing to a table or not
+            boolean startFlag; 
 
             try {
+                System.out.println("writing nodes to db level " + i + "....");
+                startFlag = true;
                 //read nodes
-                CSVReader reader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(0).build();
-                List<String[]> nodes = reader.readAll();
+                CSVReader nodesReader = new CSVReaderBuilder(new FileReader(nodesFile)).withSkipLines(0).build();
+                String[] nextLine;
+                List<String[]> nodes = new ArrayList<String[]>();
+                int bufferCounter = 0;
+                boolean overflow = false;
+                
+                // read from input in batches and write batches read into table to prevent overflow
+                while ((nextLine = nodesReader.readNext()) != null) {
+                    overflow = true;
+                    nodes.add(nextLine);
+                    bufferCounter++;
+                    if (bufferCounter == Config.bboxBatchSize) {
+                        if (startFlag == true) {
+                            numRawColumnsNodes = nodes.get(0).length;
+                            rawNodesTitles = nodes.remove(0);
+                        }
+                        rawNodes = nodes;
+                        writeToDBNodes(i, startFlag);
+                        startFlag = false;
+                        bufferCounter = 0;
+                        nodes.clear();
+                        rawNodes = nodes;
+                        overflow = false;
+                    }
+                }
+                
+                if (overflow) {
+                    if (startFlag) {
+                        numRawColumnsNodes = nodes.get(0).length;
+                        rawNodesTitles = nodes.remove(0);
+                    }
+                    rawNodes = nodes;
+                    writeToDBNodes(i, startFlag);
+                    startFlag = false;
+                    bufferCounter = 0;
+                }
 
-                numRawColumnsNodes = nodes.get(0).length;
-                rawNodesTitles = nodes.remove(0);
-                rawNodes = nodes;
+                writeToDBNodesEnding(i);
+                
+                //numRawColumnsNodes = nodes.get(0).length;
+                //rawNodesTitles = nodes.remove(0);
+                //rawNodes = nodes;
                 
                 /*
                 for (int nodeidx = 0; nodeidx < nodes.size(); nodeidx++) {
@@ -501,17 +541,57 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rtree0 = null;
                 rtree0 = rtree1;
 
-                System.out.println("writing nodes to db level " + i + "....");
-                writeToDBNodes(i); //we do the above commented out section in here?
+                
+                //writeToDBNodes(i, startFlag); //we do the above commented out section in here?
                 System.out.println("finished writing nodes to db level "+ i + "...");
 
+
+                System.out.println("writing edges to db level " + i + "....");
+
+                startFlag = true;
                 //read edges
                 CSVReader edgesReader = new CSVReaderBuilder(new FileReader(edgesFile)).withSkipLines(0).build();
-                List<String[]> edges = edgesReader.readAll();
+                List<String[]> edges = new ArrayList<String[]>();
+                nextLine = null;
+                bufferCounter = 0;
+                overflow = false;
 
-                numRawColumnsEdges = edges.get(0).length;
-                rawEdgesTitles = edges.remove(0);
-                rawEdges = edges;
+                while ((nextLine = edgesReader.readNext()) != null) {
+                    overflow = true;
+                    edges.add(nextLine);
+                    bufferCounter++;
+                    if (bufferCounter == Config.bboxBatchSize) {
+                        if (startFlag == true) {
+                            numRawColumnsEdges = edges.get(0).length;
+                            rawEdgesTitles = edges.remove(0);
+                        }
+                        rawEdges = edges;
+                        writeToDBEdges(i, startFlag);
+                        startFlag = false;
+                        bufferCounter = 0;
+                        edges.clear();
+                        rawEdges = edges;
+                        overflow = false;
+                    }
+                }
+                
+                if (overflow) {
+                    if (startFlag) {
+                        numRawColumnsEdges = edges.get(0).length;
+                        rawEdgesTitles = edges.remove(0);
+                    }
+                    rawEdges = edges;
+                    writeToDBEdges(i, startFlag);
+                    startFlag = false;
+                    edges = null;
+                    rawEdges = null;
+                }
+
+                writeToDBEdgesEnding(i);
+
+                //numRawColumnsEdges = edges.get(0).length;
+                //rawEdgesTitles = edges.remove(0);
+                //rawEdges = edges;
                 
                 /*
                 for (int edgeidx = 0; edgeidx < edges.size(); edgeidx++) {
@@ -561,8 +641,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rtree0 = null;
                 rtree0 = rtree1;
 
-                System.out.println("writing edges to db level " + i + "....");
-                writeToDBEdges(i);
+                
+                //writeToDBEdges(i, startFlag);
                 System.out.println("finished writing edges to db level " + i + "...");
                 
             } catch (Exception e) {
@@ -574,26 +654,31 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     }
 
-    private void writeToDBNodes(int level) throws Exception {
-        // create tables
+    private void writeToDBNodes(int level, boolean start) throws Exception {
+    	// create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // step 0: create tables for storing bboxes
         String bboxTableName = getGraphNodesBboxTableName(level);
+        
+        String sql;
+    	
+        if (start) {
 
-        System.out.println("bboxTableName:" + bboxTableName);
-        // drop table if exists
-        String sql = "drop table if exists " + bboxTableName + ";";
-        bboxStmt.executeUpdate(sql);
+            System.out.println("bboxTableName:" + bboxTableName);
+            // drop table if exists
+            sql = "drop table if exists " + bboxTableName + ";";
+            bboxStmt.executeUpdate(sql);
 
-        // create the bbox table
-        sql = "create unlogged table " + bboxTableName + " (";
-        for (int j = 0; j < rawNodesTitles.length; j++)
-            sql += rawNodesTitles[j] + " text, ";
-        sql += "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
-                        + "maxx double precision, maxy double precision, geom box);";
-        bboxStmt.executeUpdate(sql);
-
+            // create the bbox table
+            sql = "create unlogged table " + bboxTableName + " (";
+            for (int j = 0; j < rawNodesTitles.length; j++)
+                sql += rawNodesTitles[j] + " text, ";
+            sql += "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                            + "maxx double precision, maxy double precision, geom box);";
+            bboxStmt.executeUpdate(sql);
+        }
+        
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int j = 0; j < numRawColumnsNodes + 6; j++) insertSql += "?, ";
@@ -610,7 +695,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int nodeidx = 0; nodeidx < rawNodes.size(); nodeidx++) {
             String[] node = rawNodes.get(nodeidx);
             RTreeData rd = new RTreeData(nodeidx);
-            rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
+            //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
             double cx = new Double(node[1]) * canvasWidth;
             double cy = new Double(node[2]) * canvasHeight;
@@ -653,6 +738,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
         }
 
+        
+
         /*
         for (Entry<RTreeData, Rectangle> o : clusters) {
             RTreeData rd = o.value();
@@ -686,39 +773,55 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         preparedStmt.executeBatch();
         preparedStmt.close();
 
+    }
+
+    private void writeToDBNodesEnding(int level) throws Exception {
+
+        // create tables
+        bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        String bboxTableName = getGraphNodesBboxTableName(level);
+
         // update box
-        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+        String sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
         bboxStmt.executeUpdate(sql);
+
+        System.out.println("creating spatial index");
 
         // build spatial index
         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
         bboxStmt.executeUpdate(sql);
+
+        System.out.println("finished writetodbnodes for level i");
     }
 
-    private void writeToDBEdges(int level) throws Exception {
+    private void writeToDBEdges(int level, boolean start) throws Exception {
         // create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // step 0: create tables for storing bboxes
         String bboxTableName = getGraphEdgesBboxTableName(level);
 
-        // drop table if exists
-        String sql = "drop table if exists " + bboxTableName + ";";
-        bboxStmt.executeUpdate(sql);
+        String sql;
 
-        // create the bbox table
-        sql = "create unlogged table " + bboxTableName + " (";
-        for (int j = 0; j < rawEdgesTitles.length; j++)
-            sql += rawEdgesTitles[j] + " text, ";
-        // sql +=
-            // "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
-                    // + "maxx double precision, maxy double precision, geom box);";
-        sql +=
-                "clusterAgg text, n1x double precision, n1y double precision, n2x double precision, n2y double precision, minx double precision, miny double precision, "
-                        + "maxx double precision, maxy double precision, geom box);";
-        bboxStmt.executeUpdate(sql);
+        if (start) {
+            // drop table if exists
+            sql = "drop table if exists " + bboxTableName + ";";
+            bboxStmt.executeUpdate(sql);
+
+            // create the bbox table
+            sql = "create unlogged table " + bboxTableName + " (";
+            for (int j = 0; j < rawEdgesTitles.length; j++)
+                sql += rawEdgesTitles[j] + " text, ";
+            // sql +=
+                // "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                        // + "maxx double precision, maxy double precision, geom box);";
+            sql +=
+                    "clusterAgg text, n1x double precision, n1y double precision, n2x double precision, n2y double precision, minx double precision, miny double precision, "
+                            + "maxx double precision, maxy double precision, geom box);";
+            bboxStmt.executeUpdate(sql);
+        }
 
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
@@ -738,10 +841,10 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             RTreeData rd = new RTreeData(edgeidx);
             //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
-            double n1x = new Double(edge[4]) * canvasWidth;
-            double n1y = new Double(edge[5]) * canvasHeight;
-            double n2x = new Double(edge[6]) * canvasWidth;
-            double n2y = new Double(edge[7]) * canvasHeight;
+            double n1x = new Double(edge[3]) * canvasWidth;
+            double n1y = new Double(edge[4]) * canvasHeight;
+            double n2x = new Double(edge[5]) * canvasWidth;
+            double n2y = new Double(edge[6]) * canvasHeight;
             // double cx = (n1x + n2x)/2;
             // double cy = (n1y + n2y)/2;
 
@@ -822,8 +925,16 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         preparedStmt.executeBatch();
         preparedStmt.close();
 
+    }
+
+    private void writeToDBEdgesEnding(int level) throws Exception {
+
+        // create tables
+        bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        String bboxTableName = getGraphEdgesBboxTableName(level);
+
         // update box
-        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+        String sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
         bboxStmt.executeUpdate(sql);
 
         // build spatial index

@@ -41,8 +41,8 @@ public class Config {
     public static int numThread = 4;
 
     // number of batch size when inserting records
-    public static int bboxBatchSize = 5000;
-    public static int tileBatchSize = 10000;
+    public static int bboxBatchSize = 500; //5000
+    public static int tileBatchSize = 10000; //10000
 
     // tile indexing scheme
     public enum IndexingScheme {

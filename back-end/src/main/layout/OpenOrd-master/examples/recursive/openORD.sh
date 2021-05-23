@@ -25,7 +25,7 @@ BINDIR=../../bin				# regular bin directory
 
 # general inputs
 ROOTNAME=authorship				# root name of project
-MEMORY=1				# use multiple scans to conserve memory
+MEMORY=5				# use multiple scans to conserve memory
 
 # initial layout & clustering
 TRUNCATE_LINKS=10	# initial truncation number of edges
@@ -51,6 +51,7 @@ FINAL_CUT=.5		# final edge cut
 usage="
 authorship.sh: a script to compute layout. Usage:
     --help: show usage.
+    -p | --project ROOTNAME: specify the ROOTNAME variable 
     -m | --maxlevel MAXLEVEL: specify the MAXLEVEL variable for coarsening. Default 2.
     -s | --startlevel STARTLEVEL: specify the STARTLEVEL variable for coarsening. Default 1 to avoid recoarsening.
     -l | --lastcut LAST_CUT: specify the LAST_CUT variable for edge cutting. LAST_CUT is the edge cutting parameter for the coarsest graph. Default .8.
