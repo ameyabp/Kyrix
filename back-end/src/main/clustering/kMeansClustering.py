@@ -295,7 +295,6 @@ class kMeansClustering:
                     newEdge = currEdgeDict[newEdgeIdx]
                     newEdge._memberEdges.append(edgeIdx)
                     edge._parentEdge = newEdgeIdx
-                    assert (prevEdgeDict[edgeIdx]._parentEdge == newEdgeIdx)
                     
             self.edgeDicts[level+1] = currEdgeDict
             self.edgeCounts[level+1] = len(currEdgeDict)
