@@ -289,26 +289,34 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String aggMeasuresEdgesFields = "";
         String aggMeasuresEdgesFunctions = "";
 
-        for (String s : graph.getClusterAggMeasuresNodesFields()) {
-            aggMeasuresNodesFields += s + ",";
+        if (graph.getClusterAggMeasuresNodesFields() != null) {
+            for (String s : graph.getClusterAggMeasuresNodesFields()) {
+                aggMeasuresNodesFields += s + ",";
+            }
+            aggMeasuresNodesFields = aggMeasuresNodesFields.substring(0, aggMeasuresNodesFields.length()-1);
         }
 
-        for (String s : graph.getClusterAggMeasuresNodesFunctions()) {
-            aggMeasuresNodesFunctions += s + ",";
+        if (graph.getClusterAggMeasuresNodesFunctions() != null) {
+            for (String s : graph.getClusterAggMeasuresNodesFunctions()) {
+                aggMeasuresNodesFunctions += s + ",";
+            }
+            aggMeasuresNodesFunctions = aggMeasuresNodesFunctions.substring(0, aggMeasuresNodesFunctions.length()-1);
         }
 
-        for (String s : graph.getClusterAggMeasuresEdgesFields()) {
-            aggMeasuresEdgesFields += s + ",";
+        if (graph.getClusterAggMeasuresEdgesFields() != null) {
+            for (String s : graph.getClusterAggMeasuresEdgesFields()) {
+                aggMeasuresEdgesFields += s + ",";
+            }
+            aggMeasuresEdgesFields = aggMeasuresEdgesFields.substring(0, aggMeasuresEdgesFields.length()-1);
         }
 
-        for (String s : graph.getClusterAggMeasuresEdgesFunctions()) {
-            aggMeasuresEdgesFunctions += s + ",";
+        if (graph.getClusterAggMeasuresEdgesFunctions() != null) {
+            for (String s : graph.getClusterAggMeasuresEdgesFunctions()) {
+                aggMeasuresEdgesFunctions += s + ",";
+            }
+            aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions.substring(0, aggMeasuresEdgesFunctions.length()-1);
         }
 
-        aggMeasuresNodesFields = aggMeasuresNodesFields.substring(0, aggMeasuresNodesFields.length()-1);
-        aggMeasuresNodesFunctions = aggMeasuresNodesFunctions.substring(0, aggMeasuresNodesFunctions.length()-1);
-        aggMeasuresEdgesFields = aggMeasuresEdgesFields.substring(0, aggMeasuresEdgesFields.length()-1);
-        aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions.substring(0, aggMeasuresEdgesFunctions.length()-1);
 
         if (clusteringAlgorithm.equals("kmeans")) {
             float param1 = params.get(0);
@@ -344,8 +352,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         String generalParams = "--projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv;
         generalParams += " --layoutAlgorithm " + layoutAlgorithm + " --clusteringAlgorithm " + clusteringAlgorithm;
         generalParams += " --clusteringLevels " + clusteringLevels + " --clusteringParams " + clusteringAlgorithmParams;
-        generalParams += " --aggMeasuresNodesFields " + aggMeasuresNodesFields + " --aggMeasuresNodesFunctions " + aggMeasuresNodesFunctions;
-        generalParams += " --aggMeasuresEdgesFields " + aggMeasuresEdgesFields + " --aggMeasuresEdgesFunctions " + aggMeasuresEdgesFunctions;
+        if (aggMeasuresNodesFields.length() > 0)
+            generalParams += " --aggMeasuresNodesFields " + aggMeasuresNodesFields;
+        
+        if (aggMeasuresNodesFunctions.length() > 0)
+            generalParams += " --aggMeasuresNodesFunctions " + aggMeasuresNodesFunctions;
+
+        if (aggMeasuresEdgesFields.length() > 0)
+            generalParams += " --aggMeasuresEdgesFields " + aggMeasuresEdgesFields;
+
+        if (aggMeasuresEdgesFunctions.length() > 0)
+            generalParams += " --aggMeasuresEdgesFunctions " + aggMeasuresEdgesFunctions;
         
         String clustering = "./clustering.sh " + generalParams;
         

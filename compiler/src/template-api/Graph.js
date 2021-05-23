@@ -33,66 +33,68 @@ function Graph(args_) {
      * check constraints/add defaults that can't be easily expressed by json-schema
      *******************************************************************************/    
     // succinct object notation of the measures
-    if (!("length" in args.summarization.cluster.aggregate.measures.nodes)) {
-        var measureArray = [];
-        var aggFunctionArray = [];
-        for (
-            var i = 0;
-            i < args.summarization.cluster.aggregate.measures.nodes.fields.length;
-            i++
-        ) {
-            measureArray.push(args.summarization.cluster.aggregate.measures.nodes.fields[i]);
-            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes.functions);
+    if ("aggregate" in args.summarization.cluster) {
+        if (!("length" in args.summarization.cluster.aggregate.measures.nodes)) {
+            var measureArray = [];
+            var aggFunctionArray = [];
+            for (
+                var i = 0;
+                i < args.summarization.cluster.aggregate.measures.nodes.fields.length;
+                i++
+            ) {
+                measureArray.push(args.summarization.cluster.aggregate.measures.nodes.fields[i]);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes.functions);
+            }
+            
+            args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
+            args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
+        }
+        else {
+            var measureArray = [];
+            var aggFunctionArray = [];   
+            for (
+                var i = 0;
+                i < args.summarization.cluster.aggregate.measures.nodes.length;
+                i++
+            ) {
+                measureArray.push(args.summarization.cluster.aggregate.measures.nodes[i].fields);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes[i].functions);
+            }
+            
+            args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
+            args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
         }
         
-        args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
-        args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
-    }
-    else {
-        var measureArray = [];
-        var aggFunctionArray = [];   
-        for (
-            var i = 0;
-            i < args.summarization.cluster.aggregate.measures.nodes.length;
-            i++
-        ) {
-            measureArray.push(args.summarization.cluster.aggregate.measures.nodes[i].fields);
-            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes[i].functions);
+        if (!("length" in args.summarization.cluster.aggregate.measures.edges)) {
+            var measureArray = [];
+            var aggFunctionArray = [];
+            for (
+                var i = 0;
+                i < args.summarization.cluster.aggregate.measures.edges.fields.length;
+                i++
+            ) {
+                measureArray.push(args.summarization.cluster.aggregate.measures.edges.fields[i]);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges.functions);
+            }
+            
+            args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
+            args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
         }
-        
-        args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
-        args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
-    }
-    
-    if (!("length" in args.summarization.cluster.aggregate.measures.edges)) {
-        var measureArray = [];
-        var aggFunctionArray = [];
-        for (
-            var i = 0;
-            i < args.summarization.cluster.aggregate.measures.edges.fields.length;
-            i++
-        ) {
-            measureArray.push(args.summarization.cluster.aggregate.measures.edges.fields[i]);
-            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges.functions);
+        else {
+            var measureArray = [];
+            var aggFunctionArray = [];   
+            for (
+                var i = 0;
+                i < args.summarization.cluster.aggregate.measures.edges.length;
+                i++
+            ) {
+                measureArray.push(args.summarization.cluster.aggregate.measures.edges[i].fields);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges[i].functions);
+            }
+            
+            args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
+            args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
         }
-        
-        args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
-        args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
-    }
-    else {
-        var measureArray = [];
-        var aggFunctionArray = [];   
-        for (
-            var i = 0;
-            i < args.summarization.cluster.aggregate.measures.edges.length;
-            i++
-        ) {
-            measureArray.push(args.summarization.cluster.aggregate.measures.edges[i].fields);
-            aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges[i].functions);
-        }
-        
-        args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
-        args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
     }
 
     if ("rankList" in args.marks.hover) {
@@ -164,22 +166,24 @@ function Graph(args_) {
         this.clusteringParams.push(args.summarization.cluster.randomState);
     }
     
-    if ("measures" in args.summarization.cluster.aggregate) {
-        this.clusterAggMeasuresNodesFields = args.summarization.cluster.aggregate.measures.nodes.fields;
-        this.clusterAggMeasuresNodesFunctions = args.summarization.cluster.aggregate.measures.nodes.functions;
-    }
-    if ("dimensions" in args.summarization.cluster.aggregate) {
-        this.clusterAggDimensionsNodesFields = args.summarization.cluster.aggregate.dimensions.nodes.fields;
-        this.clusterAggDimensionsNodesFunctions = args.summarization.cluster.aggregate.dimensions.nodes.functions;
-    }
-    
-    if ("measures" in args.summarization.cluster.aggregate) {
-        this.clusterAggMeasuresEdgesFields = args.summarization.cluster.aggregate.measures.edges.fields;
-        this.clusterAggMeasuresEdgesFunctions = args.summarization.cluster.aggregate.measures.edges.functions;
-    }
-    if ("dimensions" in args.summarization.cluster.aggregate) {
-        this.clusterAggDimensionsEdgesFields = args.summarization.cluster.aggregate.dimensions.edges.fields;
-        this.clusterAggDimensionsEdgesFunctions = args.summarization.cluster.aggregate.dimensions.edges.functions;
+    if ("aggregate" in args.summarization.cluster) {
+        if ("measures" in args.summarization.cluster.aggregate) {
+            this.clusterAggMeasuresNodesFields = args.summarization.cluster.aggregate.measures.nodes.fields;
+            this.clusterAggMeasuresNodesFunctions = args.summarization.cluster.aggregate.measures.nodes.functions;
+        }
+        if ("dimensions" in args.summarization.cluster.aggregate) {
+            this.clusterAggDimensionsNodesFields = args.summarization.cluster.aggregate.dimensions.nodes.fields;
+            this.clusterAggDimensionsNodesFunctions = args.summarization.cluster.aggregate.dimensions.nodes.functions;
+        }
+        
+        if ("measures" in args.summarization.cluster.aggregate) {
+            this.clusterAggMeasuresEdgesFields = args.summarization.cluster.aggregate.measures.edges.fields;
+            this.clusterAggMeasuresEdgesFunctions = args.summarization.cluster.aggregate.measures.edges.functions;
+        }
+        if ("dimensions" in args.summarization.cluster.aggregate) {
+            this.clusterAggDimensionsEdgesFields = args.summarization.cluster.aggregate.dimensions.edges.fields;
+            this.clusterAggDimensionsEdgesFunctions = args.summarization.cluster.aggregate.dimensions.edges.functions;
+        }
     }
 
     /************************

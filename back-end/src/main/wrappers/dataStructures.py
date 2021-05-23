@@ -23,10 +23,11 @@ class dataStructures:
         nodeAttributeDict['_x'] = None
         nodeAttributeDict['_y'] = None
         nodeAttributeDict['_level'] = None
-        nodeAttributeDict['_memberNodes'] = []  
+        nodeAttributeDict['_memberNodes'] = None
         # member nodes attr only stores the children (member) nodes on the immediately lower level, and not on all the lower levels
+        nodeAttributeDict['_memberNodeCount'] = None
+        # member node count stores the count of all the children on all lower levels
         nodeAttributeDict['_parentNode'] = None
-        # dummy parent node of -1 assigned to all the nodes by default
 
         for nodeAttribute in self.nodeAttributes:
             nodeAttributeDict[nodeAttribute] = None
@@ -51,11 +52,12 @@ class dataStructures:
         edgeAttributeDict['_x2'] = None
         edgeAttributeDict['_y2'] = None
         edgeAttributeDict['_level'] = None
-        edgeAttributeDict['_memberEdges'] = []
+        edgeAttributeDict['_memberEdges'] = None
         # member edges attr only stores the children (member) edges on the immediately lower level, and not on all the lower levels
-        edgeAttributeDict['_weight'] = 0
+        edgeAttributeDict['_memberEdgeCount'] = None
+        # member edge count stores the count of all the children on all lower levels
+        edgeAttributeDict['_weight'] = None
         edgeAttributeDict['_parentEdge'] = None
-        # dummy parent edge with id 'null' assigned to all the edges by default
 
         for edgeAttribute in self.edgeAttributes:
             edgeAttributeDict[edgeAttribute] = None

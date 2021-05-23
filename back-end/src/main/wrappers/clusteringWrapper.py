@@ -20,13 +20,14 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
         for id in nodeDicts[level]:
             node = nodeDicts[level][id]
             
-            # convert the attributes aggregated as count, from python set to json string
+            # convert the attributes aggregated as set, from python set to json string
             for attr, func in zip(aggMeasuresNodesFields, aggMeasuresNodesFunctions):
-                if func == 'count':
+                if func == 'list':
                     strList = list(getattr(node, attr))
                     jsonStr = json.dumps(strList)
                     setattr(node, attr, jsonStr)
             
+            # convert the memberNodes list attribute to json string
             node._memberNodes = json.dumps(node._memberNodes)
 
             nodeDictList.append(node.__dict__) # append a dictionary of {node attributes -> node values} to our list
@@ -47,13 +48,14 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
         for id in edgeDicts[level]:
             edge = edgeDicts[level][id]
 
-            # convert the attributes aggregated as count, from python set to json string
+            # convert the attributes aggregated as set, from python set to json string
             for attr, func in zip(aggMeasuresEdgesFields, aggMeasuresEdgesFunctions):
-                if func == 'count':
+                if func == 'list':
                     strList = list(getattr(edge, attr))
                     jsonStr = json.dumps(strList)
                     setattr(edge, attr, jsonStr)
 
+            # convert the memberEdges list attribute to json string
             edge._memberEdges = json.dumps(edge._memberEdges)
 
             edgeDictList.append(edge.__dict__)
@@ -121,7 +123,8 @@ if __name__ == "__main__":
         clusterNodeDict = {}
         for _, row in finalNodes.iterrows():
             argDict = dict((key, val) for key, val in zip(nodeAttributes[3:], row[3:]))
-            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0, _parentNode=-1, **argDict)
+            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0,\
+                        _memberNodes=[], _memberNodeCount=1, _parentNode=-1, **argDict)
             clusterNodeDict[node._id] = node
         
         # map edge id to edge objects
@@ -130,7 +133,8 @@ if __name__ == "__main__":
             argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
             edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
                         _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
-                        _weight = float(row['weight']), _level = 0, _parentEdge = 'orphan', **argDict)
+                        _level = 0, _memberEdges=[], _memberEdgeCount=1, _weight = float(row['weight']), \
+                        _parentEdge = 'orphan', **argDict)
             clusterEdgeDict[edge._id] = edge
 
         # for _id in clusterNodeDict:
