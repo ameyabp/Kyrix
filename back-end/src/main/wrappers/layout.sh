@@ -55,4 +55,4 @@ done
 
 mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/layout/$ALGORITHM/
 
-python3 layoutWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $COMPUTE_WEIGHT $ALGORITHM $LAYOUT_PARAMS $DIRECTED
+python3 layoutWrapper.py --projectName $PROJECT_NAME --nodesDir $NODES_CSV --edgesDir $EDGES_CSV --computeWeight $COMPUTE_WEIGHT --layoutAlgorithm $ALGORITHM --layoutParams $LAYOUT_PARAMS --directed $DIRECTED

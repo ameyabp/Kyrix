@@ -1,4 +1,5 @@
 from dataStructures import *
+import argparse
 
 #from sklearn.cluster import KMeans
 #from sklearn.preprocessing import MinMaxScaler
@@ -74,103 +75,125 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 9:
-        # default 
-        print("Not enough arguments")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--projectName', nargs='?', const="", type=str)
+    parser.add_argument('--nodesDir', nargs='?', const="", type=str)
+    parser.add_argument('--edgesDir', nargs='?', const="", type=str)
+    parser.add_argument('--layoutAlgorithm', nargs='?', const="", type=str)
+    parser.add_argument('--clusterAlgorithm', nargs='?', const="", type=str)
+    parser.add_argument('--clusterLevels', nargs='?', const="", type=str)
+    parser.add_argument('--clusterParams', nargs='?', const="", type=str)
+    parser.add_argument('--aggMeasuresNodesFields', nargs='?', const="", type=str, default="")
+    parser.add_argument('--aggMeasuresNodesFunctions', nargs='?', const="", type=str, default="")
+    parser.add_argument('--aggMeasuresEdgesFields', nargs='?', const="", type=str, default="")
+    parser.add_argument('--aggMeasuresEdgesFunctions', nargs='?', const="", type=str, default="")
+    parser.add_argument('--directed', nargs='?', const=0, type=int, default=0)
+    parser.add_argument('--rankListNodesTopK', nargs='?', const=5, type=int, default=5)
+    parser.add_argument('--rankListNodesFields', nargs='?', const="", type=str, default="")
+    parser.add_argument('--rankListNodesOrderBy', nargs='?', const="", type=str, default="")
+    parser.add_argument('--rankListNodesOrder', nargs='?', const="", type=str, default="")
+    parser.add_argument('--rankListEdgesTopK', nargs='?', const=5, type=int, default=5)
+    parser.add_argument('--rankListEdgesFields', nargs='?', const="", type=str, default="")
+    parser.add_argument('--rankListEdgesOrderBy', nargs='?', const="", type=str, default="")
+    parser.add_argument('--rankListEdgesOrder', nargs='?', const="", type=str, default="")
+    args = parser.parse_args()
+
+
+    # project name (str)
+    projectName = args.projectName
+
+    # get node and edges file directors
+    # TODO: MAY NOT NEED THESE ANYMORE AS LAYOUT PERFORMS ALL NECESSARY JOINS
+    nodesDir = args.nodesDir
+    edgesDir = args.edgesDir
+
+    # layout algorithm name (str), one from 'openORD', 'force-directed', TODO: IMPLEMENT MORE LAYOUT ALGORITHMS
+    layoutAlgorithm = args.layoutAlgorithm
+
+    # cluster algorithm name (str), one from 'kmeans', 'spectral', TODO: IMPLEMENT MORE CLUSTERING ALGORITHMS
+    clusterAlgorithm = args.clusterAlgorithm
+
+    # number of levels, passed in as a string "1000,500,50,..." -> list
+    clusterLevels = args.clusterLevels
+    clusterLevels = [int(i) for i in clusterLevels.split(',')]
+
+    # clustering parameters, passed in as a string "0.9,0.3,..." -> list | specific to clustering method
+    clusterParams = args.clusterParams
+    clusterParams = [float(i) for i in clusterParams.split(',')]
+
+    # measure attributes to aggregate and the corresponding aggregation functions
+    aggMeasuresNodesFields = [s for s in args.aggMeasuresNodesFields.split(',')]
+    aggMeasuresNodesFunctions = [s for s in args.aggMeasuresNodesFunctions.split(',')]
+    aggMeasuresEdgesFields = [s for s in args.aggMeasuresEdgesFields.split(',')]
+    aggMeasuresEdgesFunctions = [s for s in args.aggMeasuresEdgesFunctions.split(',')]
+
+    # boolean for whether graph is directed or not, 1 if directed, 0 if not
+    directed = args.directed
+
+    # ranklist parameters
+    rankListNodes_topK = args.rankListNodesTopK
+    rankListNodes_fields = [s for s in args.rankListNodesFields.split(',')]
+    rankListNodes_orderBy = args.rankListNodesOrderBy
+    rankListNodes_order = args.rankListNodesOrder
+
+    rankListEdges_topK = args.rankListEdgesTopK
+    rankListEdges_fields = [s for s in args.rankListEdgesFields.split(',')]
+    rankListEdges_orderBy = args.rankListEdgesOrderBy
+    rankListEdges_order = args.rankListEdgesOrder
+
+    # read in layout of nodes and edges from layout algorithm, files are fully processed.
+    finalNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
+    finalEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
+
+
+    ### Prepare input for clustering algorithm
+    nodeAttributes = finalNodes.columns
+    edgeAttributes = finalEdges.columns
+
+    ds = dataStructures(nodeAttributes, edgeAttributes)
+
+    Node = ds.getNodeClass()
+    Edge = ds.getEdgeClass()
+
+    # map node id to node objects
+    clusterNodeDict = {}
+    for _, row in finalNodes.iterrows():
+        argDict = dict((key, val) for key, val in zip(nodeAttributes[3:], row[3:]))
+        node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0,\
+                    _memberNodes=[], _memberNodeCount=1, _parentNode=-1, **argDict)
+        clusterNodeDict[node._id] = node
+    
+    # map edge id to edge objects
+    clusterEdgeDict = {}
+    for _, row in finalEdges.iterrows():
+        argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
+        edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
+                    _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
+                    _level = 0, _memberEdges=[], _memberEdgeCount=1, _weight = float(row['weight']), \
+                    _parentEdge = 'orphan', **argDict)
+        clusterEdgeDict[edge._id] = edge
+
+    # for _id in clusterNodeDict:
+    #     node = clusterNodeDict[_id]
+    #     print("Node:", node._id, node.authorName, node.affiliation)
+    # print(len(clusterEdgeDict))
+
+    ###### CALL TO CLUSTERING METHOD ######
+    if clusterAlgorithm == 'kmeans':
+        kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, \
+                                        aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, \
+                                        aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions, \
+                                        rankListNodes_topK=rankListNodes_topK, rankListNodes_fields=rankListNodes_fields, rankListNodes_orderBy=rankListNodes_orderBy, rankListNodes_order=rankListNodes_order, \
+                                        rankListEdges_topK=rankListEdges_topK, rankListEdges_fields=rankListEdges_fields, rankListEdges_orderBy=rankListEdges_orderBy, rankListEdges_order=rankListEdges_order)
+        nodeDicts, edgeDicts = kmClustering.run()
+
+        writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresNodesFields, aggMeasuresNodesFunctions)
+        writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions)
+
+        print("done with clustering...")
+
+    elif clusterAlgorithm == 'spectral':
+        print("To be implemented...")
+
     else:
-        # project name (str)
-        projectName = sys.argv[1]
-
-        # get node and edges file directors
-        # TODO: MAY NOT NEED THESE ANYMORE AS LAYOUT PERFORMS ALL NECESSARY JOINS
-        nodesDir = sys.argv[2] # ../../../../OpenORD/graphNodesData_level_0.csv
-        edgesDir = sys.argv[3] # ../../../../OpenORD/graphEdgesData_level_0.csv
-
-        # layout algorithm name (str), one from 'openORD', 'force-directed', TODO: IMPLEMENT MORE LAYOUT ALGORITHMS
-        layoutAlgorithm = sys.argv[4]
-
-        # cluster algorithm name (str), one from 'kmeans', 'spectral', TODO: IMPLEMENT MORE CLUSTERING ALGORITHMS
-        clusterAlgorithm = sys.argv[5] 
-
-        # number of levels, passed in as a string "1000,500,50,..." -> list
-        clusterLevels = [int(i) for i in sys.argv[6].split(',')]
-
-        # clustering parameters, passed in as a string "0.9,0.3,..." -> list | specific to clustering method
-        clusterParams = [float(i) for i in sys.argv[7].split(',')]
-
-        # measure attributes to aggregate and the corresponding aggregation functions
-        aggMeasuresNodesFields = [s for s in sys.argv[8].split(',')]
-        aggMeasuresNodesFunctions = [s for s in sys.argv[9].split(',')]
-        aggMeasuresEdgesFields = [s for s in sys.argv[10].split(',')]
-        aggMeasuresEdgesFunctions = [s for s in sys.argv[11].split(',')]
-
-        # boolean for whether graph is directed or not, 1 if directed, 0 if not
-        directed = sys.argv[12]
-
-        # ranklist parameters
-        rankListNodes_topK = int(sys.argv[13])
-        rankListNodes_fields = [s for s in sys.argv[14].split(',')]
-        rankListNodes_orderBy = sys.argv[15]
-        rankListNodes_order = sys.argv[16]
-
-        rankListEdges_topK = int(sys.argv[17])
-        rankListEdges_fields = [s for s in sys.argv[18].split(',')]
-        rankListEdges_orderBy = sys.argv[19]
-        rankListEdges_order = sys.argv[20]
-
-        # read in layout of nodes and edges from layout algorithm, files are fully processed.
-        finalNodes = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutNodes.csv", sep=',')
-        finalEdges = pd.read_csv('../../../../compiler/examples/' + projectName + '/intermediary/layout/' + layoutAlgorithm + "/layoutEdges.csv", sep=',')
-
-
-        ### Prepare input for clustering algorithm
-        nodeAttributes = finalNodes.columns
-        edgeAttributes = finalEdges.columns
-
-        ds = dataStructures(nodeAttributes, edgeAttributes)
-
-        Node = ds.getNodeClass()
-        Edge = ds.getEdgeClass()
-
-        # map node id to node objects
-        clusterNodeDict = {}
-        for _, row in finalNodes.iterrows():
-            argDict = dict((key, val) for key, val in zip(nodeAttributes[3:], row[3:]))
-            node = Node(_id = int(row['id']), _x = float(row['x']), _y = float(row['y']), _level=0,\
-                        _memberNodes=[], _memberNodeCount=1, _parentNode=-1, **argDict)
-            clusterNodeDict[node._id] = node
-        
-        # map edge id to edge objects
-        clusterEdgeDict = {}
-        for _, row in finalEdges.iterrows():
-            argDict = dict((key, val) for key, val in zip(edgeAttributes[8:], row[8:]))
-            edge = Edge(_id = row['edgeId'], _srcId = int(row['source']), _dstId = int(row['target']), \
-                        _x1 = float(row['x1']), _y1 = float(row['y1']), _x2 = float(row['x2']), _y2 = float(row['y2']), \
-                        _level = 0, _memberEdges=[], _memberEdgeCount=1, _weight = float(row['weight']), \
-                        _parentEdge = 'orphan', **argDict)
-            clusterEdgeDict[edge._id] = edge
-
-        # for _id in clusterNodeDict:
-        #     node = clusterNodeDict[_id]
-        #     print("Node:", node._id, node.authorName, node.affiliation)
-        # print(len(clusterEdgeDict))
-
-        ###### CALL TO CLUSTERING METHOD ######
-        if clusterAlgorithm == 'kmeans':
-            kmClustering = kMeansClustering(randomState=0, clusterLevels=clusterLevels, nodeDict=clusterNodeDict, edgeDict=clusterEdgeDict, \
-                                            aggMeasuresNodesFields=aggMeasuresNodesFields, aggMeasuresNodesFunctions=aggMeasuresNodesFunctions, \
-                                            aggMeasuresEdgesFields=aggMeasuresEdgesFields, aggMeasuresEdgesFunctions=aggMeasuresEdgesFunctions, \
-                                            rankListNodes_topK=rankListNodes_topK, rankListNodes_fields=rankListNodes_fields, rankListNodes_orderBy=rankListNodes_orderBy, rankListNodes_order=rankListNodes_order, \
-                                            rankListEdges_topK=rankListEdges_topK, rankListEdges_fields=rankListEdges_fields, rankListEdges_orderBy=rankListEdges_orderBy, rankListEdges_order=rankListEdges_order)
-            nodeDicts, edgeDicts = kmClustering.run()
-
-            writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresNodesFields, aggMeasuresNodesFunctions)
-            writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, aggMeasuresEdgesFields, aggMeasuresEdgesFunctions)
-
-            print("done with clustering...")
-
-        elif clusterAlgorithm == 'spectral':
-            print("To be implemented...")
-
-        else:
-            print("Inavlid clustering algorithm")
+        print("Inavlid clustering algorithm")
