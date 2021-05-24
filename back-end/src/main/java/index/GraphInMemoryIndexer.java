@@ -829,6 +829,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         System.out.println("creating spatial index");
 
         // build spatial index
+        sql = "drop index if exists sp_" + bboxTableName +";";
+        bboxStmt.executeUpdate(sql);
+
         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
@@ -979,6 +982,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         bboxStmt.executeUpdate(sql);
 
         // build spatial index
+        sql = "drop index if exists sp_" + bboxTableName +";";
+        bboxStmt.executeUpdate(sql);
+        
         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
