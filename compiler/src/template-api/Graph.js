@@ -33,86 +33,94 @@ function Graph(args_) {
      * check constraints/add defaults that can't be easily expressed by json-schema
      *******************************************************************************/    
     // succinct object notation of the measures
-    if ("aggregate" in args.summarization.cluster) {
-        if (!("length" in args.summarization.cluster.aggregate.measures.nodes)) {
-            var measureArray = [];
+    if ("cluster" in args.summarization && "aggregate" in args.summarization.cluster) {
+        if (!("length" in args.summarization.cluster.aggregate.nodes)) {
+            var fieldsArray = [];
             var aggFunctionArray = [];
             for (
                 var i = 0;
-                i < args.summarization.cluster.aggregate.measures.nodes.fields.length;
+                i < args.summarization.cluster.aggregate.nodes.fields.length;
                 i++
             ) {
-                measureArray.push(args.summarization.cluster.aggregate.measures.nodes.fields[i]);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes.functions);
+                fieldsArray.push(args.summarization.cluster.aggregate.nodes.fields[i]);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.nodes.functions);
             }
             
-            args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
-            args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
+            args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
+            args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
         }
         else {
-            var measureArray = [];
+            var fieldsArray = [];
             var aggFunctionArray = [];   
             for (
                 var i = 0;
-                i < args.summarization.cluster.aggregate.measures.nodes.length;
+                i < args.summarization.cluster.aggregate.nodes.length;
                 i++
             ) {
-                measureArray.push(args.summarization.cluster.aggregate.measures.nodes[i].fields);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.nodes[i].functions);
+                fieldsArray.push(args.summarization.cluster.aggregate.nodes[i].fields);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.nodes[i].functions);
             }
             
-            args.summarization.cluster.aggregate.measures.nodes.fields = measureArray;
-            args.summarization.cluster.aggregate.measures.nodes.functions = aggFunctionArray;
+            args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
+            args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
         }
         
-        if (!("length" in args.summarization.cluster.aggregate.measures.edges)) {
-            var measureArray = [];
+        if (!("length" in args.summarization.cluster.aggregate.edges)) {
+            var fieldsArray = [];
             var aggFunctionArray = [];
             for (
                 var i = 0;
-                i < args.summarization.cluster.aggregate.measures.edges.fields.length;
+                i < args.summarization.cluster.aggregate.edges.fields.length;
                 i++
             ) {
-                measureArray.push(args.summarization.cluster.aggregate.measures.edges.fields[i]);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges.functions);
+                fieldsArray.push(args.summarization.cluster.aggregate.edges.fields[i]);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.edges.functions);
             }
             
-            args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
-            args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
+            args.summarization.cluster.aggregate.edges.fields = fieldsArray;
+            args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
         }
         else {
-            var measureArray = [];
+            var fieldsArray = [];
             var aggFunctionArray = [];   
             for (
                 var i = 0;
-                i < args.summarization.cluster.aggregate.measures.edges.length;
+                i < args.summarization.cluster.aggregate.edges.length;
                 i++
             ) {
-                measureArray.push(args.summarization.cluster.aggregate.measures.edges[i].fields);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.measures.edges[i].functions);
+                fieldsArray.push(args.summarization.cluster.aggregate.edges[i].fields);
+                aggFunctionArray.push(args.summarization.cluster.aggregate.edges[i].functions);
             }
             
-            args.summarization.cluster.aggregate.measures.edges.fields = measureArray;
-            args.summarization.cluster.aggregate.measures.edges.functions = aggFunctionArray;
+            args.summarization.cluster.aggregate.edges.fields = fieldsArray;
+            args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
         }
     }
 
-    if ("rankList" in args.marks.hover) {
-        if ("tooltip" in args.marks.hover)
+    if ("rankList" in args.marks.hover.nodes) {
+        if ("tooltip" in args.marks.hover.nodes)
+            throw new Error("Constructing Graph: rankList and tooltip cannot be specified together.");
+
+    }
+
+    if ("rankList" in args.marks.hover.edges) {
+        if ("tooltip" in args.marks.hover.edges)
+            throw new Error("Constructing Graph: rankList and tooltip cannot be specified together.");
+
+    }
+
+    if ("tooltip" in args.marks.hover.nodes) {
+        if ("aliases" in args.marks.hover.nodes.tooltip &&
+            (args.marks.hover.nodes.tooltip.aliases.length !== args.marks.hover.nodes.tooltip.columns.length))
             throw new Error(
-                "Constructing Graph: rankList and tooltip cannot be specified together."
+                "Constructing Graph: tooltip aliases (marks.hover.tooltip.aliases) " +
+                    "must have the same number of elements as columns (marks.hover.tooltip.columns)."
             );
     }
 
-    if ("tooltip" in args.marks.hover) {
-        if (
-            ("nodealiases" in args.marks.hover.tooltip &&
-            args.marks.hover.tooltip.nodealiases.length !==
-                args.marks.hover.tooltip.nodecolumns.length) ||
-            ("edgealiases" in args.marks.hover.tooltip &&
-            args.marks.hover.tooltip.edgealiases.length !==
-                args.marks.hover.tooltip.edgecolumns.length)
-        )
+    if ("tooltip" in args.marks.hover.edges) {
+        if("aliases" in args.marks.hover.edges.tooltip &&
+            (args.marks.hover.edges.tooltip.aliases.length !== args.marks.hover.edges.tooltip.columns.length))
             throw new Error(
                 "Constructing Graph: tooltip aliases (marks.hover.tooltip.aliases) " +
                     "must have the same number of elements as columns (marks.hover.tooltip.columns)."
@@ -124,6 +132,7 @@ function Graph(args_) {
     this.db = args.data.db;
     this.queryNodes = args.data.queryNodes;
     this.queryEdges = args.data.queryEdges;
+    this.directedGraph = args.data.directedGraph;
 
     this.topLevelWidth = args.config.topLevelWidth;
     this.topLevelHeight = args.config.topLevelHeight;
@@ -158,31 +167,20 @@ function Graph(args_) {
     /************************
      * setting cluster params
      ************************/
-    this.clusteringAlgo = args.summarization.cluster.algorithm;
-    this.numLevels = args.summarization.cluster.clusterLevels.length+1;
-    this.clusterLevels = args.summarization.cluster.clusterLevels;
-    this.clusteringParams = [];
-    if (args.summarization.cluster.algorithm == 'kmeans') {
-        this.clusteringParams.push(args.summarization.cluster.randomState);
-    }
-    
-    if ("aggregate" in args.summarization.cluster) {
-        if ("measures" in args.summarization.cluster.aggregate) {
-            this.clusterAggMeasuresNodesFields = args.summarization.cluster.aggregate.measures.nodes.fields;
-            this.clusterAggMeasuresNodesFunctions = args.summarization.cluster.aggregate.measures.nodes.functions;
-        }
-        if ("dimensions" in args.summarization.cluster.aggregate) {
-            this.clusterAggDimensionsNodesFields = args.summarization.cluster.aggregate.dimensions.nodes.fields;
-            this.clusterAggDimensionsNodesFunctions = args.summarization.cluster.aggregate.dimensions.nodes.functions;
-        }
-        
-        if ("measures" in args.summarization.cluster.aggregate) {
-            this.clusterAggMeasuresEdgesFields = args.summarization.cluster.aggregate.measures.edges.fields;
-            this.clusterAggMeasuresEdgesFunctions = args.summarization.cluster.aggregate.measures.edges.functions;
-        }
-        if ("dimensions" in args.summarization.cluster.aggregate) {
-            this.clusterAggDimensionsEdgesFields = args.summarization.cluster.aggregate.dimensions.edges.fields;
-            this.clusterAggDimensionsEdgesFunctions = args.summarization.cluster.aggregate.dimensions.edges.functions;
+    if ("cluster" in args.summarization) {
+        this.clusteringAlgo = args.summarization.cluster.algorithm;
+        this.numLevels = args.summarization.cluster.clusterLevels.length+1;
+        this.clusterLevels = args.summarization.cluster.clusterLevels;
+        this.clusteringParams = [];
+        if ("aggregate" in args.summarization.cluster) {
+            if ("nodes" in args.summarization.cluster.aggregate) {
+                this.clusterAggMeasuresNodesFields = args.summarization.cluster.aggregate.nodes.fields;
+                this.clusterAggMeasuresNodesFunctions = args.summarization.cluster.aggregate.nodes.functions;
+            }
+            if ("edges" in args.summarization.cluster.aggregate) {
+                this.clusterAggMeasuresEdgesFields = args.summarization.cluster.aggregate.edges.fields;
+                this.clusterAggMeasuresEdgesFunctions = args.summarization.cluster.aggregate.edges.functions;
+            }
         }
     }
 
@@ -190,42 +188,81 @@ function Graph(args_) {
      * setting hover params
      ************************/
     this.hoverParams = {};
-    if ("rankList" in args.marks.hover) {
+    if ("rankList" in args.marks.hover.nodes) {
+        this.hoverParams.nodesHover = {}
+
         // get in everything in config
-        this.hoverParams = args.marks.hover.rankList.config;
+        this.hoverParams.nodesHover.config = args.marks.hover.nodes.rankList.config;
 
         // mode: currently either tabular or custom
-        this.hoverParams.hoverRankListMode = args.marks.hover.rankList.mode;
+        this.hoverParams.nodesHover.hoverRankListMode = args.marks.hover.nodes.rankList.mode;
 
         // table fields
-        if (args.marks.hover.rankList.mode == "tabular")
-            this.hoverParams.hoverTableFields = args.marks.hover.rankList.fields;
+        if (args.marks.hover.nodes.rankList.mode == "tabular")
+            this.hoverParams.nodesHover.hoverTableFields = args.marks.hover.nodes.rankList.fields;
 
         // custom topk renderer
-        if (args.marks.hover.rankList.mode == "custom")
-            this.hoverParams.hoverCustomRenderer = args.marks.hover.rankList.custom;
+        if (args.marks.hover.nodes.rankList.mode == "custom")
+            this.hoverParams.nodesHover.hoverCustomRenderer = args.marks.hover.nodes.rankList.custom;
 
         // topk is 1 by default if unspecified
-        this.hoverParams.topk = args.marks.hover.rankList.topk;
+        this.hoverParams.nodesHover.topk = args.marks.hover.nodes.rankList.topk;
 
         // orientation of custom ranks
-        this.hoverParams.hoverRankListOrientation = args.marks.hover.rankList.orientation;
-    }
-    if ("boundary" in args.marks.hover)
-        this.hoverParams.hoverBoundary = args.marks.hover.boundary;
-    this.topk = "topk" in this.hoverParams ? this.hoverParams.topk : 0;
-    this.hoverSelector =
-        "selector" in args.marks.hover ? args.marks.hover.selector : null;
-    this.tooltipNodeColumns = this.tooltipNodeAliases = this.tooltipEdgeColumns = this.tooltipEdgeAliases = null;
-    if ("tooltip" in args.marks.hover) {
-        this.tooltipNodeColumns = args.marks.hover.tooltip.nodecolumns;
-        if ("nodealiases" in args.marks.hover.tooltip)
-            this.tooltipNodeAliases = args.marks.hover.tooltip.nodealiases;
-        else this.tooltipNodeAliases = this.tooltipNodeColumns;
+        this.hoverParams.nodesHover.hoverRankListOrientation = args.marks.hover.nodes.rankList.orientation;
 
-        this.tooltipEdgeColumns = args.marks.hover.tooltip.edgecolumns;
-        if ("edgealiases" in args.marks.hover.tooltip)
-            this.tooltipEdgeAliases = args.marks.hover.tooltip.edgealiases;
+        this.hoverParams.nodesHover.orderBy = args.marks.hover.nodes.rankList.orderBy;
+        this.hoverParams.nodesHover.order = args.marks.hover.nodes.rankList.order;
+    }
+    if ("rankList" in args.marks.hover.edges) {
+        this.hoverParams.edgesHover = {}
+
+        // get in everything in config
+        this.hoverParams.edgesHover.config = args.marks.hover.edges.rankList.config;
+
+        // mode: currently either tabular or custom
+        this.hoverParams.edgesHover.hoverRankListMode = args.marks.hover.edges.rankList.mode;
+
+        // table fields
+        if (args.marks.hover.edges.rankList.mode == "tabular")
+            this.hoverParams.edgesHover.hoverTableFields = args.marks.hover.edges.rankList.fields;
+
+        // custom topk renderer
+        if (args.marks.hover.edges.rankList.mode == "custom")
+            this.hoverParams.edgesHover.hoverCustomRenderer = args.marks.hover.edges.rankList.custom;
+
+        // topk is 1 by default if unspecified
+        this.hoverParams.edges.topk = args.marks.hover.edges.rankList.topk;
+
+        // orientation of custom ranks
+        this.hoverParams.edgesHover.hoverRankListOrientation = args.marks.hover.edges.rankList.orientation;
+
+        this.hoverParams.edgesHover.orderBy = args.marks.hover.edges.rankList.orderBy;
+        this.hoverParams.edgesHover.order = args.marks.hover.edges.rankList.order;
+    }
+
+    if ("boundary" in args.marks.hover.nodes) {
+        this.hoverParams.nodesHoverBoundary = args.marks.hover.nodes.boundary;
+    }
+
+    if ("boundary" in args.marks.hover.edges) {
+        this.hoverParams.edgesHoverBoundary = args.marks.hover.edges.boundary;
+    }
+
+    this.hoverSelector = "selector" in args.marks.hover ? args.marks.hover.selector : null;
+    
+    this.tooltipNodeColumns = this.tooltipNodeAliases = this.tooltipEdgeColumns = this.tooltipEdgeAliases = null;
+    if ("tooltip" in args.marks.hover.nodes) {
+        this.tooltipNodeColumns = args.marks.hover.nodes.tooltip.columns;
+        if ("aliases" in args.marks.hover.nodes.tooltip)
+            this.tooltipNodeAliases = args.marks.hover.nodes.tooltip.aliases;
+        else this.tooltipNodeAliases = this.tooltipNodeColumns;
+    }
+
+    if ("tooltip" in args.marks.hover.edges) {
+        this.tooltipEdgeColumns = args.marks.hover.edges.tooltip.columns;
+        if ("aliases" in args.marks.hover.edges.tooltip)
+            this.tooltipEdgeAliases = args.marks.hover.edges.tooltip.aliases;
         else this.tooltipEdgeAliases = this.tooltipEdgeColumns;
     }
 }

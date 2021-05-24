@@ -11,6 +11,14 @@ AGG_MEASURES_NODES_FIELDS=""
 AGG_MEASURES_NODES_FUNCTIONS=""
 AGG_MEASURES_EDGES_FIELDS=""
 AGG_MEASURES_EDGES_FUNCTIONS=""
+RANKLIST_NODES_TOPK=""
+RANKLIST_NODES_FIELDS=""
+RANKLIST_NODES_ORDERBY=""
+RANKLIST_NODES_ORDER=""
+RANKLIST_EDGES_TOPK=""
+RANKLIST_EDGES_FIELDS=""
+RANKLIST_EDGES_ORDERBY=""
+RANKLIST_EDGES_ORDER=""
 DIRECTED="0"
 while [[ $# -gt 0 ]]
 do
@@ -76,6 +84,47 @@ do
             shift
             shift
             ;;
+        --rankList_nodes_topk)
+            RANKLIST_NODES_TOPK="$2"
+            shift
+            shift
+            ;;
+        --rankList_nodes_fields)
+            RANKLIST_NODES_FIELDS="$2"
+            shift
+            shift
+            ;;
+        --rankList_nodes_orderBy)
+            RANKLIST_NODES_ORDERBY="$2"
+            shift
+            shift
+            ;;
+        --rankList_nodes_order)
+            RANKLIST_NODES_ORDER="$2"
+            shift
+            shift
+            ;;
+        --rankList_edges_topk)
+            RANKLIST_EDGES_TOPK="$2"
+            shift
+            shift
+            ;;
+        --rankList_edges_fields)
+            RANKLIST_EDGES_FIELDS="$2"
+            shift
+            shift
+            ;;
+        --rankList_edges_orderBy)
+            RANKLIST_EDGES_ORDERBY="$2"
+            shift
+            shift
+            ;;
+        --rankList_edges_order)
+            RANKLIST_EDGES_ORDER="$2"
+            shift
+            shift
+            ;;
+
         *)
             echo "Wrong argument name $key"
             exit
@@ -85,4 +134,4 @@ done
 
 mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/clustering/$CLUSTERING_ALGORITHM/
 
-python3 clusteringWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $LAYOUT_ALGORITHM $CLUSTERING_ALGORITHM $CLUSTERING_LEVELS $CLUSTERING_PARAMS $AGG_MEASURES_NODES_FIELDS $AGG_MEASURES_NODES_FUNCTIONS $AGG_MEASURES_EDGES_FIELDS $AGG_MEASURES_EDGES_FUNCTIONS $DIRECTED
+python3 clusteringWrapper.py $PROJECT_NAME $NODES_CSV $EDGES_CSV $LAYOUT_ALGORITHM $CLUSTERING_ALGORITHM $CLUSTERING_LEVELS $CLUSTERING_PARAMS $AGG_MEASURES_NODES_FIELDS $AGG_MEASURES_NODES_FUNCTIONS $AGG_MEASURES_EDGES_FIELDS $AGG_MEASURES_EDGES_FUNCTIONS $DIRECTED $RANKLIST_NODES_TOPK $RANKLIST_NODES_FIELDS $RANKLIST_NODES_ORDERBY $RANKLIST_NODES_ORDER $RANKLIST_EDGES_TOPK $RANKLIST_EDGES_FIELDS $RANKLIST_EDGES_ORDERBY $RANKLIST_EDGES_ORDER

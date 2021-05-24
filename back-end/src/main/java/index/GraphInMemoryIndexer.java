@@ -8,6 +8,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import java.io.IOException;
@@ -136,6 +138,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     // private final String aggKeyDelimiter = "__";
     private final Gson gson;
     private String rpKey;
+    private JsonObject renderingParams;
     private String rawNodesCsv, rawEdgesCsv, projectName;
     private String[] rawColumnsNodes, rawColumnsEdges;
     private int graphIndex, numLevels, numRawColumnsNodes, numRawColumnsEdges;
@@ -194,7 +197,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             // clustering need not be performed again for edges layers
             return;
 
-        rpKey = "graph_" + curGraphId.substring(0, curGraphId.lastIndexOf("_"));
+        rpKey = "graph_" + curGraphId.substring(0, curGraphId.indexOf("_"));
+        System.out.println(rpKey);
+        renderingParams = new JsonParser().parse(Main.getProject().getRenderingParams()).getAsJsonObject().get(rpKey).getAsJsonObject();
         graphIndex = Integer.valueOf(curGraphId.substring(0, curGraphId.indexOf("_")));
 
         // set common variables
@@ -317,9 +322,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions.substring(0, aggMeasuresEdgesFunctions.length()-1);
         }
 
-
         if (clusteringAlgorithm.equals("kmeans")) {
-            float param1 = params.get(0);
+            float param1 = 0;//params.get(0);
             // float param2 = params.get(1);
             // float param3 = params.get(2);
             clusteringAlgorithmParams += param1;// + "," + param2 + "," + param3;
@@ -363,6 +367,43 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         if (aggMeasuresEdgesFunctions.length() > 0)
             generalParams += " --aggMeasuresEdgesFunctions " + aggMeasuresEdgesFunctions;
+
+        if (graph.isDirectedGraph())
+            generalParams += " --directed " + "1";
+        else
+            generalParams += " --directed " + "0";
+
+        String fields = "";
+        if (renderingParams.has("nodesHover")) {
+            JsonObject nodesHoverParams = renderingParams.get("nodesHover").getAsJsonObject();
+            String topk = nodesHoverParams.get("topk").getAsString();
+            JsonArray jsonFields = nodesHoverParams.get("hoverTableFields").getAsJsonArray();
+            String orderBy = nodesHoverParams.get("orderBy").getAsString();
+            String order = nodesHoverParams.get("order").getAsString();
+
+            generalParams += " --rankList_nodes_topk " + topk;
+            for (JsonElement field : jsonFields)
+                fields += field.getAsString() + ",";
+            fields = fields.substring(0, fields.length()-1);
+            generalParams += " --rankList_nodes_fields " + fields;
+            generalParams += " --rankList_nodes_orderBy " + orderBy;
+            generalParams += " --rankList_nodes_order " + order;
+        }
+        if (renderingParams.has("edgesHover")) {
+            JsonObject edgesHoverParams = renderingParams.get("edgesHover").getAsJsonObject();
+            String topk = edgesHoverParams.get("topk").getAsString();
+            JsonArray jsonFields = edgesHoverParams.get("hoverTableFields").getAsJsonArray();
+            String orderBy = edgesHoverParams.get("orderBy").getAsString();
+            String order = edgesHoverParams.get("order").getAsString();
+
+            generalParams += " --rankList_edges_topk " + topk;
+            for (JsonElement field : jsonFields)
+                fields += field.getAsString() + ",";
+            fields = fields.substring(0, fields.length()-1);
+            generalParams += " --rankList_edges_fields " + fields;
+            generalParams += " --rankList_edges_orderBy " + orderBy;
+            generalParams += " --rankList_edges_order " + order;
+        }
         
         String clustering = "./clustering.sh " + generalParams;
         
@@ -391,7 +432,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         graph = Main.getProject().getGraphs().get(graphIndex);
         
         // get current project name
-        projectName = graph.getProjectName();
+        projectName = Main.getProject().getName();
         String userFilePath = "/kyrix/compiler/examples/" + projectName + "/";
 
         // load raw nodes and edges data

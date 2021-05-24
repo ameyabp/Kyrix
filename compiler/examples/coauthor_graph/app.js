@@ -28,15 +28,13 @@ var graph = {
     summarization: {
         cluster: {
             aggregate: {
-                measures: {
-                    nodes: {
-                        fields: ["papers", "coauthors"],
-                        functions: "count"
-                    },
-                    edges: {
-                        fields: ["papers"],
-                        functions: "count"
-                    }
+                nodes: {
+                    fields: ["papers", "coauthors"],
+                    functions: "count"
+                },
+                edges: {
+                    fields: ["papers"],
+                    functions: "count"
                 }
             },
             clusterLevels: [1000, 200, 50],
@@ -46,19 +44,26 @@ var graph = {
     },
     marks: {
         encoding: {
-            nodeSize: "memberNodeCount"
+            nodeSize: "memberNodeCount",
+            edgeThickness: "memberEdgeCount"
         },
         hover: {
-            tooltip: {
-                nodecolumns: ["authorname", "affiliation", "papercount", "coauthorcount", "membernodecount"],
-                nodealiases: ["Name", "Affiliation", "Paper count", "Coauthor count", "Member Node count"],
-                edgecolumns: ["author1", "author2", "papercount"],
-                edgealiases: ["Author1", "Author2", "Paper count"]
+            nodes: {
+                rankList: {
+                    mode: "tabular",
+                    topk: 3,
+                    fields: ["authorName", "affiliation", "papers", "coauthors"],
+                    orderBy: "papers",
+                    order: "desc"
+                }
+            },
+            edges: {
+                tooltip: {
+                    columns: ["papers"],
+                    aliases: ["Paper count"]
+                }
             }
         }
-    },
-    config: {
-        projectName: "coauthor_graph"
     }
 };
 

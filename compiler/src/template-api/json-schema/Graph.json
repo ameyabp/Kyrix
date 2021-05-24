@@ -63,8 +63,15 @@
                 "queryEdges": {
                     "$ref": "#/definitions/nonEmptyString"
                 },
-                "columnNames": {
+                "columnNamesNodes": {
                     "default": []
+                },
+                "columnNamesEdges": {
+                    "default": []
+                },
+                "directedGraph": {
+                    "enum": [true, false],
+                    "default": false
                 }
             },
             "required": ["nodesCsv", "edgesCsv", "db", "queryNodes", "queryEdges"],
@@ -179,30 +186,15 @@
                                 "aggregate": {
                                     "type": "object",
                                     "properties": {
-                                        "measures": {
-                                            "nodes": {
-                                                "anyOf": [
-                                                    {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "fields": {
-                                                                    "$ref": "#/definitions/nonEmptyString"
-                                                                },
-                                                                "functions": {
-                                                                    "$ref": "#/definitions/aggregationFunctions"
-                                                                }
-                                                            },
-                                                            "required": ["fields", "functions"],
-                                                            "additionalProperties": false
-                                                        }
-                                                    },
-                                                    {
+                                        "nodes": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
                                                         "type": "object",
                                                         "properties": {
                                                             "fields": {
-                                                                "$ref": "#/definitions/nonEmptyStringArray"
+                                                                "$ref": "#/definitions/nonEmptyString"
                                                             },
                                                             "functions": {
                                                                 "$ref": "#/definitions/aggregationFunctions"
@@ -211,104 +203,75 @@
                                                         "required": ["fields", "functions"],
                                                         "additionalProperties": false
                                                     }
-                                                ],
-                                                "default": []
-                                            },
-                                            "edges": {
-                                                "anyOf": [
-                                                    {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "fields": {
-                                                                    "$ref": "#/definitions/nonEmptyString"
-                                                                },
-                                                                "functions": {
-                                                                    "$ref": "#/definitions/aggregationFunctions"
-                                                                }
-                                                            },
-                                                            "required": ["fields", "functions"],
-                                                            "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "fields": {
+                                                            "$ref": "#/definitions/nonEmptyStringArray"
+                                                        },
+                                                        "functions": {
+                                                            "$ref": "#/definitions/aggregationFunctions"
                                                         }
                                                     },
-                                                    {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "fields": {
-                                                                "$ref": "#/definitions/nonEmptyStringArray"
-                                                            },
-                                                            "functions": {
-                                                                "$ref": "#/definitions/aggregationFunctions"
-                                                            }
-                                                        },
-                                                        "required": ["fields", "functions"],
-                                                        "additionalProperties": false
-                                                    }
-                                                ],
-                                                "default": []
-                                            }
+                                                    "required": ["fields", "functions"],
+                                                    "additionalProperties": false
+                                                }
+                                            ],
+                                            "default": []
                                         },
-                                        "dimensions": {
-                                            "nodes": {
-                                                "type": "array",
-                                                "items": {
+                                        "edges": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "fields": {
+                                                                "$ref": "#/definitions/nonEmptyString"
+                                                            },
+                                                            "functions": {
+                                                                "$ref": "#/definitions/aggregationFunctions"
+                                                            }
+                                                        },
+                                                        "required": ["fields", "functions"],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                {
                                                     "type": "object",
                                                     "properties": {
-                                                        "field": {
-                                                            "$ref": "#/definitions/nonEmptyString"
+                                                        "fields": {
+                                                            "$ref": "#/definitions/nonEmptyStringArray"
                                                         },
-                                                        "domain": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
+                                                        "functions": {
+                                                            "$ref": "#/definitions/aggregationFunctions"
                                                         }
                                                     },
-                                                    "required": ["field", "domain"],
+                                                    "required": ["fields", "functions"],
                                                     "additionalProperties": false
-                                                },
-                                                "default": []
-                                            },
-                                            "edges": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "$ref": "#/definitions/nonEmptyString"
-                                                        },
-                                                        "domain": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": ["field", "domain"],
-                                                    "additionalProperties": false
-                                                },
-                                                "default": []
-                                            }
+                                                }
+                                            ],
+                                            "default": []
                                         }
                                     },
                                     "additionalProperties": false,
                                     "default": {
-                                        "measures": [],
-                                        "dimensions": []
+                                        "nodes": {},
+                                        "edges": {}
                                     }
                                 },
                                 "clusterLevels": {
                                     "$ref": "#/definitions/nonEmptyNumberArray"
                                 },
-                                "randomState": {
-                                    "type": "number",
-                                    "default": 0
-                                },
                                 "algorithm": {
                                     "$ref": "#/definitions/clusteringAlgorithms"
                                 }
-                            }
+                            },
+                            "default": {
+                                "aggregate": {}
+                            },
+                            "required": ["algorithm", "clusterLevels"]
                         }
                     },
                     "required": ["cluster"],
@@ -318,10 +281,11 @@
                     "type": "object",
                     "properties": {
                         "partition": {
-                            "aggregate": {
-                                "type": "object",
-                                "properties": {
-                                    "measures": {
+                            "type": "object",
+                            "properties": {
+                                "aggregate": {
+                                    "type": "object",
+                                    "properties": {
                                         "nodes": {
                                             "anyOf": [
                                                 {
@@ -397,36 +361,20 @@
                                             "default": []
                                         }
                                     },
-                                    "dimensions": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "field": {
-                                                    "$ref": "#/definitions/nonEmptyString"
-                                                },
-                                                "domain": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            },
-                                            "required": ["field", "domain"],
-                                            "additionalProperties": false
-                                        },
-                                        "default": []
+                                    "additionalProperties": false,
+                                    "default": {
+                                        "nodes": {},
+                                        "edges": {}
                                     }
                                 },
-                                "additionalProperties": false,
-                                "default": {
-                                    "measures": [],
-                                    "dimensions": []
+                                "algorithm": {
+                                    "$ref": "#/definitions/partitioningAlgorithms"
                                 }
                             },
-                            "algorithm": {
-                                "$ref": "#/definitions/partitioningAlgorithms"
-                            }
+                            "default": {
+                                "aggregate": {}
+                            },
+                            "required": ["algorithm"]
                         }
                     },
                     "required": ["partition"],
@@ -440,108 +388,214 @@
                 "encoding": {
                     "nodeSize": {
                         "$ref": "#/definitions/nonEmptyString"
+                    },
+                    "edgeThickness": {
+                        "$ref": "#/definitions/nonEmptyString"
                     }
                 },
                 "hover": {
-                    "type": "object",
-                    "properties": {
-                        "rankList": {
-                            "type": "object",
-                            "properties": {
-                                "mode": {
-                                    "enum": ["tabular", "custom"]
-                                },
-                                "topk": {
-                                    "type": "integer",
-                                    "minimum": 1,
-                                    "maximum": 8,
-                                    "default": 1
-                                },
-                                "fields": {
-                                    "$ref": "#/definitions/nonEmptyStringArray"
-                                },
-                                "custom": {"typeofFunction": true},
-                                "orientation": {
-                                    "enum": ["vertical", "horizontal"],
-                                    "default": "vertical"
-                                },
-                                "config": {
-                                    "type": "object",
-                                    "properties": {
-                                        "bboxW": {
-                                            "type": "number"
-                                        },
-                                        "bboxH": {
-                                            "type": "number"
-                                        }
+                    "nodes": {
+                        "type": "object",
+                        "properties": {
+                            "rankList": {
+                                "type": "object",
+                                "properties": {
+                                    "mode": {
+                                        "enum": ["tabular", "custom"]
                                     },
-                                    "default": {},
-                                    "additionalProperties": false
-                                }
-                            },
-                            "required": ["mode"],
-                            "additionalProperties": false,
-                            "allOf": [
-                                {
-                                    "if": {
-                                        "properties": {
-                                            "mode": {
-                                                "enum": ["tabular"]
-                                            }
-                                        }
+                                    "topk": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 8,
+                                        "default": 1
                                     },
-                                    "then": {
-                                        "required": ["fields"]
-                                    }
-                                },
-                                {
-                                    "if": {
-                                        "properties": {
-                                            "mode": {
-                                                "enum": ["custom"]
-                                            }
-                                        }
+                                    "fields": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
                                     },
-                                    "then": {
+                                    "orderBy": {
+                                        "$ref": "#/definitions/nonEmptyString"
+                                    },
+                                    "order": {
+                                        "enum": ["asc", "desc"]
+                                    },
+                                    "custom": {"typeofFunction": true},
+                                    "orientation": {
+                                        "enum": ["vertical", "horizontal"],
+                                        "default": "vertical"
+                                    },
+                                    "config": {
+                                        "type": "object",
                                         "properties": {
-                                            "config": {
-                                                "required": ["bboxW", "bboxH"]
+                                            "bboxW": {
+                                                "type": "number"
+                                            },
+                                            "bboxH": {
+                                                "type": "number"
                                             }
                                         },
-                                        "required": ["custom", "config"]
+                                        "default": {},
+                                        "additionalProperties": false
                                     }
-                                }
-                            ]
-                        },
-                        "tooltip": {
-                            "type": "object",
-                            "properties": {
-                                "nodecolumns": {
-                                    "$ref": "#/definitions/nonEmptyStringArray"
                                 },
-                                "nodealiases": {
-                                    "$ref": "#/definitions/nonEmptyStringArray"
-                                },
-                                "edgecolumns": {
-                                    "$ref": "#/definitions/nonEmptyStringArray"
-                                },
-                                "edgealiases": {
-                                    "$ref": "#/definitions/nonEmptyStringArray"
-                                }
+                                "required": ["mode"],
+                                "additionalProperties": false,
+                                "allOf": [
+                                    {
+                                        "if": {
+                                            "properties": {
+                                                "mode": {
+                                                    "enum": ["tabular"]
+                                                }
+                                            }
+                                        },
+                                        "then": {
+                                            "required": ["fields"]
+                                        }
+                                    },
+                                    {
+                                        "if": {
+                                            "properties": {
+                                                "mode": {
+                                                    "enum": ["custom"]
+                                                }
+                                            }
+                                        },
+                                        "then": {
+                                            "properties": {
+                                                "config": {
+                                                    "required": ["bboxW", "bboxH"]
+                                                }
+                                            },
+                                            "required": ["custom", "config"]
+                                        }
+                                    }
+                                ]
                             },
-                            "required": ["nodecolumns", "edgecolumns"],
-                            "additionalProperties": false
+                            "tooltip": {
+                                "type": "object",
+                                "properties": {
+                                    "columns": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
+                                    },
+                                    "aliases": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
+                                    }
+                                },
+                                "required": ["nodecolumns", "edgecolumns"],
+                                "additionalProperties": false
+                            },
+                            "boundary": {
+                                "enum": ["bbox", "convexhull"]
+                            },
+                            "selector": {
+                                "$ref": "#/definitions/nonEmptyString",
+                                "default": "*"
+                            }
                         },
-                        "boundary": {
-                            "enum": ["bbox", "convexhull"]
-                        },
-                        "selector": {
-                            "$ref": "#/definitions/nonEmptyString",
-                            "default": "*"
-                        }
+                        "additionalProperties": false,
+                        "default": {}
                     },
-                    "additionalProperties": false,
-                    "default": {}                    
+                    "edges": {
+                        "type": "object",
+                        "properties": {
+                            "rankList": {
+                                "type": "object",
+                                "properties": {
+                                    "mode": {
+                                        "enum": ["tabular", "custom"]
+                                    },
+                                    "topk": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 8,
+                                        "default": 1
+                                    },
+                                    "fields": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
+                                    },
+                                    "orderBy": {
+                                        "$ref": "#/definitions/nonEmptyString"
+                                    },
+                                    "order": {
+                                        "enum": ["asc", "desc"]
+                                    },
+                                    "custom": {"typeofFunction": true},
+                                    "orientation": {
+                                        "enum": ["vertical", "horizontal"],
+                                        "default": "vertical"
+                                    },
+                                    "config": {
+                                        "type": "object",
+                                        "properties": {
+                                            "bboxW": {
+                                                "type": "number"
+                                            },
+                                            "bboxH": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "default": {},
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "required": ["mode"],
+                                "additionalProperties": false,
+                                "allOf": [
+                                    {
+                                        "if": {
+                                            "properties": {
+                                                "mode": {
+                                                    "enum": ["tabular"]
+                                                }
+                                            }
+                                        },
+                                        "then": {
+                                            "required": ["fields"]
+                                        }
+                                    },
+                                    {
+                                        "if": {
+                                            "properties": {
+                                                "mode": {
+                                                    "enum": ["custom"]
+                                                }
+                                            }
+                                        },
+                                        "then": {
+                                            "properties": {
+                                                "config": {
+                                                    "required": ["bboxW", "bboxH"]
+                                                }
+                                            },
+                                            "required": ["custom", "config"]
+                                        }
+                                    }
+                                ]
+                            },
+                            "tooltip": {
+                                "type": "object",
+                                "properties": {
+                                    "columns": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
+                                    },
+                                    "aliases": {
+                                        "$ref": "#/definitions/nonEmptyStringArray"
+                                    }
+                                },
+                                "required": ["nodecolumns", "edgecolumns"],
+                                "additionalProperties": false
+                            },
+                            "boundary": {
+                                "enum": ["bbox", "convexhull"]
+                            },
+                            "selector": {
+                                "$ref": "#/definitions/nonEmptyString",
+                                "default": "*"
+                            }
+                        },
+                        "additionalProperties": false,
+                        "default": {}
+                    }
                 }
             },
             "additionalProperties": false
@@ -549,10 +603,6 @@
         "config": {
             "type": "object",
             "properties": {
-                "projectName": {
-                    "type": "string",
-                    "minLength": 1
-                },
                 "topLevelWidth": {
                     "type": "number",
                     "minimum": 200,
@@ -573,9 +623,13 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["projectName"]
+            "default": {
+                "topLevelWidth": 4000,
+                "topLevelHeight": 4000,
+                "zoomFactor": 2
+            }
         }
     },
-    "required": ["data", "layout", "summarization", "marks", "config"],
+    "required": ["data", "layout", "summarization", "marks"],
     "additionalProperties": false
 }

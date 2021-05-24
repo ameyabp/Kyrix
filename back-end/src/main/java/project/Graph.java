@@ -13,25 +13,20 @@ public class Graph {
     private String xCol, yCol, zCol;
     private int bboxW, bboxH;
     private int topk;
-    // private String clusterMode, zOrder;
     private String zOrder;
     private ArrayList<String> columnNamesNodes, queriedColumnNamesNodes = null, columnTypesNodes = null;
     private ArrayList<String> columnNamesEdges, queriedColumnNamesEdges = null, columnTypesEdges = null;
-    // private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int topLevelWidth, topLevelHeight;
+    private boolean directedGraph;
     // private double overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1, zColId = -1;
-    // private double loX = Double.NaN, loY, hiX, hiY;
     private String mergeClusterAggs,
             getCoordinatesFromLatLonBody,
             getCitusSpatialHashKeyBody,
             singleNodeClusteringBody,
             mergeClustersAlongSplitsBody;
-    // private double geoLat, geoLon;
-    // private String geoLatCol, geoLonCol;
-    // private int geoInitialLevel;
-    // private boolean mapBackground;
+
     private String layoutAlgo;
     private ArrayList<Float> layoutParams;
 
@@ -49,8 +44,6 @@ public class Graph {
     private ArrayList<String> clusterAggMeasuresEdgesFunctions;
     private ArrayList<String> clusterAggDimensionsEdgesFields;
     private ArrayList<String> clusterAggDimensionsEdgesFunctions;
-
-    private String projectName;
 
     public String getQueryNodes() {
         return queryNodes;
@@ -102,6 +95,10 @@ public class Graph {
 
     public String getEdgesCsv() {
        return edgesCsv;
+    }
+
+    public boolean isDirectedGraph() {
+        return directedGraph;
     }
 
     // public String getClusterMode() {
@@ -279,10 +276,6 @@ public class Graph {
 
     public ArrayList<Float> getLayoutParams() {
         return layoutParams;
-    }
-
-    public String getProjectName() {
-        return projectName;
     }
 
     // public double getLoX() {
