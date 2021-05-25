@@ -140,16 +140,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private String rpKey;
     private JsonObject renderingParams;
     private String rawNodesCsv, rawEdgesCsv, projectName;
-    private String[] rawColumnsNodes, rawColumnsEdges;
-    private int graphIndex, numLevels, numRawColumnsNodes, numRawColumnsEdges;
+    // private String[] rawColumnsNodes, rawColumnsEdges;
+    private int graphIndex, numLevels;
     private Statement bboxStmt, rawDbStmt;
 
     // One Rtree per level to store clusters
     // https://github.com/davidmoten/rtree
-    private RTree<RTreeData, Rectangle> rtree0, rtree1;
+    // private RTree<RTreeData, Rectangle> rtree0, rtree1;
     private ArrayList<ArrayList<String>> rawRows;
     private List<String[]> rawNodes, rawEdges;
     private String[] rawNodesTitles, rawEdgesTitles;
+    private int numRawColumnsNodes, numRawColumnsEdges;
     private Graph graph;    
 
     // singleton pattern to ensure only one instance existed
@@ -167,21 +168,22 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void loadRawData(String nodesCsvFile, String edgesCsvFile) throws FileNotFoundException, IOException {
         this.rawNodesCsv = nodesCsvFile;
         this.rawEdgesCsv = edgesCsvFile;
-        // System.out.println("cwd: " + System.getProperty("user.dir"));
+        System.out.println("cwd: " + System.getProperty("user.dir"));
+        // user.dir is /kyrix/back-end
         // System.out.println("raw data files set to: " + this.rawNodesCsv + " " + this.rawEdgesCsv);
 
-        try {
-            CSVReader reader = new CSVReader(new FileReader(this.rawNodesCsv));
-            this.rawColumnsNodes = reader.readNext();
-            this.numRawColumnsNodes = this.rawColumnsNodes.length;
+        // try {
+        //     CSVReader reader = new CSVReader(new FileReader(this.rawNodesCsv));
+        //     this.rawColumnsNodes = reader.readNext();
+        //     this.numRawColumnsNodes = this.rawColumnsNodes.length;
 
-            reader = new CSVReader(new FileReader(this.rawEdgesCsv));
-            this.rawColumnsEdges = reader.readNext();
-            this.numRawColumnsEdges = this.rawColumnsEdges.length;
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        //     reader = new CSVReader(new FileReader(this.rawEdgesCsv));
+        //     this.rawColumnsEdges = reader.readNext();
+        //     this.numRawColumnsEdges = this.rawColumnsEdges.length;
+        // }
+        // catch (Exception e) {
+        //     System.out.println(e.getMessage());
+        // }
     }
 
     @Override
@@ -353,9 +355,9 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         clusteringLevels = clusteringLevels.substring(0, clusteringLevels.length()-1); //get rid of last comma
 
         // set general parameters for clusteringWrapper
-        String generalParams = "--projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv;
-        generalParams += " --layoutAlgorithm " + layoutAlgorithm + " --clusteringAlgorithm " + clusteringAlgorithm;
-        generalParams += " --clusteringLevels " + clusteringLevels + " --clusteringParams " + clusteringAlgorithmParams;
+        String generalParams = " --projectName " + projectName + " --nodes " + rawNodesCsv + " --edges " + rawEdgesCsv;
+        generalParams += " --layoutAlgorithm " + layoutAlgorithm + " --clusterAlgorithm " + clusteringAlgorithm;
+        generalParams += " --clusterLevels " + clusteringLevels + " --clusterParams " + clusteringAlgorithmParams;
         if (aggMeasuresNodesFields.length() > 0)
             generalParams += " --aggMeasuresNodesFields " + aggMeasuresNodesFields;
         
@@ -381,13 +383,13 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             String orderBy = nodesHoverParams.get("orderBy").getAsString();
             String order = nodesHoverParams.get("order").getAsString();
 
-            generalParams += " --rankList_nodes_topk " + topk;
+            generalParams += " --rankListNodesTopK " + topk;
             for (JsonElement field : jsonFields)
                 fields += field.getAsString() + ",";
             fields = fields.substring(0, fields.length()-1);
-            generalParams += " --rankList_nodes_fields " + fields;
-            generalParams += " --rankList_nodes_orderBy " + orderBy;
-            generalParams += " --rankList_nodes_order " + order;
+            generalParams += " --rankListNodesFields " + fields;
+            generalParams += " --rankListNodesOrderBy " + orderBy;
+            generalParams += " --rankListNodesOrder " + order;
         }
         if (renderingParams.has("edgesHover")) {
             JsonObject edgesHoverParams = renderingParams.get("edgesHover").getAsJsonObject();
@@ -396,16 +398,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             String orderBy = edgesHoverParams.get("orderBy").getAsString();
             String order = edgesHoverParams.get("order").getAsString();
 
-            generalParams += " --rankList_edges_topk " + topk;
+            generalParams += " --rankListEdgesTopK " + topk;
             for (JsonElement field : jsonFields)
                 fields += field.getAsString() + ",";
             fields = fields.substring(0, fields.length()-1);
-            generalParams += " --rankList_edges_fields " + fields;
-            generalParams += " --rankList_edges_orderBy " + orderBy;
-            generalParams += " --rankList_edges_order " + order;
+            generalParams += " --rankListEdgesFields " + fields;
+            generalParams += " --rankListEdgesOrderBy " + orderBy;
+            generalParams += " --rankListEdgesOrder " + order;
         }
         
         String clustering = "./clustering.sh " + generalParams;
+        // String clustering = "python3 clusteringWrapper.py " + generalParams;
         
         System.out.println("clustering call: " + clustering);
 
@@ -421,10 +424,33 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 System.out.println("computing clustering: " + newLine);
             p.waitFor();
             System.out.println ("exit: " + p.exitValue());
+            if (p.exitValue() == 0)
+                System.out.println("clustering computed without errors");
             p.destroy();
         } catch (Exception e) {
         	System.out.println(e.getMessage());
         }
+
+        // try {
+        //     File clusterOutDir = new File("../compiler/examples/" + projectName + "/intermediary/clustering/" + clusteringAlgorithm);
+        //     clusterOutDir.mkdirs();
+
+        //     ProcessBuilder pb = new ProcessBuilder(clustering);
+        //     pb.directory(new File("/kyrix/back-end/src/main/wrappers"));
+        //     pb.inheritIO();
+        //     p = pb.start();
+            
+        //     BufferedReader br = new BufferedReader(
+        //         new InputStreamReader(p.getInputStream()));
+        //     while ((newLine = br.readLine()) != null)
+        //         System.out.println("computing clustering: " + newLine);
+        //     p.waitFor();
+        //     System.out.println ("exit: " + p.exitValue());
+        //     p.destroy();
+            
+        // } catch (Exception e) {
+        //     System.out.println(e.getMessage());
+        // }
     }
 
     private void setCommonVariables() throws Exception {
@@ -434,10 +460,11 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         // get current project name
         projectName = Main.getProject().getName();
         String userFilePath = "/kyrix/compiler/examples/" + projectName + "/";
+        // String userFilePath = "../compiler/examples/" + projectName + "/";
 
         // load raw nodes and edges data
         loadRawData(userFilePath + graph.getNodesCsv(), userFilePath + graph.getEdgesCsv());
-        numLevels = graph.getNumLevels(); 
+        this.numLevels = graph.getNumLevels(); 
         
 
         // store raw query results into memory
@@ -472,18 +499,18 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         String clusteringAlgorithm = graph.getClusteringAlgorithm();
         String layoutAlgorithm = graph.getLayoutAlgorithm();
-        String userFilePath = "/kyrix/compiler/examples/" + projectName + "/intermediary/clustering/";
+        String userFilePath = "/kyrix/compiler/examples/" + this.projectName + "/intermediary/clustering/";
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
         for (int i = 0; i < numLevels; i++) {
             System.out.println("Loading clusters for level " + i + " ...");
-            rtree0 = RTree.star().create();
+            // rtree0 = RTree.star().create();
             int tempIndex = numLevels - 1 - i;
             String edgesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_edges_level_" + tempIndex + ".csv";
             String nodesFile = userFilePath + clusteringAlgorithm + "/" + layoutAlgorithm + "_nodes_level_" + tempIndex + ".csv";
 
             // an Rtree for level clusters
-            rtree1 = RTree.star().create();
+            // rtree1 = RTree.star().create();
             // boolean flag to determine whether we start writing to a table or not
             boolean startFlag; 
 
@@ -504,25 +531,25 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                     bufferCounter++;
                     if (bufferCounter == Config.bboxBatchSize) {
                         if (startFlag == true) {
-                            numRawColumnsNodes = nodes.get(0).length;
-                            rawNodesTitles = nodes.remove(0);
+                            this.numRawColumnsNodes = nodes.get(0).length;
+                            this.rawNodesTitles = nodes.remove(0);
                         }
-                        rawNodes = nodes;
+                        this.rawNodes = nodes;
                         writeToDBNodes(i, startFlag);
                         startFlag = false;
                         bufferCounter = 0;
                         nodes.clear();
-                        rawNodes = nodes;
+                        this.rawNodes = nodes;
                         overflow = false;
                     }
                 }
                 
                 if (overflow) {
                     if (startFlag) {
-                        numRawColumnsNodes = nodes.get(0).length;
-                        rawNodesTitles = nodes.remove(0);
+                        this.numRawColumnsNodes = nodes.get(0).length;
+                        this.rawNodesTitles = nodes.remove(0);
                     }
-                    rawNodes = nodes;
+                    this.rawNodes = nodes;
                     writeToDBNodes(i, startFlag);
                     startFlag = false;
                     bufferCounter = 0;
@@ -579,8 +606,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 }
                 */
                 // assign rtree1 to rtree0
-                rtree0 = null;
-                rtree0 = rtree1;
+                // rtree0 = null;
+                // rtree0 = rtree1;
 
                 
                 //writeToDBNodes(i, startFlag); //we do the above commented out section in here?
@@ -603,29 +630,29 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                     bufferCounter++;
                     if (bufferCounter == Config.bboxBatchSize) {
                         if (startFlag == true) {
-                            numRawColumnsEdges = edges.get(0).length;
-                            rawEdgesTitles = edges.remove(0);
+                            this.numRawColumnsEdges = edges.get(0).length;
+                            this.rawEdgesTitles = edges.remove(0);
                         }
-                        rawEdges = edges;
+                        this.rawEdges = edges;
                         writeToDBEdges(i, startFlag);
                         startFlag = false;
                         bufferCounter = 0;
                         edges.clear();
-                        rawEdges = edges;
+                        this.rawEdges = edges;
                         overflow = false;
                     }
                 }
                 
                 if (overflow) {
                     if (startFlag) {
-                        numRawColumnsEdges = edges.get(0).length;
-                        rawEdgesTitles = edges.remove(0);
+                        this.numRawColumnsEdges = edges.get(0).length;
+                        this.rawEdgesTitles = edges.remove(0);
                     }
-                    rawEdges = edges;
+                    this.rawEdges = edges;
                     writeToDBEdges(i, startFlag);
                     startFlag = false;
                     edges = null;
-                    rawEdges = null;
+                    this.rawEdges = null;
                 }
 
                 writeToDBEdgesEnding(i);
@@ -679,8 +706,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 }
                 */
                 // assign rtree1 to rtree0
-                rtree0 = null;
-                rtree0 = rtree1;
+                // rtree0 = null;
+                // rtree0 = rtree1;
 
                 
                 //writeToDBEdges(i, startFlag);
@@ -713,16 +740,17 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             // create the bbox table
             sql = "create unlogged table " + bboxTableName + " (";
-            for (int j = 0; j < rawNodesTitles.length; j++)
-                sql += rawNodesTitles[j] + " text, ";
-            sql += "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+            for (int j = 0; j < this.rawNodesTitles.length; j++)
+                sql += this.rawNodesTitles[j] + " text, ";
+            sql += "cx double precision, cy double precision, minx double precision, miny double precision, "
                             + "maxx double precision, maxy double precision, geom box);";
             bboxStmt.executeUpdate(sql);
+
         }
         
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
-        for (int j = 0; j < numRawColumnsNodes + 6; j++) insertSql += "?, ";
+        for (int j = 0; j < this.numRawColumnsNodes + 5; j++) insertSql += "?, ";
         insertSql += "?);";
 
         PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
@@ -733,8 +761,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         int canvasWidth = c.getW();
         int canvasHeight = c.getH();
 
-        for (int nodeidx = 0; nodeidx < rawNodes.size(); nodeidx++) {
-            String[] node = rawNodes.get(nodeidx);
+        for (int nodeidx = 0; nodeidx < this.rawNodes.size(); nodeidx++) {
+            String[] node = this.rawNodes.get(nodeidx);
             RTreeData rd = new RTreeData(nodeidx);
             //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
             //System.out.println(Arrays.toString(node));
@@ -758,20 +786,19 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
                 for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();
 
 
-            for (int k = 0; k < rawNodesTitles.length; k++)
-                preparedStmt.setString(
-                        k + 1, rawNodes.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
+            for (int k = 0; k < this.numRawColumnsNodes; k++)
+                preparedStmt.setString(k + 1, this.rawNodes.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
 
-            preparedStmt.setString(numRawColumnsNodes + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
-            
+            // preparedStmt.setString(this.numRawColumnsNodes, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
             
             // bounding box fields
-            preparedStmt.setDouble(numRawColumnsNodes + 2, (rd.minx + rd.maxx) / 2.0);
-            preparedStmt.setDouble(numRawColumnsNodes + 3, (rd.miny + rd.maxy) / 2.0);
-            preparedStmt.setDouble(numRawColumnsNodes + 4, rd.minx);
-            preparedStmt.setDouble(numRawColumnsNodes + 5, rd.miny);
-            preparedStmt.setDouble(numRawColumnsNodes + 6, rd.maxx);
-            preparedStmt.setDouble(numRawColumnsNodes + 7, rd.maxy);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 1, (minx + maxx) / 2.0);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 2, (miny + maxy) / 2.0);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 3, minx);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 4, miny);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 5, maxx);
+            preparedStmt.setDouble(this.numRawColumnsNodes + 6, maxy);
+            // preparedStmt.setDouble(this.numRawColumnsNodes + 7, 0);
 
             //System.out.println(preparedStmt);
             preparedStmt.addBatch();
@@ -836,8 +863,6 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
         bboxStmt.executeUpdate(sql);
-
-        System.out.println("finished writetodbnodes for level i");
     }
 
     private void writeToDBEdges(int level, boolean start) throws Exception {
@@ -856,20 +881,18 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             // create the bbox table
             sql = "create unlogged table " + bboxTableName + " (";
-            for (int j = 0; j < rawEdgesTitles.length; j++)
-                sql += rawEdgesTitles[j] + " text, ";
-            // sql +=
-                // "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+            for (int j = 0; j < this.rawEdgesTitles.length; j++)
+                sql += this.rawEdgesTitles[j] + " text, ";
+            // sql += "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
                         // + "maxx double precision, maxy double precision, geom box);";
-            sql +=
-                    "clusterAgg text, n1x double precision, n1y double precision, n2x double precision, n2y double precision, minx double precision, miny double precision, "
+            sql += "n1x double precision, n1y double precision, n2x double precision, n2y double precision, minx double precision, miny double precision, "
                             + "maxx double precision, maxy double precision, geom box);";
             bboxStmt.executeUpdate(sql);
         }
 
         // insert clusters
         String insertSql = "insert into " + bboxTableName + " values (";
-        for (int j = 0; j < numRawColumnsEdges + 8; j++) insertSql += "?, ";
+        for (int j = 0; j < this.numRawColumnsEdges + 7; j++) insertSql += "?, ";
         insertSql += "?);";
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
@@ -880,7 +903,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         int canvasWidth = c.getW();
         int canvasHeight = c.getH();
 
-        for (int edgeidx = 0; edgeidx < rawEdges.size(); edgeidx++) {
+        for (int edgeidx = 0; edgeidx < this.rawEdges.size(); edgeidx++) {
             String[] edge = rawEdges.get(edgeidx);
             RTreeData rd = new RTreeData(edgeidx);
             //rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
@@ -913,23 +936,22 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             for (int p = 0; p < rd.convexHull.length; p++)
                 for (int k = 0; k < 2; k++) rd.convexHull[p][k] /= graph.getZoomFactor();
 
-            for (int k = 0; k < rawEdgesTitles.length; k++)
-            preparedStmt.setString(
-                    k + 1, rawEdges.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
+            for (int k = 0; k < this.numRawColumnsEdges; k++)
+                preparedStmt.setString(k + 1, this.rawEdges.get(rd.rowId)[k].replaceAll("\'", "\'\'"));
 
-            preparedStmt.setString(
-                    numRawColumnsEdges + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
+            // preparedStmt.setString(numRawColumnsEdges + 1, ""); //rd.getClusterAggString().replaceAll("\'", "\'\'"));
             
             
             // bounding box fields
-            preparedStmt.setDouble(numRawColumnsEdges + 2, n1x);
-            preparedStmt.setDouble(numRawColumnsEdges + 3, n1y);
-            preparedStmt.setDouble(numRawColumnsEdges + 4, n2x);
-            preparedStmt.setDouble(numRawColumnsEdges + 5, n2y);
-            preparedStmt.setDouble(numRawColumnsEdges + 6, rd.minx);
-            preparedStmt.setDouble(numRawColumnsEdges + 7, rd.miny);
-            preparedStmt.setDouble(numRawColumnsEdges + 8, rd.maxx);
-            preparedStmt.setDouble(numRawColumnsEdges + 9, rd.maxy);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 1, n1x);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 2, n1y);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 3, n2x);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 4, n2y);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 5, rd.minx);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 6, rd.miny);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 7, rd.maxx);
+            preparedStmt.setDouble(this.numRawColumnsEdges + 8, rd.maxy);
+            // preparedStmt.setDouble(this.numRawColumnsEdges + 9, 0);
 
             //System.out.println(preparedStmt);
             preparedStmt.addBatch();
@@ -1031,8 +1053,8 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
         DbConnector.closeConnection(Config.databaseName);
 
         // release memory
-        rtree0 = null;
-        rtree1 = null;
+        // rtree0 = null;
+        // rtree1 = null;
         rawRows = null;
         graph = null;
     }

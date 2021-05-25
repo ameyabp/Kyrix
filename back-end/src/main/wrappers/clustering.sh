@@ -4,9 +4,9 @@ PROJECT_NAME=""
 NODES_CSV=""
 EDGES_CSV=""
 LAYOUT_ALGORITHM=""
-CLUSTERING_ALGORITHM=""
-CLUSTERING_PARAMS=""
-CLUSTERING_LEVELS=""
+CLUSTER_ALGORITHM=""
+CLUSTER_PARAMS=""
+CLUSTER_LEVELS=""
 AGG_MEASURES_NODES_FIELDS=""
 AGG_MEASURES_NODES_FUNCTIONS=""
 AGG_MEASURES_EDGES_FIELDS=""
@@ -44,18 +44,18 @@ do
             shift
             shift
             ;;
-        --clusteringAlgorithm)
-            CLUSTERING_ALGORITHM="$2"
+        --clusterAlgorithm)
+            CLUSTER_ALGORITHM="$2"
             shift
             shift
             ;;
-        --clusteringLevels)
-            CLUSTERING_LEVELS="$2"
+        --clusterLevels)
+            CLUSTER_LEVELS="$2"
             shift
             shift
             ;;
-        --clusteringParams)
-            CLUSTERING_PARAMS="$2"
+        --clusterParams)
+            CLUSTER_PARAMS="$2"
             shift
             shift
             ;;
@@ -84,42 +84,42 @@ do
             shift
             shift
             ;;
-        --rankList_nodes_topk)
+        --rankListNodesTopK)
             RANKLIST_NODES_TOPK="$2"
             shift
             shift
             ;;
-        --rankList_nodes_fields)
+        --rankListNodesFields)
             RANKLIST_NODES_FIELDS="$2"
             shift
             shift
             ;;
-        --rankList_nodes_orderBy)
+        --rankListNodesOrderBy)
             RANKLIST_NODES_ORDERBY="$2"
             shift
             shift
             ;;
-        --rankList_nodes_order)
+        --rankListNodesOrder)
             RANKLIST_NODES_ORDER="$2"
             shift
             shift
             ;;
-        --rankList_edges_topk)
+        --rankListEdgesTopK)
             RANKLIST_EDGES_TOPK="$2"
             shift
             shift
             ;;
-        --rankList_edges_fields)
+        --rankListEdgesFields)
             RANKLIST_EDGES_FIELDS="$2"
             shift
             shift
             ;;
-        --rankList_edges_orderBy)
+        --rankListEdgesOrderBy)
             RANKLIST_EDGES_ORDERBY="$2"
             shift
             shift
             ;;
-        --rankList_edges_order)
+        --rankListEdgesOrder)
             RANKLIST_EDGES_ORDER="$2"
             shift
             shift
@@ -132,6 +132,6 @@ do
     esac
 done
 
-mkdir -p /kyrix/compiler/examples/$PROJECT_NAME/intermediary/clustering/$CLUSTERING_ALGORITHM/
+mkdir -p ../../../../compiler/examples/$PROJECT_NAME/intermediary/clustering/$CLUSTER_ALGORITHM/
 
-python3 clusteringWrapper.py --projectName $PROJECT_NAME --nodesDir $NODES_CSV --edgesDir $EDGES_CSV --layoutAlgorithm $LAYOUT_ALGORITHM --clusterAlgorithm $CLUSTERING_ALGORITHM --clusterLevels $CLUSTERING_LEVELS --clusterParams $CLUSTERING_PARAMS --aggMeasuresNodesFields $AGG_MEASURES_NODES_FIELDS --aggMeasuresNodesFunctions $AGG_MEASURES_NODES_FUNCTIONS --aggMeasuresEdgesFields $AGG_MEASURES_EDGES_FIELDS --aggMeasuresEdgesFunctions $AGG_MEASURES_EDGES_FUNCTIONS --directed $DIRECTED --rankListNodesTopK $RANKLIST_NODES_TOPK --rankListNodesFields $RANKLIST_NODES_FIELDS --rankListNodesOrderBy $RANKLIST_NODES_ORDERBY --rankListNodesOrder $RANKLIST_NODES_ORDER --rankListEdgesTopK $RANKLIST_EDGES_TOPK --rankListEdgesFields $RANKLIST_EDGES_FIELDS --rankListEdgesOrderBy $RANKLIST_EDGES_ORDERBY --rankListEdgesOrder $RANKLIST_EDGES_ORDER
+python3 clusteringWrapper.py --projectName $PROJECT_NAME --nodesDir $NODES_CSV --edgesDir $EDGES_CSV --layoutAlgorithm $LAYOUT_ALGORITHM --clusterAlgorithm $CLUSTER_ALGORITHM --clusterLevels $CLUSTER_LEVELS --clusterParams $CLUSTER_PARAMS --aggMeasuresNodesFields $AGG_MEASURES_NODES_FIELDS --aggMeasuresNodesFunctions $AGG_MEASURES_NODES_FUNCTIONS --aggMeasuresEdgesFields $AGG_MEASURES_EDGES_FIELDS --aggMeasuresEdgesFunctions $AGG_MEASURES_EDGES_FUNCTIONS --directed $DIRECTED --rankListNodesTopK $RANKLIST_NODES_TOPK --rankListNodesFields $RANKLIST_NODES_FIELDS --rankListNodesOrderBy $RANKLIST_NODES_ORDERBY --rankListNodesOrder $RANKLIST_NODES_ORDER --rankListEdgesTopK $RANKLIST_EDGES_TOPK --rankListEdgesFields $RANKLIST_EDGES_FIELDS --rankListEdgesOrderBy $RANKLIST_EDGES_ORDERBY --rankListEdgesOrder $RANKLIST_EDGES_ORDER

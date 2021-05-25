@@ -134,14 +134,14 @@ if __name__ == "__main__":
 
     # reset source_target in finalEdges
     finalEdges['edgeId'] = [createUniqueEdgeID(x, y) for x, y in zip(finalEdges['source'], finalEdges['target'])]
-    finalEdges['originalID'] = finalEdges['edgeId']
+    # finalEdges['originalID'] = finalEdges['edgeId']
     
     
-    finalEdges['originalID'] = finalEdges.originalID.astype(str)
-    finalNodes['originalID'] = finalNodes.originalID.astype(str)
+    # finalEdges['originalID'] = finalEdges.originalID.astype(str)
+    # finalNodes['originalID'] = finalNodes.originalID.astype(str)
 
     # drop unneeded columns
-    # finalNodes = finalNodes.drop(columns = ['originalID'])
+    finalNodes = finalNodes.drop(columns = ['originalID'])
 
     # reorder columns so necessary columns come first
     nodesNeeded = ['id', 'x', 'y']

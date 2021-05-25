@@ -34,66 +34,70 @@ function Graph(args_) {
      *******************************************************************************/    
     // succinct object notation of the measures
     if ("cluster" in args.summarization && "aggregate" in args.summarization.cluster) {
-        if (!("length" in args.summarization.cluster.aggregate.nodes)) {
-            var fieldsArray = [];
-            var aggFunctionArray = [];
-            for (
-                var i = 0;
-                i < args.summarization.cluster.aggregate.nodes.fields.length;
-                i++
-            ) {
-                fieldsArray.push(args.summarization.cluster.aggregate.nodes.fields[i]);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.nodes.functions);
+        if ("nodes" in args.summarization.cluster.aggregate) {
+            if (!("length" in args.summarization.cluster.aggregate.nodes)) {
+                var fieldsArray = [];
+                var aggFunctionArray = [];
+                for (
+                    var i = 0;
+                    i < args.summarization.cluster.aggregate.nodes.fields.length;
+                    i++
+                ) {
+                    fieldsArray.push(args.summarization.cluster.aggregate.nodes.fields[i]);
+                    aggFunctionArray.push(args.summarization.cluster.aggregate.nodes.functions);
+                }
+                
+                args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
+                args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
             }
-            
-            args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
-            args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
-        }
-        else {
-            var fieldsArray = [];
-            var aggFunctionArray = [];   
-            for (
-                var i = 0;
-                i < args.summarization.cluster.aggregate.nodes.length;
-                i++
-            ) {
-                fieldsArray.push(args.summarization.cluster.aggregate.nodes[i].fields);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.nodes[i].functions);
+            else {
+                var fieldsArray = [];
+                var aggFunctionArray = [];   
+                for (
+                    var i = 0;
+                    i < args.summarization.cluster.aggregate.nodes.length;
+                    i++
+                ) {
+                    fieldsArray.push(args.summarization.cluster.aggregate.nodes[i].fields);
+                    aggFunctionArray.push(args.summarization.cluster.aggregate.nodes[i].functions);
+                }
+                
+                args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
+                args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
             }
-            
-            args.summarization.cluster.aggregate.nodes.fields = fieldsArray;
-            args.summarization.cluster.aggregate.nodes.functions = aggFunctionArray;
         }
         
-        if (!("length" in args.summarization.cluster.aggregate.edges)) {
-            var fieldsArray = [];
-            var aggFunctionArray = [];
-            for (
-                var i = 0;
-                i < args.summarization.cluster.aggregate.edges.fields.length;
-                i++
-            ) {
-                fieldsArray.push(args.summarization.cluster.aggregate.edges.fields[i]);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.edges.functions);
+        if ("edges" in args.summarization.cluster.aggregate) {
+            if (!("length" in args.summarization.cluster.aggregate.edges)) {
+                var fieldsArray = [];
+                var aggFunctionArray = [];
+                for (
+                    var i = 0;
+                    i < args.summarization.cluster.aggregate.edges.fields.length;
+                    i++
+                ) {
+                    fieldsArray.push(args.summarization.cluster.aggregate.edges.fields[i]);
+                    aggFunctionArray.push(args.summarization.cluster.aggregate.edges.functions);
+                }
+                
+                args.summarization.cluster.aggregate.edges.fields = fieldsArray;
+                args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
             }
-            
-            args.summarization.cluster.aggregate.edges.fields = fieldsArray;
-            args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
-        }
-        else {
-            var fieldsArray = [];
-            var aggFunctionArray = [];   
-            for (
-                var i = 0;
-                i < args.summarization.cluster.aggregate.edges.length;
-                i++
-            ) {
-                fieldsArray.push(args.summarization.cluster.aggregate.edges[i].fields);
-                aggFunctionArray.push(args.summarization.cluster.aggregate.edges[i].functions);
+            else {
+                var fieldsArray = [];
+                var aggFunctionArray = [];   
+                for (
+                    var i = 0;
+                    i < args.summarization.cluster.aggregate.edges.length;
+                    i++
+                ) {
+                    fieldsArray.push(args.summarization.cluster.aggregate.edges[i].fields);
+                    aggFunctionArray.push(args.summarization.cluster.aggregate.edges[i].functions);
+                }
+                
+                args.summarization.cluster.aggregate.edges.fields = fieldsArray;
+                args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
             }
-            
-            args.summarization.cluster.aggregate.edges.fields = fieldsArray;
-            args.summarization.cluster.aggregate.edges.functions = aggFunctionArray;
         }
     }
 
@@ -544,14 +548,14 @@ function getNodeLayerRenderer() {
         .on("mouseover", function(d) {
             d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeid.includes(d._id);
+                    return l._id.includes(d._id);
                 })
                 .style("stroke", "rgba(0, 0, 0, 0.8)");
         })
         .on("mouseout", function(d) {
             d3.select("#linkLayer").selectAll("line")
                 .filter(function(l) {
-                    return l.edgeid.includes(d._id);
+                    return l._id.includes(d._id);
                 })
                 .style("stroke", "rgba(225, 225, 225, 0.5)");
         });

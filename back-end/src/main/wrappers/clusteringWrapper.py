@@ -31,8 +31,8 @@ def writeToCSVNodes(nodeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
             # convert the memberNodes list attribute to json string
             node._memberNodes = json.dumps(node._memberNodes)
 
-            # convert the rankList to json string
-            node._rankList = json.dumps(node._rankList)
+            # convert the clusterAgg to json string
+            node.clusterAgg = json.dumps(node.clusterAgg)
 
             nodeDictList.append(node.__dict__) # append a dictionary of {node attributes -> node values} to our list
         
@@ -63,7 +63,7 @@ def writeToCSVEdges(edgeDicts, projectName, layoutAlgorithm, clusterAlgorithm, a
             edge._memberEdges = json.dumps(edge._memberEdges)
 
             # convert the rankList to json string
-            edge._rankList = json.dumps(edge._rankList)
+            edge.clusterAgg = json.dumps(edge.clusterAgg)
 
             edgeDictList.append(edge.__dict__)
         
