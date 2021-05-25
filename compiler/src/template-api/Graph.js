@@ -272,8 +272,10 @@ function Graph(args_) {
 }
 
 // function used for processing cluster aggs
-function processClusterAggEdges(data, params) {
-
+function processClusterAggEdges(data, _params) {
+    data.forEach(d => {
+        d.clusterAgg = JSON.parse(d.clusterAgg);
+    });
 }
 
 // get rendering function for the graph edges layer
@@ -281,7 +283,11 @@ function getEdgeLayerRenderer() {
     function renderEdges() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        // params.processClusterAggEdges(data, params);
+        console.log(typeof params);
+        console.log(typeof params.processClusterAggEdges);
+        console.log(params.processClusterAggEdges);
+        console.log(JSON.stringify(params));
+        params.processClusterAggEdges(data, params);
 
         g = svg.append("g").attr("id", "linkLayer");
         g.selectAll("line")
@@ -304,10 +310,10 @@ function getEdgeLayerRenderer() {
             return Math.max(3, Math.sqrt(parseFloat(d._memberedgecount)));
         })
         .style("stroke", "rgba(225, 225, 225, 0.5)")
-        .on("mouseover", function(d) {
+        .on("mouseover", function(_d) {
             d3.select(this).style("stroke", "rgba(0, 0, 0, 0.8)");
         })
-        .on("mouseout", function(d) {
+        .on("mouseout", function(_d) {
             d3.select(this).style("stroke", "rgba(225, 225, 225, 0.5)");
         });
 
@@ -366,8 +372,8 @@ function getEdgeLayerRenderer() {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            var rpKey =
-                "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            console.log("rendering ranklist for edges");
+            var rpKey = "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -379,7 +385,7 @@ function getEdgeLayerRenderer() {
                 .append("g")
                 .attr("id", "tabular_hover")
                 .attr("class", "tabular ranklist");
-            var fields = params.hoverTableFields;
+            var fields = params.edgesHover.hoverTableFields;
             var widths = [];
             var totalW = 0,
                 totalH = data.length * (charH + paddingH) + headerH;
@@ -444,7 +450,8 @@ function getEdgeLayerRenderer() {
         }
 
         // ranklist
-        if ("hoverRankListMode" in params) {
+        // if ("hoverRankListMode" in params) {
+        if ("edgesHover" in params) {
             console.log("rohila found rankListMode for hover with selector " + hoverSelector);
             var rankListRenderer;
             if (params.hoverRankListMode == "tabular")
@@ -517,8 +524,10 @@ function getEdgeLayerRenderer() {
 }
 
 // function used for processing cluster aggs
-function processClusterAggNodes(data, params) {
-
+function processClusterAggNodes(data, _params) {
+    data.forEach(d => {
+        d.clusterAgg = JSON.parse(d.clusterAgg);
+    });
 }
 
 // get rendering function for the graph nodes layer
@@ -526,7 +535,8 @@ function getNodeLayerRenderer() {
     function renderNodes() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        // params.processClusterAggNodes(data, params);
+        console.log("nodes: " + JSON.stringify(params));
+        params.processClusterAggNodes(data, params);
 
         g = svg.append("g").attr("id", "nodeLayer");
         g.selectAll("circle")
@@ -542,7 +552,7 @@ function getNodeLayerRenderer() {
         .attr("r", function(d) {
             return Math.max(10, Math.sqrt(parseFloat(d._membernodecount)));
         })
-        .attr("fill", function(d) {
+        .attr("fill", function(_d) {
             return "rgba(255, 0, 0, 0.7)";
         })
         .on("mouseover", function(d) {
@@ -615,8 +625,8 @@ function getNodeLayerRenderer() {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            var rpKey =
-                "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            console.log("rendering ranklist for nodes");
+            var rpKey = "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -628,7 +638,7 @@ function getNodeLayerRenderer() {
                 .append("g")
                 .attr("id", "tabular_hover")
                 .attr("class", "tabular ranklist");
-            var fields = params.hoverTableFields;
+            var fields = params.nodesHover.hoverTableFields;
             var widths = [];
             var totalW = 0,
                 totalH = data.length * (charH + paddingH) + headerH;
@@ -693,7 +703,8 @@ function getNodeLayerRenderer() {
         }
 
         // ranklist
-        if ("hoverRankListMode" in params) {
+        // if ("hoverRankListMode" in params) {
+        if ("nodesHover" in params) {
             console.log("rohila found rankListMode for hover with selector " + hoverSelector);
             var rankListRenderer;
             if (params.hoverRankListMode == "tabular")
@@ -707,7 +718,7 @@ function getNodeLayerRenderer() {
                     // use params.hoverRankListOrientation for deciding layout
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "ssv_ranklist_hover");
-                    var topKData = d.clusterAgg.topk;
+                    var topKData = d.clusterAgg;
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
@@ -775,5 +786,5 @@ Graph.prototype = {
 module.exports = {
     Graph,
     processClusterAggNodes,
-    processClusterAggEdges,
+    processClusterAggEdges
 };
