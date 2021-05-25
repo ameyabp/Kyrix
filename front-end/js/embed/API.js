@@ -181,6 +181,7 @@ export function reRender(viewId, layerId, additionalArgs) {
     oldArgs["viewportY"] = curVp["vpY"];
     oldArgs["layerId"] = layerId;
     oldArgs["ssvId"] = gvd.curCanvas.layers[layerId].ssvId;
+    oldArgs["graphId"] = gvd.curCanvas.layers[layerId].graphId;
     oldArgs["usmapId"] = gvd.curCanvas.layers[layerId].usmapId;
     oldArgs["staticAggregationId"] =
         gvd.curCanvas.layers[layerId].staticAggregationId;

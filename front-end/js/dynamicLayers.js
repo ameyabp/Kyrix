@@ -269,7 +269,6 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     optionalArgsMore["ssvId"] = curLayer.ssvId;
                     optionalArgsMore["usmapId"] = curLayer.usmapId;
                     optionalArgsMore["staticAggregationId"] = curLayer.staticAggregationId;
-                    console.log("dyLay: " + typeof curLayer.rendering);
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
@@ -488,8 +487,7 @@ function renderDynamicBoxes(
                     optionalArgsMore["ssvId"] = curLayer.ssvId;
                     optionalArgsMore["usmapId"] = curLayer.usmapId;
                     optionalArgsMore["graphId"] = curLayer.graphId;
-                    optionalArgsMore["staticAggregationId"] =
-                        curLayer.staticAggregationId;
+                    optionalArgsMore["staticAggregationId"] = curLayer.staticAggregationId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],

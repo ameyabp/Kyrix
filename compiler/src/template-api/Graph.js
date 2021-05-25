@@ -274,7 +274,7 @@ function Graph(args_) {
 // function used for processing cluster aggs
 function processClusterAggEdges(data, _params) {
     data.forEach(d => {
-        d.clusterAgg = JSON.parse(d.clusterAgg);
+        d.clusterAgg = JSON.parse(d.clusteragg);
     });
 }
 
@@ -283,10 +283,6 @@ function getEdgeLayerRenderer() {
     function renderEdges() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        console.log(typeof params);
-        console.log(typeof params.processClusterAggEdges);
-        console.log(params.processClusterAggEdges);
-        console.log(JSON.stringify(params));
         params.processClusterAggEdges(data, params);
 
         g = svg.append("g").attr("id", "linkLayer");
@@ -309,12 +305,12 @@ function getEdgeLayerRenderer() {
         .attr("stroke-width", function(d) {
             return Math.max(3, Math.sqrt(parseFloat(d._memberedgecount)));
         })
-        .style("stroke", "rgba(225, 225, 225, 0.5)")
+        .style("stroke", "rgba(205, 205, 205, 0.7)")
         .on("mouseover", function(_d) {
             d3.select(this).style("stroke", "rgba(0, 0, 0, 0.8)");
         })
         .on("mouseout", function(_d) {
-            d3.select(this).style("stroke", "rgba(225, 225, 225, 0.5)");
+            d3.select(this).style("stroke", "rgba(205, 205, 205, 0.7)");
         });
 
         // fade in
@@ -372,8 +368,7 @@ function getEdgeLayerRenderer() {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            console.log("rendering ranklist for edges");
-            var rpKey = "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -393,7 +388,7 @@ function getEdgeLayerRenderer() {
                 var maxlen = 0;
                 for (var j = 0; j < data.length; j++) {
                     if (!isNaN(data[j][fields[i]]))
-                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                        data[j][fields[i]] = d3.format("~s")(
                             +data[j][fields[i]]
                         );
                     maxlen = Math.max(
@@ -451,12 +446,12 @@ function getEdgeLayerRenderer() {
 
         // ranklist
         // if ("hoverRankListMode" in params) {
-        if ("edgesHover" in params) {
-            console.log("rohila found rankListMode for hover with selector " + hoverSelector);
+        if ("edgesHover" in params && "hoverRankListMode" in params.edgesHover) {
             var rankListRenderer;
-            if (params.hoverRankListMode == "tabular")
+            if (params.edgesHover.hoverRankListMode == "tabular")
                 rankListRenderer = tabularRankListRenderer;
-            else rankListRenderer = params.hoverCustomRenderer;
+            else 
+                rankListRenderer = params.edgesHover.hoverCustomRenderer;
             g.selectAll(hoverSelector)
                 .on("mouseenter.ranklist", function(d) {
                     // deal with top-k here
@@ -465,16 +460,16 @@ function getEdgeLayerRenderer() {
                     // use params.hoverRankListOrientation for deciding layout
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "ssv_ranklist_hover");
-                    var topKData = d.clusterAgg.topk;
+                    var topKData = d.clusterAgg.rankList;
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
                         topKData[i].cy = +d.cy;
                     }
-                    if (params.hoverRankListMode == "tabular")
+                    if (params.edgesHover.hoverRankListMode == "tabular")
                         rankListRenderer(g, topKData, args);
                     else {
-                        var orientation = params.hoverRankListOrientation;
+                        var orientation = params.edgesHover.hoverRankListOrientation;
                         var bboxW = params.bboxW;
                         var bboxH = params.bboxH;
                         for (var i = 0; i < topk; i++) {
@@ -526,7 +521,7 @@ function getEdgeLayerRenderer() {
 // function used for processing cluster aggs
 function processClusterAggNodes(data, _params) {
     data.forEach(d => {
-        d.clusterAgg = JSON.parse(d.clusterAgg);
+        d.clusterAgg = JSON.parse(d.clusteragg);
     });
 }
 
@@ -535,7 +530,6 @@ function getNodeLayerRenderer() {
     function renderNodes() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        console.log("nodes: " + JSON.stringify(params));
         params.processClusterAggNodes(data, params);
 
         g = svg.append("g").attr("id", "nodeLayer");
@@ -567,7 +561,7 @@ function getNodeLayerRenderer() {
                 .filter(function(l) {
                     return l._id.includes(d._id);
                 })
-                .style("stroke", "rgba(225, 225, 225, 0.5)");
+                .style("stroke", "rgba(205, 205, 205, 0.7)");
         });
 
         // fade in
@@ -625,8 +619,7 @@ function getNodeLayerRenderer() {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            console.log("rendering ranklist for nodes");
-            var rpKey = "graph_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
             var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
@@ -646,7 +639,7 @@ function getNodeLayerRenderer() {
                 var maxlen = 0;
                 for (var j = 0; j < data.length; j++) {
                     if (!isNaN(data[j][fields[i]]))
-                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                        data[j][fields[i]] = d3.format("~s")(
                             +data[j][fields[i]]
                         );
                     maxlen = Math.max(
@@ -703,13 +696,13 @@ function getNodeLayerRenderer() {
         }
 
         // ranklist
+        if ("nodesHover" in params && "hoverRankListMode" in params.nodesHover) {
         // if ("hoverRankListMode" in params) {
-        if ("nodesHover" in params) {
-            console.log("rohila found rankListMode for hover with selector " + hoverSelector);
             var rankListRenderer;
-            if (params.hoverRankListMode == "tabular")
+            if (params.nodesHover.hoverRankListMode == "tabular")
                 rankListRenderer = tabularRankListRenderer;
-            else rankListRenderer = params.hoverCustomRenderer;
+            else 
+                rankListRenderer = params.nodesHover.hoverCustomRenderer;
             g.selectAll(hoverSelector)
                 .on("mouseenter.ranklist", function(d) {
                     // deal with top-k here
@@ -718,16 +711,16 @@ function getNodeLayerRenderer() {
                     // use params.hoverRankListOrientation for deciding layout
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "ssv_ranklist_hover");
-                    var topKData = d.clusterAgg;
+                    var topKData = d.clusterAgg.rankList;
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
                         topKData[i].cy = +d.cy;
                     }
-                    if (params.hoverRankListMode == "tabular")
+                    if (params.nodesHover.hoverRankListMode == "tabular")
                         rankListRenderer(g, topKData, args);
                     else {
-                        var orientation = params.hoverRankListOrientation;
+                        var orientation = params.nodesHover.hoverRankListOrientation;
                         var bboxW = params.bboxW;
                         var bboxH = params.bboxH;
                         for (var i = 0; i < topk; i++) {

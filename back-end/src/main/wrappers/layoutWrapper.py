@@ -35,8 +35,8 @@ if __name__ == "__main__":
 
 
     # read in edges csv, this is turned into our sparse adjacency matrix
-    inputEdges = pd.read_csv(edgesDir, na_values=[''])
-    inputNodes = pd.read_csv(nodesDir, na_values=[''])
+    inputEdges = pd.read_csv(edgesDir).fillna('missing')   #, na_values=['missing'])
+    inputNodes = pd.read_csv(nodesDir).fillna('missing')  #, na_values=['missing'])
     inputNodes = inputNodes.drop(columns = ['x', 'y'], errors='ignore')
 
     if not 'weight' in inputEdges.columns:

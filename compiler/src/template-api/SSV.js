@@ -359,10 +359,6 @@ function getLayerRenderer() {
     function renderCircleBody() {
         var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        console.log(typeof params);
-        console.log(typeof params.processClusterAgg);
-        console.log(params.processClusterAgg);
-        console.log(JSON.stringify(params));
         params.processClusterAgg(data, params);
 
         // set up d3.scale for circle/text size

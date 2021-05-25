@@ -108,7 +108,7 @@ function processRenderingParams() {
             globalVar.renderingParams[key] = curValue.parseFunction();
         // check if it's ssv parameters
         // if so, do a nested round of converting
-        if (key.startsWith("ssv_")) {
+        if (key.startsWith("ssv_") || key.startsWith("graph_")) {
             for (key in curValue) {
                 var curV = curValue[key];
                 if (typeof curV == "string" && curV.parseFunction() != null)
