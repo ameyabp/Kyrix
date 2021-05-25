@@ -39,11 +39,11 @@ if __name__ == "__main__":
     inputNodes = pd.read_csv(nodesDir, na_values=[''])
     inputNodes = inputNodes.drop(columns = ['x', 'y'], errors='ignore')
 
-    if computeWeight == '0':
-        edges = inputEdges[['source', 'target', 'weight']]
-    else:
-        edges = inputEdges[['source', 'target']]
-        edges['weight'] = 1/len(edges['source'])
+    if not 'weight' in inputEdges.columns:
+        inputEdges['weight'] = 1/len(inputEdges['source'])
+
+    edges = inputEdges[['source', 'target', 'weight']]
+    
 
     # enter if-else ladder for layout algorithm
     if layoutAlgorithm == 'openORD':
