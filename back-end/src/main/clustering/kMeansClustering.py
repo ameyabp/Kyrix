@@ -28,10 +28,10 @@ class kMeansClustering:
         self.edgeCounts[0] = len(edgeDict)
 
         # attributes to aggregate and their corresponding aggregation functions
-        self.aggMeasuresNodesFields = aggMeasuresNodesFields
-        self.aggMeasuresNodesFunctions = aggMeasuresNodesFunctions
-        self.aggMeasuresEdgesFields = aggMeasuresEdgesFields
-        self.aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions
+        self.aggMeasuresNodesFields = aggMeasuresNodesFields if aggMeasuresNodesFields[0] != "" else []
+        self.aggMeasuresNodesFunctions = aggMeasuresNodesFunctions if aggMeasuresNodesFunctions[0] != "" else []
+        self.aggMeasuresEdgesFields = aggMeasuresEdgesFields if aggMeasuresEdgesFields[0] != "" else []
+        self.aggMeasuresEdgesFunctions = aggMeasuresEdgesFunctions if aggMeasuresEdgesFunctions != "" else []
 
         # rankList parameters
         self.rankListNodes_topK = rankListNodes_topK
@@ -72,12 +72,15 @@ class kMeansClustering:
                     strNum = getattr(node, attr, None)
                     setattr(node, attr, float(strNum) * float(strNum))
 
-            else:
+            elif func == 'sum' or func == 'avg' or func == 'min' or func == 'max':
                 # func == 'sum' or 'avg' or 'min' or 'max'
                 for key in self.nodeDicts[0]:
                     node = self.nodeDicts[0][key]
                     strNum = getattr(node, attr, None)
                     setattr(node, attr, float(strNum))
+            
+            else:
+                pass
 
         for attr, func in zip(self.aggMeasuresEdgesFields, self.aggMeasuresEdgesFunctions):
             if func == 'list' or func == 'count':
@@ -94,12 +97,14 @@ class kMeansClustering:
                     strNum = getattr(edge, attr, None)
                     setattr(edge, attr, float(strNum) * float(strNum))
 
-            else:
-                # func == 'sum' or 'avg' or 'min' or 'max'
+            elif func == 'sum' or func == 'avg' or func == 'min' or func == 'max':
                 for key in self.edgeDicts[0]:
                     edge = self.edgeDicts[0][key]
                     strNum = getattr(edge, attr, None)
                     setattr(edge, attr, float(strNum))
+            
+            else:
+                pass
 
         self.dataStructures = dataStructures(nodeAttributes, edgeAttributes)
         self.Node = self.dataStructures.getNodeClass()
