@@ -236,7 +236,7 @@ function Graph(args_) {
             this.hoverParams.edgesHover.hoverCustomRenderer = args.marks.hover.edges.rankList.custom;
 
         // topk is 1 by default if unspecified
-        this.hoverParams.edges.topk = args.marks.hover.edges.rankList.topk;
+        this.hoverParams.edgesHover.topk = args.marks.hover.edges.rankList.topk;
 
         // orientation of custom ranks
         this.hoverParams.edgesHover.hoverRankListOrientation = args.marks.hover.edges.rankList.orientation;
@@ -417,8 +417,8 @@ function getEdgeLayerRenderer() {
                 widths.push(maxlen * charW + paddingW);
                 totalW += widths[i];
             }
-            var basex = data[0].cx + charH;// - totalW / 2;
-            var basey = data[0].cy + charH;// - totalH / 2;
+            var basex = data[0].cx + charH;
+            var basey = data[0].cy + charH;
             var runx = basex,
                 runy = basey;
             for (var i = 0; i < fields.length; i++) {
@@ -471,6 +471,8 @@ function getEdgeLayerRenderer() {
                 rankListRenderer = params.edgesHover.hoverCustomRenderer;
             g.selectAll(hoverSelector)
                 .on("mouseenter.ranklist", function(d) {
+                    d.cx = d3.mouse(this)[0];
+                    d.cy = d3.mouse(this)[1];
                     // deal with top-k here
                     // run rankListRenderer for each of the top-k
                     // for tabular renderer, add a header first

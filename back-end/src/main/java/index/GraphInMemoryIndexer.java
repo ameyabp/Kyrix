@@ -393,6 +393,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             generalParams += " --rankListNodesOrderBy " + orderBy;
             generalParams += " --rankListNodesOrder " + order;
         }
+        fields = "";
         if (renderingParams.has("edgesHover")) {
             JsonObject edgesHoverParams = renderingParams.get("edgesHover").getAsJsonObject();
             String topk = edgesHoverParams.get("topk").getAsString();
