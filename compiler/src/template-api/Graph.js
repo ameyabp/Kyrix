@@ -269,6 +269,14 @@ function Graph(args_) {
             this.tooltipEdgeAliases = args.marks.hover.edges.tooltip.aliases;
         else this.tooltipEdgeAliases = this.tooltipEdgeColumns;
     }
+
+    /*************************
+    * marks encoding params
+    *************************/
+    this.encodingParams = {};
+    this.encodingParams.nodeSizeEncoding = args.marks.encoding.nodeSize;
+    this.encodingParams.edgeThicknessEncoding = args.marks.encoding.edgeThickness;
+    this.encodingParams.topLevelWidth = args.config.topLevelWidth;
 }
 
 // function used for processing cluster aggs
@@ -284,6 +292,8 @@ function getEdgeLayerRenderer() {
         var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         params.processClusterAggEdges(data, params);
+
+        var strokeWidth = params.edgeThicknessEncoding.toLowerCase();
 
         g = svg.append("g").attr("id", "linkLayer");
         g.selectAll("line")
@@ -303,7 +313,14 @@ function getEdgeLayerRenderer() {
             return d.n2y;
         })
         .attr("stroke-width", function(d) {
-            return Math.max(3, Math.sqrt(parseFloat(d._memberedgecount)));
+            if (("_" + strokeWidth) in d)
+                return Math.max(3, Math.sqrt(parseFloat(d["_" + strokeWidth])));
+            else if (strokeWidth in d)
+                return Math.max(3, Math.sqrt(parseFloat(d[strokeWidth])));
+            else if (strokeWidth in d.clusterAgg)
+                return Math.max(3, Math.sqrt(parseFloat(d.clusterAgg[strokeWidth])));
+            else
+                console.log("lol");
         })
         .style("stroke", "rgba(205, 205, 205, 0.7)")
         .on("mouseover", function(_d) {
@@ -370,11 +387,11 @@ function getEdgeLayerRenderer() {
         function tabularRankListRenderer(svg, data, args) {
             var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
             var params = args.renderingParams[rpKey];
-            var charW = 8;
-            var charH = 15;
-            var paddingH = 10;
-            var paddingW = 14;
-            var headerH = charH + 20;
+            var charW = params.topLevelWidth/200;
+            var charH = charW * 2;
+            var paddingH = charH * 3 / 2;
+            var paddingW = charH;
+            var headerH = charH * 2;
 
             var g = svg
                 .append("g")
@@ -400,8 +417,8 @@ function getEdgeLayerRenderer() {
                 widths.push(maxlen * charW + paddingW);
                 totalW += widths[i];
             }
-            var basex = data[0].cx - totalW / 2;
-            var basey = data[0].cy - totalH / 2;
+            var basex = data[0].cx + charH;// - totalW / 2;
+            var basey = data[0].cy + charH;// - totalH / 2;
             var runx = basex,
                 runy = basey;
             for (var i = 0; i < fields.length; i++) {
@@ -532,6 +549,8 @@ function getNodeLayerRenderer() {
         var params = args.renderingParams[rpKey];
         params.processClusterAggNodes(data, params);
 
+        var nodeRadius = params.nodeSizeEncoding.toLowerCase();
+
         g = svg.append("g").attr("id", "nodeLayer");
         g.selectAll("circle")
         .data(data)
@@ -544,7 +563,14 @@ function getNodeLayerRenderer() {
             return d.cy;
         })
         .attr("r", function(d) {
-            return Math.max(10, Math.sqrt(parseFloat(d._membernodecount)));
+            if (nodeRadius in d)
+                return Math.max(10, Math.sqrt(parseFloat(d[nodeRadius])));
+            else if (("_" + nodeRadius) in d)
+                return Math.max(10, Math.sqrt(parseFloat(d["_"+nodeRadius])));
+            else if ((nodeRadius in d.clusterAgg))
+                return Math.max(10, Math.sqrt(parseFloat(d.clusterAgg[nodeRadius])));
+            else
+                console.log("hul");
         })
         .attr("fill", function(_d) {
             return "rgba(255, 0, 0, 0.7)";
@@ -621,11 +647,16 @@ function getNodeLayerRenderer() {
         function tabularRankListRenderer(svg, data, args) {
             var rpKey = "graph_" + args.graphId.substring(0, args.graphId.indexOf("_"));
             var params = args.renderingParams[rpKey];
-            var charW = 8;
-            var charH = 15;
-            var paddingH = 10;
-            var paddingW = 14;
-            var headerH = charH + 20;
+            var charW = params.topLevelWidth/200;
+            var charH = charW * 2;
+            var paddingH = charH * 3 / 2;
+            var paddingW = charH;
+            var headerH = charH * 2;
+            // var charW = 12;
+            // var charH = 25;
+            // var paddingH = 10;
+            // var paddingW = 14;
+            // var headerH = charH + 20;
 
             var g = svg
                 .append("g")
@@ -651,8 +682,8 @@ function getNodeLayerRenderer() {
                 widths.push(maxlen * charW + paddingW);
                 totalW += widths[i];
             }
-            var basex = data[0].cx - totalW / 2;
-            var basey = data[0].cy - totalH / 2;
+            var basex = data[0].cx + charH;//- totalW / 2;
+            var basey = data[0].cy + charH;//- totalH / 2;
             var runx = basex,
                 runy = basey;
             for (var i = 0; i < fields.length; i++) {

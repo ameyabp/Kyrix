@@ -152,13 +152,19 @@ function makeTooltips(selection, columns, aliases) {
         // column values
         rows.append("td")
             .html(function(p) {
-                if (
-                    (typeof d[p] == "number" ||
-                        (typeof d[p] == "string" && d[p].length > 0)) &&
-                    !isNaN(d[p])
-                )
-                    return d3.format(",.2f")(d[p]);
-                else return d[p];
+                if (p in d) {
+                    if ((typeof d[p] == "number" || (typeof d[p] == "string" && d[p].length > 0)) && !isNaN(d[p]))
+                        return d3.format(",.2f")(d[p]);
+                    else 
+                        return d[p];
+                }
+                else if (p in JSON.parse(d.clusteragg)) {
+                    agg = JSON.parse(d.clusteragg)[p];
+                    if ((typeof agg == "number" || (typeof agg == "string" && agg.length > 0)) && !isNaN(agg))
+                        return d3.format(",.2f")(agg);
+                    else 
+                        return agg;
+                }
             })
             .style("font-weight", "900")
             .style("padding-left", "2px")

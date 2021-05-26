@@ -31,7 +31,8 @@ function addGraph(graph, args) {
         ...renderingParams,
         ...graph.layoutParams,
         ...graph.clusterParams,
-        ...graph.hoverParams
+        ...graph.hoverParams,
+        ...graph.encodingParams
     };
     var rpKey = "graph_" + (this.graphs.length - 1);
     var rpDict = {};

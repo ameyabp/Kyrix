@@ -31,10 +31,6 @@ var graph = {
                 nodes: {
                     fields: ["page_name", "page_type"],
                     functions: "count"
-                },
-                edges: {
-                    fields: ["originalID"],
-                    functions: "count"
                 }
             },
             clusterLevels: [1000, 200, 50],
@@ -56,7 +52,7 @@ var graph = {
             },
             edges: {
                 tooltip: {
-                    columns: ["_memberedgecount"],
+                    columns: ["memberedgecount"],
                     aliases: ["Number of edges"]
                 }
             }
