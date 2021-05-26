@@ -152,6 +152,7 @@ function makeTooltips(selection, columns, aliases) {
         // column values
         rows.append("td")
             .html(function(p) {
+                p = p.toLowerCase();
                 if (p in d) {
                     if ((typeof d[p] == "number" || (typeof d[p] == "string" && d[p].length > 0)) && !isNaN(d[p]))
                         return d3.format(",.2f")(d[p]);
@@ -164,6 +165,13 @@ function makeTooltips(selection, columns, aliases) {
                         return d3.format(",.2f")(agg);
                     else 
                         return agg;
+                }
+                else if (("_"+p) in d) {
+                    p = "_"+p;
+                    if ((typeof d[p] == "number" || (typeof d[p] == "string" && d[p].length > 0)) && !isNaN(d[p]))
+                        return d3.format(",.2f")(d[p]);
+                    else 
+                        return d[p];
                 }
             })
             .style("font-weight", "900")

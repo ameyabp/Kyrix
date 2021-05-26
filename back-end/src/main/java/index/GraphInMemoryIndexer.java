@@ -209,13 +209,15 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // compute layout
         System.out.println("Computing Layout...");
+        long st = System.nanoTime();
         computeLayout();
+        System.out.println("Computing layout took " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // compute cluster aggregations
-        System.out.println("Computing Clusters...");
-        long st = System.nanoTime();
+        // System.out.println("Computing Clusters...");
+        st = System.nanoTime();
         computeClusterAggs();
-        System.out.println("Computer ClusterAggs took " + (System.nanoTime() - st) / 1e9 + "s.");
+        // System.out.println("Computing Clustering took " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // clean up
         cleanUp();
@@ -495,13 +497,16 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         //TODO: UNCOMMENT THIS
         ArrayList<Integer> clusterLevels = graph.getClusterLevels();
+        long st = System.nanoTime();
         computeClustering(clusterLevels);
+        System.out.println("Computing Clusters took " + (System.nanoTime() - st) / 1e9 + "s.");
 
         String clusteringAlgorithm = graph.getClusteringAlgorithm();
         String layoutAlgorithm = graph.getLayoutAlgorithm();
         String userFilePath = "/kyrix/compiler/examples/" + this.projectName + "/intermediary/clustering/";
         // all data files are created from command above, and stored as csv in /Clustering
         // now we need to read from these into DB
+        st = System.nanoTime();
         for (int i = 0; i < numLevels; i++) {
             System.out.println("Loading clusters for level " + i + " ...");
             // rtree0 = RTree.star().create();
@@ -718,7 +723,7 @@ public class GraphInMemoryIndexer extends PsqlNativeBoxIndexer {
             }
 
         }
-        
+        System.out.println("Loading to DB and computing indexes took " + (System.nanoTime() - st) / 1e9 + "s.");
 
     }
 

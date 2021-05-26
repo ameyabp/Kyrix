@@ -27,12 +27,12 @@ var graph = {
     },
     summarization: {
         cluster: {
-            aggregate: {
-                nodes: {
-                    fields: ["page_name", "page_type"],
-                    functions: "count"
-                }
-            },
+            // aggregate: {
+            //     nodes: {
+            //         fields: ["page_name", "page_type"],
+            //         functions: "count"
+            //     }
+            // },
             clusterLevels: [1000, 200, 50],
             randomState: 0,
             algorithm: "kmeans"
@@ -45,14 +45,21 @@ var graph = {
         },
         hover: {
             nodes: {
-                tooltip: {
-                    columns: ["page_name", "page_type"],
-                    aliases: ["Page Name", "Page Type"]
+                rankList: {
+                    mode: "tabular",
+                    topk: 3,
+                    fields: ["page_name", "page_type", "facebook_id"],
+                    orderBy: "facebook_id",
+                    order: "asc"
                 }
+                // tooltip: {
+                //     columns: ["page_name", "page_type"],
+                //     aliases: ["Page Name", "Page Type"]
+                // }
             },
             edges: {
                 tooltip: {
-                    columns: ["_memberedgecount"],
+                    columns: ["memberEdgeCount"],
                     aliases: ["Number of edges"]
                 }
             }
