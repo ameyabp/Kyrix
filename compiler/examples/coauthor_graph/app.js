@@ -12,7 +12,7 @@ var p = new Project("coauthor_graph", "../../../config.txt");
 var graph = {
     data: {
         nodesCsv: "graphNodesData.csv",
-        edgesCsv: "graphEdgesData_clean.csv",
+        edgesCsv: "graphEdgesData.csv",
         db: "kyrix",
         queryNodes: "select _id, _x, _y, _level, _parentnode, _membernodes, _membernodecount, clusteragg from bbox_coauthor_graph_graph0_level0layer0",
         queryEdges: "select _id, _srcid, _dstid, _level, _weight, _parentedge, _memberedges, _memberedgecount, clusteragg, _x1, _x2, _y1, _y2 from bbox_coauthor_graph_graph0_level0layer1"

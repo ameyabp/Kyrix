@@ -62,6 +62,8 @@ if __name__ == '__main__':
 
         for idx, author in enumerate(cleanedAuthorList):
             affiliation = affiliationList[idx] if idx < len(affiliationList) else ''
+            affiliation = affiliation.replace('"','') 
+            author = author.replace('"','') 
             if author not in authorDict:
                 authorDict[author] = nodeCounter
                 node = Node(id=nodeCounter, name=str(author), affiliation=str(affiliation))
